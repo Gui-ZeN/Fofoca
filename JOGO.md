@@ -224,7 +224,7 @@ Depois da fala, uma frase explica a regra.
 
 - No modo teste, **cada fase abre sempre igual** pra todo mundo (sem espelho, nomes fixos por fase), **sem advertência** e **sem cena de chegada**.
 - Protocolo no `README.md`: entregar sem explicar; pedir pra apontar origem, vítima, objetivo e próximo destino; separar erro de leitura de erro de plano; perguntar "o que você mudaria agora, e o que espera que aconteça?"; ajuda padrão depois de 2 minutos travado; anotar desde a fase 1.
-- **Ainda não rodou.** Falta escolher onde hospedar a pasta `dist/`.
+- **Ainda não rodou.** O jogo está publicado em https://gui-zen.github.io/Fofoca/ — o teste usa `?pesquisa&zerar` (campanha real, sem advertências; roteiro no README).
 
 ---
 
@@ -295,12 +295,12 @@ npm run build
 - Ajustes, Fofoca do dia, Álbum de causos (meta).
 
 **Produto e lançamento**
-- O **teste com 5 pessoas** (precisa hospedar `dist/`).
+- O **teste com 5 pessoas** (já publicado; falta recrutar e rodar).
 - Analytics, app Android (Capacitor), conta no Google Play.
 - Nome global e tradução (en/es), criativos em vídeo.
 - Monetização: o plano ainda fala em "+1 giro" (no trilho seria "+1 seta") e "sem vidas no protótipo" (as advertências contradizem).
 
 **Casa**
-- Projeto **sem git**.
+- ~~Projeto sem git~~ → repositório público https://github.com/Gui-ZeN/Fofoca, publicado no Pages a cada push (testes → build → deploy). `PRODUCT.md` fica fora do repo. Sem licença definida (código "todos os direitos reservados").
 - Sem nota do projeto no vault (`Projetos/Fofoca.md`); só as consultas.
 - Mecânica antiga ainda no código, só nos testes.
