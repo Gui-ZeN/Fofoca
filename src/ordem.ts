@@ -1,0 +1,100 @@
+// Bloco "Ordem": uma novidade só — a estrela com número menor tem que saber ANTES (empate perde;
+// `interesse.ordem` no motor). Consulta 3: "Fofoqueira + Ordem" é boa e barata — às vezes ela tem que
+// ser a última da fila, porque conta pra todo mundo ao mesmo tempo. Fases achadas com o buscador sobre
+// o motor (1 solução no K mínimo; sem a ordem, a jogada muda; o caminho curto perde) e mapeadas à mão.
+// Jogado numa sessão separada (?bloco=ordem). O5 e O6 combinam com a padaria do bloco Hora certa.
+
+import type { Vizinho } from './motor';
+import type { FaseTrilho } from './trilho';
+
+const v = (id: string, nome: string, tipo: Vizinho['tipo'], pos: [number, number], extra: Partial<Vizinho> = {}): Vizinho =>
+  ({ id, nome, tipo, pos, ...extra });
+const ze = (pos: [number, number]) => v('z', 'Seu Zé', 'assunto', pos);
+const vez = (ordem: number, chega?: number): Partial<Vizinho> => ({ interesse: { ordem }, ...(chega ? { chega } : {}) });
+
+export const fasesOrdem: FaseTrilho[] = [
+  {
+    // a Cida (2) está do lado; a Bia (1) fica no fundo: tem que ir nela primeiro e voltar
+    titulo: 'A Bia primeiro',
+    boato: 'O Seu Zé dança na cozinha',
+    novidade: 'Ordem: o número na estrela diz quem tem que saber primeiro',
+    giros: 0, setas: 4, origens: ['r'],
+    vizinhos: [
+      v('r', 'Rita', 'comum', [0, 0]), v('a', 'Ana', 'comum', [1, 0]), v('c', 'Cida', 'comum', [2, 0], vez(2)),
+      v('d', 'Davi', 'comum', [1, 1]), v('b', 'Bia', 'comum', [2, 1], vez(1)),
+      ze([1, 2]),
+    ],
+    amizades: [['r', 'a'], ['a', 'd'], ['a', 'c'], ['b', 'd'], ['b', 'c'], ['d', 'z']],
+    solucao: { r: 'a', a: 'd', d: 'b', b: 'c' },
+    armadilha: { r: 'a', a: 'c', c: 'b' }, // a Cida sabe primeiro
+  },
+  {
+    // a Neide conta pras duas na mesma batida: junto não vale; a Bia tem que chegar antes e a Neide ficar pro fim
+    titulo: 'Junto não vale',
+    boato: 'O Seu Zé dorme no sofá de propósito',
+    giros: 0, setas: 3, origens: ['r'],
+    vizinhos: [
+      ze([1, 0]), v('c', 'Cida', 'comum', [2, 0], vez(2)),
+      v('b', 'Bia', 'comum', [1, 1], vez(1)), v('n', 'Neide', 'fofoqueira', [2, 1]),
+      v('u', 'Rui', 'comum', [1, 2]), v('r', 'Rita', 'comum', [2, 2]),
+    ],
+    amizades: [['n', 'c'], ['n', 'b'], ['n', 'r'], ['c', 'z'], ['b', 'z'], ['b', 'u'], ['r', 'u']],
+    solucao: { r: 'u', u: 'b', b: 'n' },
+    armadilha: { r: 'n' }, // a Neide conta pras duas ao mesmo tempo
+  },
+  {
+    // fase do Astra (Consulta 3): atender a Bia antes de liberar a Neide; a Neide fecha a fila
+    titulo: 'A Neide por último',
+    boato: 'O Seu Zé pede música no rádio',
+    giros: 0, setas: 4, origens: ['r'],
+    vizinhos: [
+      v('r', 'Rita', 'comum', [0, 0]), v('a', 'Ana', 'comum', [1, 0]), v('b', 'Bia', 'comum', [2, 0], vez(1)),
+      v('d', 'Davi', 'comum', [0, 1]), v('n', 'Neide', 'fofoqueira', [1, 1]), v('e', 'Edu', 'comum', [2, 1]),
+      ze([0, 2]), v('c', 'Cida', 'comum', [1, 2], vez(2)), v('u', 'Rui', 'comum', [2, 2]),
+    ],
+    amizades: [['r', 'a'], ['a', 'b'], ['d', 'n'], ['n', 'e'], ['z', 'c'], ['c', 'u'], ['r', 'd'], ['d', 'z'], ['a', 'n'], ['n', 'c'], ['b', 'e'], ['e', 'u']],
+    solucao: { r: 'a', a: 'b', b: 'e', e: 'n' },
+    armadilha: { r: 'a', a: 'n', e: 'b' }, // mais curta, mas a Cida sabe antes da Bia
+  },
+  {
+    // três na fila; aqui a Neide abre: ela entrega a 1 e o resto segue em corrente
+    titulo: 'Um, dois, três',
+    boato: 'O Seu Zé coleciona ímã de geladeira',
+    giros: 0, setas: 4, origens: ['r'],
+    vizinhos: [
+      v('d', 'Davi', 'comum', [1, 0]), ze([2, 0]),
+      v('r', 'Rita', 'comum', [0, 1]), v('a', 'Ana', 'comum', [1, 1]), v('c', 'Cida', 'comum', [2, 1], vez(2)),
+      v('n', 'Neide', 'fofoqueira', [0, 2]), v('b', 'Bia', 'comum', [1, 2], vez(1)), v('u', 'Rui', 'comum', [2, 2], vez(3)),
+    ],
+    amizades: [['u', 'b'], ['u', 'c'], ['z', 'c'], ['z', 'd'], ['a', 'b'], ['a', 'c'], ['a', 'r'], ['a', 'd'], ['b', 'n'], ['n', 'r']],
+    solucao: { r: 'n', b: 'a', a: 'c', c: 'u' },
+  },
+  {
+    // a Bia (1) está na padaria até a 3: quem chega cedo perde o recado; a Neide abre o caminho longo
+    titulo: 'Fila do pão',
+    boato: 'O Seu Zé dá corda no relógio todo dia',
+    giros: 0, setas: 4, origens: ['r'],
+    vizinhos: [
+      v('c', 'Cida', 'comum', [0, 0], vez(2)), v('d', 'Davi', 'comum', [1, 0]), v('n', 'Neide', 'fofoqueira', [2, 0]),
+      v('b', 'Bia', 'comum', [0, 1], vez(1, 3)), v('a', 'Ana', 'comum', [1, 1]), v('r', 'Rita', 'comum', [2, 1]),
+      ze([0, 2]), v('u', 'Rui', 'comum', [2, 2]),
+    ],
+    amizades: [['r', 'n'], ['r', 'a'], ['r', 'u'], ['z', 'b'], ['c', 'd'], ['c', 'b'], ['d', 'n'], ['d', 'a'], ['a', 'b']],
+    solucao: { r: 'n', d: 'a', a: 'b', b: 'c' },
+    armadilha: { r: 'a', a: 'b', b: 'c' }, // a Bia ainda está na padaria
+  },
+  {
+    // a Cida (1) volta na 4: a Neide tem que falar na hora certa; depois a Cida passa pra Bia (2)
+    titulo: 'Na volta, por ordem',
+    boato: 'O Seu Zé esconde chocolate na caixa de remédio',
+    giros: 0, setas: 4, origens: ['r'],
+    vizinhos: [
+      v('a', 'Ana', 'comum', [1, 0]), v('r', 'Rita', 'comum', [2, 0]),
+      ze([0, 1]), v('d', 'Davi', 'comum', [1, 1]), v('n', 'Neide', 'fofoqueira', [2, 1]),
+      v('u', 'Rui', 'comum', [0, 2]), v('b', 'Bia', 'comum', [1, 2], vez(2)), v('c', 'Cida', 'comum', [2, 2], vez(1, 4)),
+    ],
+    amizades: [['r', 'a'], ['r', 'n'], ['a', 'd'], ['c', 'b'], ['c', 'n'], ['u', 'z'], ['u', 'b'], ['z', 'd'], ['b', 'd'], ['n', 'd']],
+    solucao: { r: 'a', a: 'd', d: 'n', c: 'b' },
+    armadilha: { r: 'n', c: 'b' }, // a Neide fala cedo: a Cida ainda não voltou
+  },
+];

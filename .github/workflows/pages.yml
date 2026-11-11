@@ -1,0 +1,48 @@
+# Publica o jogo no GitHub Pages a cada push no main: testes → build → publicação.
+# Teste falhando = não publica. O site é estático (pasta dist/); não há servidor nem segredo.
+# Uma vez só, no GitHub: Settings → Pages → Source: "GitHub Actions".
+name: Publicar no Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# o build (que roda npm ci com código de terceiros) só lê; publicar fica só no job deploy (revisão cyberops, 11/11/2026)
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.publicar.outputs.page_url }}
+    steps:
+      - id: publicar
+        uses: actions/deploy-pages@v4

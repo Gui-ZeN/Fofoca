@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+.env*
+# metas e estratégia de negócio: ficam só no computador do Guilherme (repo é público; decisão de 11/11/2026)
+PRODUCT.md
+# cache local do detector de design (o config.json do .impeccable vai pro repo)
+.impeccable/hook.cache.json

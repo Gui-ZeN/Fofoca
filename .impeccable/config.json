@@ -1,0 +1,23 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(.2, .9, .3, 1.4)",
+        "createdAt": "2026-11-10T17:57:16.092Z",
+        "reason": "Claude: estouro de balão de fala de desenho animado; o overshoot é o movimento próprio do gênero (charge), usado só no balão"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/estilo.css"
+        ],
+        "createdAt": "2026-11-11T12:29:39.938Z",
+        "reason": "Claude: parede do poço do elevador no menu-prédio, mesma cor --parede de todas as paredes; é estrutura do desenho, não faixa de destaque em cartão"
+      }
+    ]
+  }
+}
