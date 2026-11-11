@@ -216,9 +216,11 @@ Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio
 | Peso | Prédio | Moradores | Setas | Extra |
 |---|---|---|---|---|
 | Leve | 3×3 | 6–7 | 3–4 | 1 Fofoqueira |
-| Média | 3×3 | 7–9 | 4–5 | 1 Fofoqueira |
-| Pesada | 3×4 | 9–11 | 5–6 | 2 Fofoqueiras, Zé no meio com 3+ portas |
-| Chefão | 3×4 | 10–12 | 6–7 | 2 Fofoqueiras, Zé no meio, 2 estrelas |
+| Média | 3×4 | 8–10 | 4–5 | 1 Fofoqueira |
+| Pesada | 3×5 (rola) | 10–12 | 5–6 | 2 Fofoqueiras, Zé no meio com 3+ portas |
+| Chefão | 3×6 (rola) | 11–13 | 6–7 | 2 Fofoqueiras, Zé no meio, 2 estrelas |
+
+Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (antes havia Gil, Tião e Juca, sem desenho, e um teto de 7 moradores comuns). Hoje: 59 leves de 3 andares, 54 médias de 4, 28 pesadas de 5 (2 saíram com 4), 6 chefões de 6. Os 150 saem em ~20 s com 10 processos em paralelo.
 
 - Temas sorteados: corrente de Fofoqueiras, padaria, ordem, tamanho, padaria+ordem.
 - Acabou o estoque, **recomeça** — espelhado numa volta sim, outra não. O prédio vai até o andar **3.028**.
@@ -318,7 +320,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas; com uma seta a mais, no máximo 2; o caminho mais curto perde; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente muda a jogada.
 
-**Números de hoje:** **624 testes em 19 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
+**Números de hoje:** **626 testes em 19 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 
@@ -348,7 +350,6 @@ npm run build
 
 **Jogo**
 - **Jogar** o Arnaldo e o Nonato e decidir se entram na campanha (e no gerador).
-- Regerar o estoque da fábrica com o elenco maior (hoje ela ainda limita a 7 moradores comuns por prédio).
 - Próximo fiscal (Vera ou Dona Norma), uma regra por vez.
 - Decidir o **celular** (peça do quebra-cabeça ou ajuda).
 - **Som** ("psst" a cada batida, "QUÊ?!" na derrota).

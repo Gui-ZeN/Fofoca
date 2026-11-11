@@ -33,7 +33,8 @@ const TEMAS: Record<Peso, Tema[]> = {
   pesada: ['cadeia', 'padaria', 'ordem', 'tamanho', 'padaria+ordem'],
   chefe: ['padaria+ordem', 'padaria', 'ordem'],
 };
-const PRAZO: Record<Peso, number> = { leve: 20_000, media: 40_000, pesada: 150_000, chefe: 240_000 };
+// prédio maior demora mais pra certificar (o resolvedor explora mais caminhos)
+const PRAZO: Record<Peso, number> = { leve: 20_000, media: 60_000, pesada: 240_000, chefe: 420_000 };
 const MAIS_LEVE: Record<Peso, Peso | undefined> = { chefe: 'pesada', pesada: 'media', media: 'leve', leve: undefined };
 
 const [inicio, fim, saida] = [Number(process.argv[2]), Number(process.argv[3]), process.argv[4]];

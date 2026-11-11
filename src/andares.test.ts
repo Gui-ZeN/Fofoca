@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { alvosDe } from './motor';
 import { custo, jogar, resolverTrilho, type FaseTrilho } from './trilho';
 import estoque from './andares.json';
+import manifesto from '../public/arte/manifesto.json';
 
 // Recertifica o estoque gerado sem confiar no gerador: as mesmas garantias das fases feitas à mão.
 const fases = (estoque as unknown as { pos: number; peso: string; fase: FaseTrilho }[]);
@@ -11,6 +12,23 @@ describe('estoque de andares gerados', () => {
     expect(fases).toHaveLength(150);
     fases.forEach((a, i) => expect(a.pos).toBe(i));
     expect(fases.filter((a) => a.peso === 'chefe').map((a) => a.pos)).toEqual([24, 49, 74, 99, 124, 149]);
+  });
+
+  it('o prédio cresce com o peso: leve 3 andares, média 4, pesada 5, chefão 6', () => {
+    const altura = { leve: 3, media: 4, pesada: 5, chefe: 6 } as Record<string, number>;
+    // `saiu` = o peso que de fato saiu (se a fábrica não achar no prazo, ela desce um peso)
+    for (const a of fases as unknown as { pos: number; saiu: string; fase: FaseTrilho }[]) {
+      expect(Math.max(...a.fase.vizinhos.map((v) => v.pos[1])) + 1, `andar ${a.pos}`).toBeLessThanOrEqual(altura[a.saiu]);
+    }
+    expect(fases.filter((a) => Math.max(...a.fase.vizinhos.map((v) => v.pos[1])) + 1 >= 5).length).toBeGreaterThan(20);
+  });
+
+  it('todo morador tem desenho ilustrado e ninguém repete no mesmo prédio', () => {
+    const comArte = new Set(Object.keys(manifesto).filter((k) => k !== '_cenario'));
+    for (const a of fases) {
+      for (const v of a.fase.vizinhos) expect(comArte.has(v.nome), `${v.nome} (andar ${a.pos})`).toBe(true);
+      expect(new Set(a.fase.vizinhos.map((v) => v.nome)).size).toBe(a.fase.vizinhos.length);
+    }
   });
 
   it.each(fases.map((a) => [a.pos, a.fase.titulo, a.fase] as const))('andar gerado %i (%s)', (_p, _t, f) => {

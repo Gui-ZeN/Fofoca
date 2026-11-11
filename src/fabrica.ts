@@ -17,7 +17,7 @@ export type Tema = 'cadeia' | 'padaria' | 'ordem' | 'tamanho' | 'padaria+ordem';
 export type Peso = 'leve' | 'media' | 'pesada' | 'chefe';
 
 export interface Molde {
-  andares: 3 | 4; // altura do prédio (3 colunas sempre: é o que cabe em pé no celular)
+  andares: number; // altura do prédio (3 colunas sempre; de 5 andares pra cima o palco rola na vertical)
   n: [number, number]; // moradores
   fof: number; // Fofoqueiras (a 1ª fica colada no Zé)
   estrelas: number;
@@ -29,10 +29,12 @@ export interface Molde {
 
 export function moldeDe(peso: Peso, tema: Tema): Molde {
   const base: Record<Peso, Omit<Molde, 'tema'>> = {
+    // Prédio cresce com o peso (2026-11-11, "a fábrica com prédios maiores"): mais andares = caminhos mais
+    // longos e mais lugar pra armadilha. 5 e 6 andares rolam na tela (Cena.tsx), com cômodo de ≥100 px.
     leve: { andares: 3, n: [6, 7], fof: 1, estrelas: 1, k: [3, 4], zeMeio: false, aprendeu: false },
-    media: { andares: 3, n: [7, 9], fof: 1, estrelas: 1, k: [4, 5], zeMeio: false, aprendeu: false },
-    pesada: { andares: 4, n: [9, 11], fof: 2, estrelas: 1, k: [5, 6], zeMeio: true, aprendeu: true },
-    chefe: { andares: 4, n: [10, 12], fof: 2, estrelas: 2, k: [6, 7], zeMeio: true, aprendeu: true },
+    media: { andares: 4, n: [8, 10], fof: 1, estrelas: 1, k: [4, 5], zeMeio: false, aprendeu: false },
+    pesada: { andares: 5, n: [10, 12], fof: 2, estrelas: 1, k: [5, 6], zeMeio: true, aprendeu: true },
+    chefe: { andares: 6, n: [11, 13], fof: 2, estrelas: 2, k: [6, 7], zeMeio: true, aprendeu: true },
   };
   const m = { ...base[peso], tema };
   if (tema === 'ordem' || tema === 'padaria+ordem') m.estrelas = Math.max(2, m.estrelas);
@@ -54,7 +56,7 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   const vitPos = m.zeMeio ? pick(meio, sorte) : pick(cel, sorte);
   const n = m.n[0] + Math.floor(sorte() * (m.n[1] - m.n[0] + 1));
   const usados = [vitPos, ...embaralha(cel.filter(([c, r]) => !(c === vitPos[0] && r === vitPos[1])), sorte).slice(0, n - 1)];
-  const ids = 'zabcdefghijk'.slice(0, n).split('');
+  const ids = 'zabcdefghijklmnop'.slice(0, n).split('');
   const am: [string, string][] = [];
   for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
     const [a, b] = [usados[i], usados[j]];
@@ -71,7 +73,8 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   const resto = embaralha(ids.slice(1), sorte);
   const origem = resto[0];
   const dO = dist(origem);
-  const longe = resto.filter((x) => dO[x] >= (m.andares === 4 ? 3 : 2));
+  // estrela longe da origem: 2 passos num prédio de 3 andares, 3 com 4, 4 do 5º andar pra cima
+  const longe = resto.filter((x) => dO[x] >= Math.min(4, m.andares - 1));
   if (longe.length < m.estrelas) return null;
   const est = embaralha(longe, sorte).slice(0, m.estrelas);
   const livres = resto.filter((x) => x !== origem && !est.includes(x));
@@ -81,8 +84,8 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   const fofs = [f1, ...embaralha(livres.filter((x) => x !== f1), sorte).slice(0, m.fof - 1)];
   const temTamanho = m.tema === 'tamanho';
   const exag = temTamanho ? embaralha(livres.filter((x) => !fofs.includes(x)), sorte).slice(0, 2) : [];
-  // só existem 7 desenhos de morador comum: mais que isso repete rosto no mesmo prédio
-  if (n - 1 - fofs.length - exag.length > 7) return null;
+  // cada morador comum precisa de um nome com desenho próprio (COMUNS): mais que isso repetiria rosto
+  if (n - 1 - fofs.length - exag.length > COMUNS.length) return null;
   const ordem = m.tema === 'ordem' || m.tema === 'padaria+ordem';
   const padaria = m.tema === 'padaria' || m.tema === 'padaria+ordem';
   // padaria: às vezes no Zé, às vezes na 1ª estrela, às vezes nos dois
@@ -152,11 +155,13 @@ export function certificar(f: Fase, m: Molde): Certificado | undefined {
 
 // Nomes de verdade (o elenco ainda troca ao abrir): origem Rita, estrelas Bia/Cida/Ana,
 // Fofoqueiras Neide/Lu, Exagerados Beto/Lúcia, o resto em ordem. Os ids viram a inicial.
-// os 7 com desenho próprio primeiro (a Bia entra quando não é estrela); os de reserva só se faltar
-const COMUNS = ['Ana', 'Davi', 'Rui', 'Edu', 'Bia', 'Lia', 'Gil', 'Tião', 'Juca'];
+// Só nomes com arte ilustrada (⚠️ antes havia Gil, Tião e Juca, sem desenho). A ordem alterna gênero; na tela
+// o elenco ainda troca dentro do mesmo gênero (elenco.ts). Os ids viram uma letra fixa por nome.
+const COMUNS = ['Ana', 'Davi', 'Bia', 'Rui', 'Lia', 'Edu', 'Marlene', 'Caio', 'Jandira', 'Otávio', 'Celina', 'Nando', 'Solange', 'Ivo'];
 const ID: Record<string, string> = {
   Rita: 'r', Bia: 'b', Cida: 'c', Ana: 'a', Neide: 'n', Lu: 'l', Beto: 'o', 'Lúcia': 'u',
-  Davi: 'd', Rui: 'y', Edu: 'e', Lia: 'i', Gil: 'g', 'Tião': 't', Juca: 'j', 'Seu Zé': 'z',
+  Davi: 'd', Rui: 'y', Edu: 'e', Lia: 'i', 'Seu Zé': 'z',
+  Marlene: 'm', Caio: 'k', Jandira: 'j', 'Otávio': 'v', Celina: 'x', Nando: 'w', Solange: 's', Ivo: 'h',
 };
 
 export function batizar(f: Fase, c: Certificado, titulo: string, boato: string): FaseTrilho {
