@@ -438,7 +438,9 @@ export function Predio(props: {
             {fora(v)
               ? <Padaria x={pe.x} y={y0 + 84} faltam={montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
               : <Personagem v={v} expressao={expressao(v)} x={pe.x} y={pe.y} olha={olharPara(v)} escala={ESCALA} />}
-            <Etiqueta v={v} x0={x0} y0={y0} contou={!!fase.origens && origem === v.id} menos={baixo.has(v.id) && v.tipo !== 'assunto'} />
+            {/* ⚠️ a plaquinha sobe 11 e fica meio em cima da laje: no lugar de antes (y0+8…30) ela tapava a testa
+                e às vezes o olho — a cabeça do desenho começa em ~y0+9. Assim ela encosta só no alto do cabelo. */}
+            <Etiqueta v={v} x0={x0} y0={y0 - 11} contou={!!fase.origens && origem === v.id} menos={baixo.has(v.id) && v.tipo !== 'assunto'} />
             {v.celular && <g transform={`translate(${x0 + 22} ${y0 + A - 28}) scale(0.9)`} className="tem-celular"><Telefone /></g>}
             {selecionado && (
               // seleção = 4 cantoneiras grossas (forma, não só cor)

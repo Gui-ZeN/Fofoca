@@ -373,23 +373,27 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
         />
         <div className="sobre-o-ceu">
           <p className="boato"><OrigemMini /> {fase.boato}</p>
+          {/* setas, advertências e (onde o tamanho importa) a escadinha, numa linha só: o topo enxuto deixa o prédio
+              de 5 andares caber sem rolar. A escadinha fica só nos ícones; os nomes estão no aria-label e na
+              cena de chegada do Beto, que ensina os tamanhos. */}
           <div className="fichas">
             <span className={cheio ? 'ficha setas cheio' : 'ficha setas'}>{girando ? 'Giros' : 'Setas'} {usadas}/{limite}</span>
             {cobra && <span className="ficha advertencias"><CartoesAdvertencia restam={vidas!.restam} /></span>}
+            {fase.vizinhos.some((v) => v.tipo === 'exagerado' || v.interesse?.tamanho) && (
+              <span className="escala" aria-label={`Tamanhos do boato: ${NOME_TAMANHO[1]}, ${NOME_TAMANHO[2]}, ${NOME_TAMANHO[3]}`}>
+                {([1, 2, 3] as const).map((t, i) => (
+                  <span key={t}>{i > 0 && <b aria-hidden="true">›</b>}<BoatoMini tamanho={t} /></span>
+                ))}
+              </span>
+            )}
           </div>
-          {/* onde o tamanho importa, a escadinha fica sempre à vista: começa em cochicho e sobe um degrau por Exagerado */}
-          {fase.vizinhos.some((v) => v.tipo === 'exagerado' || v.interesse?.tamanho) && (
-            <div className="escala" aria-label="Tamanhos do boato: cochicho, fofoca, escândalo">
-              {([1, 2, 3] as const).map((t, i) => (
-                <span key={t}>{i > 0 && <b aria-hidden="true">›</b>}<BoatoMini tamanho={t} />{NOME_TAMANHO[t]}</span>
-              ))}
-            </div>
-          )}
           {fase.novidade && montando && <p className="novidade"><b>NOVO</b> {fase.novidade}</p>}
-          {/* a dica da fase fica até a primeira seta; depois, o que o selecionado está fazendo */}
+          {/* a dica da fase fica até a primeira seta; depois, o que o selecionado está fazendo — SÓ no tutorial.
+              Fora dele, a seleção já aparece nas cantoneiras e o contador treme quando as setas acabam: a frase
+              custava uma linha do prédio (Fable, 2026-11-11: o topo empurrava o prédio de 5 andares pra rolagem). */}
           {montando && (fase.dica && !historico.length
             ? <p className="dica">{fase.dica}</p>
-            : status && <p className="dica status">{status}</p>)}
+            : idx < TUTORIAL && status && <p className="dica status">{status}</p>)}
         </div>
       </section>
 
@@ -405,7 +409,9 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
             <div className="acoes">
               <button onClick={desfazer} disabled={!historico.length}>Desfazer</button>
               {/* com 3 advertências, dá pra montar o trilho mas não espalhar até o síndico tirar uma */}
-              <button className="principal" onClick={espalharAgora} disabled={suspenso}>
+              {/* ⚠️ sem nenhuma seta, ninguém além da origem ouve: era derrota certa, e um toque duplo em "Próxima fase"
+                  (no mesmo lugar) caía aqui e tirava a ★ de primeira (Fable). Desligado até a primeira seta. */}
+              <button className="principal" onClick={espalharAgora} disabled={suspenso || (!girando && usadas === 0)}>
                 {suspenso ? `Suspenso · ${relogio(vidas!.falta ?? 0)}` : 'Espalhar!'}
               </button>
             </div>
@@ -428,7 +434,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
               fase={fase} resultado={resultado!} ultima={idx === total - 1} aviso={aviso} falta={vidas?.falta}
               aoRepetir={() => {
                 if (resultado!.vitoria) { setEspelho(!espelho); setElenco(novoElenco()); } // repetir: outro prédio e outro elenco (no teste, a mesma fase de novo)
-                else { setResultado(undefined); setBatida(0); setSelecionado(undefined); } // tentar de novo: o plano fica
+                else { setResultado(undefined); setBatida(0); setSelecionado(girando ? undefined : origem); } // tentar de novo: o plano fica; a origem volta selecionada
               }}
               aoRever={() => setRevendo(1)}
               aoAvancar={() => setIdx(idx + 1)}

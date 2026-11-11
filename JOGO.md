@@ -281,7 +281,10 @@ Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** co
 - **A plaquinha mede o nome de verdade** (não chuta por letra): cabe com fonte nova e tradução.
 - **Cores e letras:** tinta marrom e tons quentes; botão mostarda com texto escuro (botão de elevador, afunda ao apertar). **Patua One** (marca e títulos) + **Asap** (interface).
 - **Céu pouco:** o prédio ocupa o palco; nas fases pequenas, sol e nuvens lentas no que sobra.
-- **Prédio alto (5–6 andares) rola na vertical:** se, encaixado inteiro, o cômodo ficaria com menos de 100 px, o prédio fica na largura da tela e o palco rola; a câmera vai até onde a fofoca está (quem está selecionado, quem conta e quem ouve em cada batida, a vítima no fim). Prédio que cabe (até 3×4) não muda.
+- **Prédio alto (5–6 andares) rola na vertical:** se, encaixado inteiro, o cômodo ficaria com menos de 100 px, o prédio fica na largura da tela e o palco rola; a câmera vai até onde a fofoca está (quem está selecionado, quem conta e quem ouve em cada batida, a vítima no fim). Prédio que cabe não muda. **Topo enxuto (2026-11-11):** o telhado fica fora da conta e sobe pra trás dos avisos; setas, advertências e a escadinha de tamanhos (só ícones) dividem uma linha; a frase de estado só aparece no tutorial. Com isso o prédio de **5 andares cabe sem rolar** num celular de 390×844; o de 6 ainda rola.
+- **Plaquinha do nome na laje:** subiu 11 unidades e fica meio em cima da laje entre os andares — antes tapava a testa (e às vezes o olho) do morador.
+- **Arte nítida e sem piscar:** sprites recortados a 460 px de altura (eram 300, borravam em tela 3×) e fundos a 420 px; todas as poses de quem está na fase são pré-carregadas (antes o morador sumia por um instante ao trocar de pose no celular).
+- **Espalhar desligado sem nenhuma seta** (era derrota certa, e um toque duplo em "Próxima fase" caía nele); **Tentar de novo** volta com a origem selecionada.
 - **Movimento:** cochicho e susto nas poses, balão viajando pela seta, luz acendendo, padaria balançando, "QUÊ?!" estourando. Tudo some com "movimento reduzido" (o balão aparece direto no destino).
 - **O desfecho** flutua por cima da rua, sem empurrar o prédio.
 - **Se algo quebrar:** em vez de tela branca, "O elevador travou." com o botão **Voltar ao prédio** (no `?pesquisa`, o erro vai pro registro).
@@ -327,7 +330,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas; com uma seta a mais, no máximo 2; o caminho mais curto perde; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente muda a jogada.
 
-**Números de hoje:** **633 testes em 20 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
+**Números de hoje:** **633 testes em 20 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentProps } from 'react';
 import { A, Predio, medidas } from './Predio';
 import { CENARIO, urlArte } from './arte';
+import { precarregar } from './Personagem';
 
 // A rua do prédio. O desenho envolve só o prédio (mais o telhado e a calçada), então ele ocupa
 // todo o palco e o céu fica pouco — a Consulta 5 cortou o céu que ocupava meia tela.
@@ -17,6 +18,9 @@ const MIN = 400; // ⚠️ largura mínima: sem ela, um prédio de 2 colunas cre
 const L = 120; // largura de um cômodo (a mesma do Predio)
 // ⚠️ Abaixo disso a arte ilustrada vira borrão (com 6 andares encaixados, o cômodo cairia pra ~76 px)
 const COMODO_MIN = 100;
+// ⚠️ Prédio que cabe: o telhado (caixa d'água, antena, varal) fica FORA da conta e sobe pra trás dos avisos.
+// Ele é só enfeite e custava ~55 px; com isso, o prédio de 5 andares cabe inteiro num celular de 390×844.
+const BEIRAL = 14; // o que do telhado ainda entra na conta (a beirada das telhas)
 
 // Silhuetas dos prédios do bairro, sem detalhe para não disputar com o tabuleiro (altura em fração do prédio).
 const FUNDO: [number, number, number][] = [
@@ -62,20 +66,29 @@ export function Cena(props: ComponentProps<typeof Predio>) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const { escala, rola } = enquadrar(W, H, tela.w, tela.h);
+  const y0 = topo - BEIRAL; // sem rolar, o desenho começa na beirada do telhado
+  const cabe = enquadrar(W, H - y0, tela.w, tela.h);
+  const { escala, rola } = cabe.rola ? enquadrar(W, H, tela.w, tela.h) : cabe;
+  // todas as poses de quem está aqui, antes de alguém precisar trocar de pose
+  useEffect(() => { precarregar(props.fase.vizinhos.map((v) => v.nome)); }, [props.fase]);
 
-  // ⚠️ Rolando, o prédio começa logo no topo do palco: com o boato em 2 linhas, a dica ficava por cima do
-  // telhado. Aí o palco começa abaixo dos avisos (medidos). Sem rolar, nada muda: o céu de sobra acomoda a dica.
+  // O palco começa logo abaixo dos avisos (medidos), em vez de uma faixa fixa de ~127 px.
+  // ⚠️ Só cresce dentro da mesma fase: quando o NOVO ou a dica somem (ao espalhar), o prédio NÃO aumenta —
+  // senão ele pulava bem na hora de ver o boato andar. Fase nova: mede de novo.
   const [abaixo, setAbaixo] = useState<number>();
   useLayoutEffect(() => {
     const el = caixa.current, avisos = el?.parentElement?.querySelector('.sobre-o-ceu');
-    if (!rola || !el || !avisos) { setAbaixo(undefined); return; }
-    const medir = () => setAbaixo(avisos.getBoundingClientRect().bottom - el.parentElement!.getBoundingClientRect().top + 8);
+    setAbaixo(undefined);
+    if (!el || !avisos) return;
+    const medir = () => {
+      const fundo = avisos.getBoundingClientRect().bottom - el.parentElement!.getBoundingClientRect().top + 6;
+      setAbaixo((antes) => Math.max(antes ?? 0, fundo));
+    };
     medir();
     const ro = new ResizeObserver(medir);
     ro.observe(avisos);
     return () => ro.disconnect();
-  }, [rola]);
+  }, [props.fase]);
 
   // A câmera: andares que importam agora (unidades do desenho → px).
   const { fase, resultado, batida, montando, origem, trilho } = props;
@@ -97,15 +110,14 @@ export function Cena(props: ComponentProps<typeof Predio>) {
   }, [chaveFoco, rola, escala]);
 
   return (
-    <div ref={caixa} className={rola ? 'tabuleiro rola' : 'tabuleiro'} style={rola && abaixo !== undefined ? { top: Math.max(abaixo, 0) } : undefined}>
+    <div ref={caixa} className={rola ? 'tabuleiro rola' : 'tabuleiro'} style={abaixo !== undefined ? { top: Math.max(abaixo, 0) } : undefined}>
       {/* ⚠️ assentado na calçada (YMax): preso no alto, num prédio de 3 andares sobrava um bloco de asfalto
           embaixo; o que sobra fica de céu em cima, onde a dica aparece */}
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax meet" role="img" aria-label="Prédio em corte com os vizinhos"
+      <svg viewBox={rola ? `0 0 ${W} ${H}` : `0 ${y0} ${W} ${H - y0}`} preserveAspectRatio="xMidYMax meet" role="img" aria-label="Prédio em corte com os vizinhos"
         style={rola ? { width: W * escala, height: H * escala } : undefined}>
         <g aria-hidden="true">
           {CENARIO && !rola && (
             <g>
-              <circle cx={W - 80} cy={-150} r={26} className="sol" />
               <Nuvem x={20} y={-30} s={1.1} dur={90} atraso={20} />
               <Nuvem x={180} y={-190} s={0.8} dur={120} atraso={70} />
               <Nuvem x={-80} y={-320} s={0.9} dur={140} atraso={40} />

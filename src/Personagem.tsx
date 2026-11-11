@@ -612,6 +612,20 @@ function Ilustrado({ s, expressao, olha }: { s: Sprite; expressao: Expressao; ol
   );
 }
 
+// Pré-carrega TODAS as poses de quem está na fase. ⚠️ Sem isso, cada pose só era buscada na hora em que
+// aparecia: no celular (pela internet) o morador sumia por um instante ao trocar pra cochicho/susto/bravo.
+const jaPedidas = new Set<string>();
+export function precarregar(nomes: string[]) {
+  if (!ARTE || typeof Image === 'undefined') return;
+  for (const nome of nomes) {
+    for (const p of Object.values(SPRITES[nome]?.poses ?? {})) {
+      if (jaPedidas.has(p.f)) continue;
+      jaPedidas.add(p.f);
+      new Image().src = urlArte(p.f);
+    }
+  }
+}
+
 // (x, y) = onde os pés pisam
 export function Personagem({ v, expressao, x, y, olha = [0, 0], escala = 1 }: {
   v: Vizinho; expressao: Expressao; x: number; y: number; olha?: [number, number]; escala?: number;
