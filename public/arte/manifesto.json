@@ -703,5 +703,31 @@
     "h": 300
    }
   }
+ },
+ "Padre": {
+  "olha": 1,
+  "alt": 0.92,
+  "poses": {
+   "parado": {
+    "f": "padre-parado.webp",
+    "w": 137,
+    "h": 300
+   },
+   "susto": {
+    "f": "padre-susto.webp",
+    "w": 143,
+    "h": 300
+   },
+   "bravo": {
+    "f": "padre-bravo.webp",
+    "w": 163,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "padre-cochicho.webp",
+    "w": 155,
+    "h": 300
+   }
+  }
  }
 }

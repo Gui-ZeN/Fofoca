@@ -1,43 +1,48 @@
 # Fofoca! — o jogo inteiro
 
-> Retrato do jogo em **11/11/2026**, tirado do código (`Fofoca/src`). Protótipo: roda no navegador, ninguém de fora jogou ainda.
-> Plano de negócio e cronograma: `../reports/Fofoca plano de protótipo.md`. Consultas com outros modelos: vault, `Projetos/Fofoca — Consulta 1/2/3`.
+> Retrato do jogo em **11/11/2026** (commit `fdcb7bf`), tirado do código (`Fofoca/src`). Publicado em **https://gui-zen.github.io/Fofoca/**. Ninguém de fora jogou ainda.
+> Plano de negócio e cronograma: `../reports/Fofoca plano de protótipo.md`. Consultas com outros modelos: vault, `Projetos/Fofoca — Consulta 1` a `6`.
 
 ---
 
 ## 1. Em uma frase
 
-Um quebra-cabeça de **reação em cadeia** num prédio em corte: você desenha quem conta o boato pra quem, para ele chegar em quem quer saber — no tamanho e na ordem certos — **sem chegar na vítima**, que é sobre quem estão falando.
+Um quebra-cabeça de **reação em cadeia** num prédio em corte: você desenha quem conta o boato pra quem, para ele chegar em quem quer saber — no tamanho, na versão e na ordem certos — **sem chegar na vítima**, que é sobre quem estão falando.
 
 - **Público:** adultos casuais de 25 a 45 anos (forte público feminino 35+), celular em pé, partidas de 3 a 5 minutos, uma mão. Global desde o início; texto nasce em pt-BR.
-- **Tom:** fofoca absurda e carinhosa ("O Seu Zé chama a samambaia de Dona Glória"). **Nunca** aparência, raça, orientação ou doença como piada.
-- **O momento-chave:** a derrota engraçada — a vítima descobre e grita "QUÊ?!". É também o anúncio do jogo.
+- **Tom:** "**Conforme o regulamento**" — o condomínio leva as suas bobagens administrativamente a sério (aviso, placa, carimbo), e os moradores tratam cada aviso como oportunidade de pergunta. **Nunca** aparência, raça, orientação ou doença como piada; a piada nunca toma o lugar de uma instrução.
+- **O momento-chave:** ver os vizinhos **encenarem** o plano — quem conta cochicha, o balão atravessa a porta, quem ouve leva susto — e a derrota engraçada, quando a vítima descobre e grita "**QUÊ?!**".
 
 ---
 
 ## 2. A história
 
 - O lugar é o **Edifício Primavera**, um predinho brasileiro visto em corte, como casa de boneca.
-- **Seu Zé é o síndico e odeia fofoca.** Às vezes ele é a própria vítima do boato; às vezes o boato é sobre outro morador (sorteado — "pra não parecer perseguição").
-- Quando a vítima descobre, o síndico dá uma **advertência** (cartão amarelo). Três advertências e você fica **suspenso** até ele tirar uma (seção 7).
-- O menu é o próprio prédio: você sobe andar por andar, de elevador (seção 8).
+- **Seu Zé é o síndico e odeia fofoca.** Às vezes ele é a vítima do boato; às vezes o boato é sobre outro morador (sorteado — "pra não parecer perseguição").
+- Os **fiscais do condomínio** (Arnaldo, Vera, Dona Norma, Dr. Álvaro) são vítimas com **regra própria** — o primeiro já está em protótipo (seção 5.2).
+- Quando a vítima descobre, o síndico dá uma **advertência** (com carimbo). Três e você fica **suspenso** até ele tirar uma (seção 8).
+- O menu é o próprio prédio: uma janela com três andares e o elevador (seção 9).
+- **Dona Glória** é a samambaia que o síndico trata como moradora (cadeira "RESERVADO" no menu, num banquinho na portaria).
 
 ---
 
 ## 3. Como se joga (o "trilho")
 
-1. A fase abre dizendo **pra quem você contou** (a origem: etiqueta laranja com um balãozinho). Ela já começa com um **cochicho**.
+1. A fase abre dizendo **pra quem você contou** (a origem: selo de balão amarelo na plaquinha). Ela já começa com um **cochicho**.
 2. Você **desenha setas**: toca em quem conta e depois no vizinho que vai ouvir (ou arrasta de um apartamento pro outro). Cada morador tem **no máximo uma seta de saída**. Quem fica **sem seta guarda o boato pra si**.
 3. Há um limite de setas (**"Setas x/K"**). Acabou, o contador treme.
-4. Aperta **Espalhar!** e assiste: o boato anda **uma batida por vez** (850 ms cada), acendendo a luz de quem ouviu.
-5. **Vence** se todas as estrelas (⭐) ouvirem — do tamanho pedido e na ordem pedida — e a vítima **não** ouvir.
+4. Aperta **Espalhar!** e assiste, **uma batida por vez** (850 ms, ou 425 ms com **×2**):
+   - quem conta faz a pose de **cochicho**, virado pra quem vai ouvir;
+   - um **balão do tamanho enviado** percorre a seta, atravessando a porta ou a escada;
+   - quem ouve faz **susto** e a luz do apartamento acende (amarelo forte com moldura).
+5. **Vence** se todas as estrelas (⭐) ouvirem — no tamanho, na versão e na ordem pedidos — e a vítima **não** ouvir.
+6. No fim: **Tentar de novo** (mantém as setas, pra corrigir só o trecho errado) / **Repetir** na vitória, **Rever** (passo a passo, uma batida por vez, com ‹ ›) e **Próxima fase**.
 
 **Controles:**
-- Tocar num apartamento seleciona quem vai contar (contorno azul) e destaca pra quem dá pra contar (contorno tracejado).
+- Tocar num apartamento seleciona quem vai contar (**4 cantoneiras** azuis) e destaca pra quem dá pra contar (contorno **tracejado**).
 - Depois de desenhar uma seta, a seleção pula pra quem vai ouvir, pra continuar a corrente tocando um atrás do outro.
 - Tocar de novo no mesmo destino apaga a seta. **Desfazer** volta o último passo.
-- Tocar em quem já está selecionado não desseleciona (o gesto natural "toco na Rita, depois na Ana" funciona).
-- A faixa azul diz o que está acontecendo: "Rita guarda pra si. Toque em quem vai ouvir." / "As setas acabaram: aperte Espalhar ou desfaça."
+- A frase azul diz o que está acontecendo: "Rita guarda pra si. Toque em quem vai ouvir." / "As setas acabaram: aperte Espalhar ou desfaça."
 
 ---
 
@@ -46,35 +51,45 @@ Um quebra-cabeça de **reação em cadeia** num prédio em corte: você desenha 
 O motor é determinístico (`src/motor.ts`, função `espalhar`): a mesma jogada dá sempre o mesmo resultado. Nada de sorte.
 
 **Como o boato anda:**
-- Cada morador **ouve uma vez só**. Depois de ouvir, na batida seguinte ele conta (se tiver pra quem).
+- Cada morador **ouve uma vez só**. Depois de ouvir, na batida seguinte ele conta (se tiver pra quem). Ninguém fica esperando.
 - Se duas mensagens chegam juntas na mesma pessoa, **vale a maior**; empate, vale a versão normal.
-- Quem está **fora de casa** perde o recado que chegar antes da volta (seção 5, padaria).
+- Quem está **fora de casa** perde o recado que chegar antes da volta (padaria).
+- Ordem fixa ao enviar: o **Exagerado aumenta primeiro**, o **Arnaldo reduz depois**; o **Do Contra inverte ao contar** (ele mesmo ouviu a versão certa).
 
-**Tamanhos do boato:** **cochicho → fofoca → escândalo** (1, 2, 3). Começa sempre em cochicho. "Boato" é o nome da coisa toda — o tamanho do meio se chamava "boato" e confundia (um modelo jogando por texto errou por isso).
+**Tamanhos do boato:** **cochicho → fofoca → escândalo** (1, 2, 3). Começa sempre em cochicho. Cada um tem forma própria: cochicho achatado e pontilhado, fofoca redonda com "!", escândalo pontudo com "!!". "Boato" é o nome da coisa toda (o tamanho do meio se chamava "boato" e confundia).
+
+**Versão:** normal ou **ao contrário** (balão azul com setinhas trocadas). A estrela que declara uma versão só acredita nela.
 
 **Quem é quem:**
 
-| Tipo | O que faz | Aceita seta? |
-|---|---|---|
-| **Comum** | conta pra quem a seta mandar; sem seta, guarda | sim |
-| **Fofoqueira** (Neide, Lu) | conta pra **todos** os vizinhos de passagem, sozinha, na mesma batida | não |
-| **Exagerado** (Beto, Lúcia) | conta **um tamanho maior** (máx. escândalo); selo **+1** na etiqueta | sim |
-| **Do Contra** | conta a versão ao contrário (existe no motor; ainda não usado no trilho) | sim |
-| **Padre** | ouve e não conta pra ninguém (existe no motor; ainda não usado no trilho) | não |
-| **Vítima** (Seu Zé ou sorteado) | se ouvir, você perde; etiqueta vermelha | não |
-| **Estrela ⭐** | quem quer saber; pode exigir tamanho exato (`= fofoca`) ou um lugar na fila (⭐1, ⭐2) | sim (comum com estrela) |
+| Tipo | O que faz | Aceita seta? | Marca na plaquinha |
+|---|---|---|---|
+| **Comum** | conta pra quem a seta mandar; sem seta, guarda | sim | — |
+| **Fofoqueira** (Neide, Lu) | conta pra **todos** os vizinhos de passagem, sozinha, na mesma batida | não | — |
+| **Exagerado** (Beto, Lúcia) | conta **um tamanho maior** (máx. escândalo) | sim | **+1** |
+| **Do Contra** (Nonato) | conta a **versão ao contrário** | sim | **⇄** |
+| **Arnaldo** (fiscal) | vítima; **quem mora colado nele conta um tamanho menor** (mín. cochicho) | não | **−1** em cada vizinho afetado |
+| **Padre** | ouve e não conta (só no motor; fora do trilho — não muda nenhuma jogada) | não | — |
+| **Vítima** (Seu Zé, sorteado ou fiscal) | se ouvir, você perde | não | octógono vermelho com "!" |
+| **Estrela ⭐** | quem quer saber; pode exigir **tamanho exato** (`=` e o balão), **versão** (o balão certo ou o invertido) ou **lugar na fila** (⭐1, ⭐2) | sim | estrela |
 
-**Como se perde** (e a mensagem que aparece):
-- A vítima ouviu → "Neide contou pro Seu Zé! Agora ele sabe que estão falando dele."
-- Uma estrela não ouviu → "Cida não ficou sabendo de nada." / "Cida ainda estava na padaria quando o recado chegou."
-- Tamanho errado → "Cida queria uma fofoca e recebeu um escândalo."
-- Ordem errada → "A Bia tinha que saber antes da Cida."
+**Como se perde** (a frase, e o que o prédio mostra):
+
+| Motivo | Frase | No prédio |
+|---|---|---|
+| A vítima ouviu | "Neide contou pro Seu Zé! Agora ele sabe que estão falando dele." (se foi a fofoqueira, ela se defende: *"Eu ia te contar por último."*) | seta vermelha de quem contou, vítima **brava** com "QUÊ?!" em letras soltas; com advertência, **carimbo** do síndico |
+| Estrela não ouviu | "Cida não ficou sabendo de nada." / "Cida ainda estava na padaria quando o recado chegou." | plaquinha "não ouviu" / "recado na 2 · volta na 4" |
+| Tamanho errado | "Cida queria uma fofoca e recebeu um escândalo." | plaquinha "queria [balão] veio [balão]" |
+| Versão errada | "Ana ouviu a versão ao contrário e não acreditou." / "…só acredita na versão ao contrário, e ouviu a certa." | plaquinha "queria / veio" com o balão invertido |
+| Ordem errada | "A Bia tinha que saber antes da Cida." | "ouviu na N" nas duas estrelas ("junto, na N" no empate) |
 
 **Vitória:** "Bia, Rita e Rui ficaram sabendo. Seu Zé nem desconfia."
 
 ---
 
-## 5. As mecânicas (na ordem em que aparecem)
+## 5. As mecânicas
+
+### 5.1 Na campanha (na ordem em que aparecem)
 
 | Mecânica | Como funciona | Estreia (andar) |
 |---|---|---|
@@ -83,26 +98,82 @@ O motor é determinístico (`src/motor.ts`, função `espalhar`): a mesma jogada
 | **Estrela passa adiante** | quem quer saber também pode contar | 3 |
 | **Fofoqueira** | conta pra todo mundo em volta sozinha — perigo perto da vítima, recurso quando longe | 4 |
 | **Exagerado + tamanho exato** | +1 tamanho por Exagerado; a estrela quer exatamente aquele tamanho | 9 |
-| **Padaria (fora de casa)** | placa com pão e número: recado que chega antes daquela batida se perde. Vale pra estrela (chegar tarde) e pra vítima (falar enquanto ela não está) | 10 |
-| **Celular** | uma pessoa pode ligar pra alguém longe, sem passagem (linha pontilhada com telefone) | 13 |
+| **Padaria (fora de casa)** | placa com pão e número: recado que chega antes daquela batida se perde. Vale pra estrela e pra vítima | 10 |
+| **Celular** | uma pessoa pode ligar pra alguém longe, sem passagem (linha pontilhada com telefone) | 13 (só ali) |
 | **Ordem** | ⭐1 tem que saber antes da ⭐2; junto não vale | 15 |
 
-**Passagens:** porta na parede (vizinhos lado a lado) e escada (um em cima do outro, no canto direito). Só existe passagem onde está desenhada.
+**Passagens:** **porta** (vizinhos lado a lado: a parede some, batente e folha aberta) e **escada** (um em cima do outro: um lance do chão de baixo até o buraco na laje). Só existe passagem onde está desenhada.
+
+### 5.2 Em protótipo (fora da campanha, Consulta 6)
+
+Pedido do Guilherme: "temos muitos que ajudam e poucos que dificultam". O Sol (Consulta 6) contestou: o problema medido é **variedade** (as 178 fases pedem o mesmo raciocínio), e cada regra nova deve **mudar a escolha de rota por um motivo compreensível**. Por isso **uma regra por vez**, cada uma com **3 fases** de funções diferentes, testada antes de entrar no gerador.
+
+**Arnaldo, o fiscal do barulho** — `?bloco=arnaldo`. Ele é a vítima; quem mora colado nele conta um tamanho menor.
+
+| Fase | Função | O que acontece |
+|---|---|---|
+| A1 · Fala baixo, Beto | reconhecer | o Beto (+1) mora colado no Arnaldo (−1): sai cochicho de novo, e a estrela quer cochicho |
+| A2 · Corredor do silêncio | escolher | dois caminhos de 3 setas: pelo Rui (colado nele) a fofoca vira cochicho; pela Ana chega inteira |
+| A3 · Escândalo demais | usar de propósito | Beto + Lúcia fazem escândalo; a estrela quer fofoca; só passando colado no Arnaldo o boato baixa |
+
+Cena de chegada: "**Fiscal novo!**" — *"Psiu! Aqui ninguém grita."* (entra uma fofoca, sai um cochicho).
+
+**Nonato, o Do Contra** — `?bloco=nonato`. Conta tudo ao contrário.
+
+| Fase | Função | O que acontece |
+|---|---|---|
+| N1 · O do contra | desviar | pelo Nonato a estrela ouve ao contrário; o outro caminho entrega certa |
+| N2 · Do avesso | usar de propósito | a estrela só acredita na versão ao contrário; o atalho entrega a certa |
+| N3 · Cada um com a sua | acompanhar a troca | uma estrela quer a certa e a outra a ao contrário: passar pela primeira **antes** do Nonato |
+
+Cena de chegada: "**Morador novo!**" — *"Isso aí? Foi o contrário."* Ficou de fora "dois Do Contra se anulam" (só existe um personagem do contra).
+
+**Critério pra entrar na campanha** (teste com 5 pessoas): 4/5 reconhecem quem é afetado; 4/5 preveem o tamanho/versão antes de espalhar; 3/5 resolvem a 3ª fase sem ajuda e explicam por que precisaram passar ali.
+
+### 5.3 Ideias discutidas, ainda não construídas
+
+- **Vera, a vigia:** ouve quando um vizinho de passagem **conta** algo (não quando só recebe); orelha em cada cômodo afetado. A estrela colada nela pode receber e guardar.
+- **Dona Norma:** "**fecha após a batida N**" uma passagem (prazo). "Tranca até N" não funciona: ninguém espera porta abrir.
+- **Dr. Álvaro:** teto de pessoas sabendo só morde em fases **novas** (Fofoqueira barata que espalha demais) — nas atuais a solução já é o mínimo de ouvintes. Alternativa: **procedência** (a estrela só acredita vindo de quem tem o mesmo carimbo).
+- **Celular como recurso:** ligação de qualquer um pra qualquer um **quebra** fases (no andar 4 a Rita ligaria direto pra Cida). Se entrar como **ajuda**: uma por fase, aceitando várias soluções quando usada; nunca "ganhar por vencer de primeira". Em aberto.
+- **Padre:** só valeria com regra nova ("Padre ouviu: assunto encerrado" — o boato para naquela batida).
+- Mecânicas de tempo (padaria, porta com horário, "enrolado") são da mesma família: testar uma de cada vez.
 
 ---
 
-## 6. A campanha (os andares)
+## 6. O elenco
 
-### 6.1 Tutorial (andares 1–5)
-- Cada fase tem **uma dica de uma frase**, que diz a regra e **nunca** a jogada. Some na primeira seta.
+Arte **ilustrada** (gerada por IA a partir de uma prancha do Guilherme), uma folha de poses por pessoa: **parado** (quieto ou ouvindo), **cochicho** (contando, mão em concha, virado pro destino), **susto** (acabou de ouvir; estrela na vitória) e **bravo** (vítima pega — quem pode virar vítima tem). A imagem espelha pra pessoa olhar pra quem conta; cada pose pode ter sua própria direção (o Rui olha pra esquerda, mas cochicha pra direita). Todos "respiram", cada um no seu tempo.
+
+| Grupo | Quem |
+|---|---|
+| Síndico | **Seu Zé** (braços cruzados, chaveiro) |
+| Fofoqueiras | **Neide** (bobes, mão na orelha), **Lu** |
+| Exagerados | **Beto** (braços abertos), **Lúcia** |
+| Do Contra | **Nonato** (dedo em riste) |
+| Comuns na campanha | **Cida** (xícara), **Ana**, **Bia** (com o cachorro), **Rita**, **Lia**, **Davi**, **Rui**, **Edu** |
+| Fiscais | **Arnaldo** (em protótipo), **Vera**, **Dona Norma**, **Dr. Álvaro** |
+| Moradores novos | **Marlene, Caio, Jandira, Otávio, Celina, Nando, Solange, Ivo** |
+
+- 27 personagens, 114 imagens (~2,4 MB) em `public/arte/` com `manifesto.json`. O **Padre** (batina, crucifixo, bíblia) tem arte pronta, mas não aparece em nenhuma fase do trilho.
+- ⚠️ Os **12 novos** (fiscais e moradores) têm arte pronta, mas **ainda não entram no sorteio do elenco** (só o Arnaldo, no protótipo).
+- A cada abertura (fora do modo teste), os nomes dos comuns trocam dentro do mesmo gênero, o prédio pode espelhar, e em ~35% das vezes a vítima é outro morador. **Fiscal nunca é renomeado** (só a vítima que é o Seu Zé troca).
+- ⚠️ A volta dos **bobes da Neide** foi decisão do Guilherme, contra o corte por estereótipo da Consulta 5.
+- O desenho antigo em SVG fica de reserva: pra quem não tem imagem e no link **`?vetor`**.
+
+---
+
+## 7. A campanha (os andares)
+
+### 7.1 Tutorial (andares 1–5)
+- Cada fase tem **uma dica de uma frase**, que diz a regra e **nunca** a jogada. Some na primeira seta. O andar 1 também diz o objetivo: "Faça o boato chegar em quem tem a estrela."
 - **Não custa advertência**, mesmo perdendo.
-- Dicas: "Quem fica sem seta guarda o boato pra si." · "Quem quer saber também pode passar adiante." · "A Neide é fofoqueira: conta pra todo mundo em volta, sem você mandar." · "Duas pessoas querem saber."
 
-### 6.2 Depois do tutorial
-- Regra nova aparece só numa **etiqueta NOVO** de uma linha (ex.: "Exagerado: aumenta o boato um tamanho") — e numa **cena de chegada** antes da fase (seção 9).
-- **Intercalado:** fase pesada, depois uma mais leve (a "escada" de dificuldade).
+### 7.2 Depois do tutorial
+- Regra nova aparece numa **etiqueta NOVO** de uma linha e numa **cena de chegada** antes da fase (seção 10).
+- **Intercalado:** fase pesada, depois uma mais leve.
 
-### 6.3 Os 28 andares feitos à mão
+### 7.3 Os 28 andares feitos à mão
 
 | Andar | Rótulo | Nome | Moradores | Prédio | Setas | O que tem |
 |---|---|---|---|---|---|---|
@@ -112,7 +183,7 @@ O motor é determinístico (`src/motor.ts`, função `espalhar`): a mesma jogada
 | 4 | T4 | A fofoqueira | 6 | 3×2 | 3 | Fofoqueira |
 | 5 | T5 | Fofoqueira do bem | 6 | 3×2 | 2 | Fofoqueira |
 | 6 | T6 | Só três setas | 7 | 3×3 | 3 | Fofoqueira |
-| 7 | H1 | Fofoca de segunda mão | 8 | 3×3 | 3 | 2 Fofoqueiras (vazamento a dois passos) |
+| 7 | H1 | Fofoca de segunda mão | 8 | 3×3 | 3 | 2 Fofoqueiras |
 | 8 | T7 | Atalho que vaza | 7 | 3×3 | 4 | Fofoqueira |
 | 9 | T8 | Boato na medida | 6 | 3×2 | 3 | Exagerado, tamanho — **NOVO** |
 | 10 | H2 | Foi na padaria | 6 | 3×3 | 4 | padaria — **NOVO** |
@@ -135,13 +206,12 @@ O motor é determinístico (`src/motor.ts`, função `espalhar`): a mesma jogada
 | 27 | D5 | Volta comprida | 10 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
 | 28 | D6 | Reunião de condomínio | 11 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
 
-As letras dizem de onde a fase veio: **T** = trilho (as 10 primeiras), **H** = bloco Hora certa, **O** = bloco Ordem, **D** = bloco difícil "Prédio cheio".
+Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio. (Fora da campanha: **A** = Arnaldo, **N** = Nonato.)
 
-**Garantias de toda fase feita à mão** (testes): uma única solução dentro das setas; com uma seta a menos não dá (exceto a T2, onde sobrar é a lição); a armadilha registrada perde; espelhada continua o mesmo quebra-cabeça; cada regra presente muda a jogada.
+**Garantias de toda fase feita à mão** (testes): uma única solução dentro das setas; com uma seta a menos não dá (exceto a T2); a armadilha registrada perde pelo motivo certo; espelhada continua o mesmo quebra-cabeça; **desligar a regra da fase muda a jogada**.
 
-### 6.4 Prédio sem fim (andar 29 em diante)
-- **150 andares gerados** (`src/andares.json`) depois dos 28 feitos à mão.
-- Blocos de **25**: leve → média → pesada → leve → média… e um **chefão** no andar 25 de cada bloco.
+### 7.4 Prédio sem fim (andar 29 em diante)
+- **150 andares gerados** (`src/andares.json`), em blocos de **25**: leve → média → pesada… e um **chefão** no 25º.
 
 | Peso | Prédio | Moradores | Setas | Extra |
 |---|---|---|---|---|
@@ -150,117 +220,102 @@ As letras dizem de onde a fase veio: **T** = trilho (as 10 primeiras), **H** = b
 | Pesada | 3×4 | 9–11 | 5–6 | 2 Fofoqueiras, Zé no meio com 3+ portas |
 | Chefão | 3×4 | 10–12 | 6–7 | 2 Fofoqueiras, Zé no meio, 2 estrelas |
 
-- Temas sorteados: corrente de Fofoqueiras, padaria, ordem, tamanho, padaria+ordem. Distribuição atual: 60 leves, 54 médias, 30 pesadas, 6 chefões.
-- Título e boato de listas próprias ("Festa junina", "O Seu Zé ganhou concurso de bolo no clube").
+- Temas sorteados: corrente de Fofoqueiras, padaria, ordem, tamanho, padaria+ordem.
 - Acabou o estoque, **recomeça** — espelhado numa volta sim, outra não. O prédio vai até o andar **3.028**.
-- No menu, o prédio "cresce": aparecem só 3 andares trancados acima de você.
 
 ---
 
-## 7. Advertências do síndico (as vidas)
+## 8. Advertências do síndico (as vidas)
 
-- **3 advertências.** Deixar a **vítima descobrir** dá uma (cartão amarelo). Errar tamanho, ordem ou esquecer uma estrela **não custa nada**.
-- Na **terceira**, você fica **suspenso**: dá pra montar o trilho, mas o botão vira "Suspenso · 14:49" até o síndico tirar uma.
-- O síndico tira **uma a cada 15 minutos**. A contagem começa na primeira advertência.
-- **Tutorial (andares 1–5) não cobra.**
-- Aparecem: no topo da fase (três cartões ao lado de "Setas"), na derrota ("O síndico te deu uma advertência (1 de 3)." / "Terceira advertência: suspenso por 14:50.") e no menu, com o relógio.
-- **Ainda não existe** recuperar por anúncio ou compra (entra com a loja).
-- ⚠️ Decisão do Guilherme contra o conselho do Sol (que preferia uma "medalha de discrição" sem bloquear). Rever se o teste mostrar gente largando por causa da suspensão.
+- **3 advertências.** Deixar a **vítima descobrir** dá uma. Errar tamanho, versão, ordem ou esquecer uma estrela **não custa nada**.
+- Na **terceira**, você fica **suspenso**: dá pra montar o trilho, mas o botão vira "Suspenso · 14:49" até o síndico tirar uma (uma a cada 15 minutos).
+- **Tutorial não cobra.** No teste com pessoas (`?pesquisa`) **não existem**.
+- Aparecem: no topo da fase, no desfecho (carimbo "ADVERTÊNCIA · 1 de 3 · o síndico") e no menu (papéis de aviso e o relógio; o aviso do mural vira "TRÊS ADVERTÊNCIAS = SUSPENSÃO." / "E quatro?").
+- ⚠️ Decisão do Guilherme contra o conselho do Sol. Testar com jogadores antes de manter.
 
 ---
 
-## 8. Menu: o prédio
+## 9. Menu: o prédio
 
-- Abre direto em `http://localhost:5179/` (sem link).
-- Topo: o letreiro **"Fofoca!"** (Edifício Primavera) e os papéis de advertência com o relógio.
-- **Aviso da administração** com a resposta de um morador colada por cima, um por vez ("PROIBIDO OUVIR ATRÁS DA PORTA." / "Na frente pode?"). Com advertência recebida, o aviso vira a regra ("TRÊS ADVERTÊNCIAS = SUSPENSÃO." / "E quatro?").
-- **Uma janela no prédio em corte:** três andares, cada um com três apartamentos; o **elevador** fica no andar escolhido. Andar feito = visto azul e um morador em cena; o **atual** tem a Neide ouvindo *na frente* da porta; **trancado** = de noite, porta fechada com a plaquinha "Trancado". Acima do último, o telhado; no 1º, a **portaria** do térreo (Seu Zé no balcão, cobogó).
+- Topo: o letreiro **"Fofoca!"** · EDIFÍCIO PRIMAVERA, e as advertências.
+- **Aviso da administração** com a resposta de um morador colada por cima, um por vez: "PROIBIDO OUVIR ATRÁS DA PORTA." / "Na frente pode?" · "A REUNIÃO SERÁ BREVE." / "Trouxe o jantar." · "ASSUNTO ENCERRADO." / "Qual assunto?" · "A PLANTA NÃO TEM DIREITO A VOTO." / "Ela pediu a palavra." · "FAVOR NÃO COMENTAR ESTE AVISO." / "Comentaram."
+- **Uma janela no prédio em corte:** três andares, cada um com três apartamentos (os mesmos fundos do jogo); o **elevador** com visor fica no andar escolhido. Andar **feito** = visto azul e um morador em cena; o **atual** tem a Neide ouvindo *na frente* da porta; **trancado** = de noite, porta fechada com a plaquinha "Trancado". Acima do último, o telhado; abaixo do 1º, a **portaria** (Seu Zé no balcão, cobogó, Dona Glória).
 - Tocar num andar liberado escolhe ele; **"Ver andares"** abre o índice por dezenas e o "Ir ao andar N".
-- Placa esmaltada com o andar e o nome; botão **"Jogar · 9º andar"**. Dentro da fase, a **casinha** volta ao prédio.
-- O progresso fica salvo no aparelho.
+- Placa esmaltada com o andar e o nome; botão de elevador **"Jogar · 9º andar"**. Dentro da fase, a **casinha** volta ao prédio.
+- No `?pesquisa`, embaixo: "Participante P-XXXX · exportar registro".
 
 ---
 
-## 9. Cenas de chegada
+## 10. Cenas de chegada
 
-Na **primeira vez** que algo novo aparece, antes da fase, uma cena curta prepara o jogador. Usa o morador da própria fase, com o nome sorteado. **"Bora!"** pula a qualquer momento. Aparece **uma vez por aparelho**. Com "movimento reduzido" ligado, aparece já pronta.
+Na **primeira vez** que algo novo aparece, antes da fase. Usa o morador da própria fase. **"Bora!"** pula a qualquer momento. Uma vez por aparelho. Com "movimento reduzido", aparece já pronta.
 
-| Andar | Título | O que acontece | Fala |
+| Onde | Título | O que acontece | Fala |
 |---|---|---|---|
-| 4 | Moradora nova! | a Neide chega andando; balõezinhos voam dela pros lados | "Cheguei! E já tô sabendo de tudo." |
-| 9 | Morador novo! | o Beto chega; entra um cochicho, sai uma fofoca | "Cochicho? Comigo vira fofoca!" |
-| 10 | Hora do pão | um morador sai do prédio e deixa a placa com o pão e o "3" | "Vou ali na padaria e já volto!" |
-| 13 | Celular novo | o telefone toca na mão de quem vai poder ligar | "Agora eu ligo pra quem eu quiser!" |
-| 15 | Fila da fofoca | quem chega ganha o ⭐1, a ⭐2 espera na porta, o balão passa pela 1 antes | "Eu primeiro, viu?" |
-
-Depois da fala, uma frase explica a regra.
+| andar 4 | Moradora nova! | a Neide chega; balõezinhos voam dela pros lados | "Cheguei! E já tô sabendo de tudo." |
+| andar 9 | Morador novo! | o Beto chega; entra um cochicho, sai uma fofoca | "Cochicho? Comigo vira fofoca!" |
+| andar 10 | Hora do pão | um morador sai e deixa a placa com o pão e o "3" | "Vou ali na padaria e já volto!" |
+| andar 13 | Celular novo | o telefone toca na mão de quem vai poder ligar | "Agora eu ligo pra quem eu quiser!" |
+| andar 15 | Fila da fofoca | quem chega ganha o ⭐1, a ⭐2 espera na porta | "Eu primeiro, viu?" |
+| `?bloco=arnaldo` | Fiscal novo! | o Arnaldo bravo; entra uma fofoca, sai um cochicho | "Psiu! Aqui ninguém grita." |
+| `?bloco=nonato` | Morador novo! | entra a versão certa, sai a ao contrário | "Isso aí? Foi o contrário." |
 
 ---
 
-## 10. Visual
+## 11. Visual
 
-Direção **"Conforme o regulamento"** (Consulta 5): o condomínio leva as suas bobagens administrativamente a sério (aviso, placa, carimbo). Arte **ilustrada** desde 2026-11-11 (gerada por IA a partir de uma prancha do Guilherme); o desenho antigo em SVG fica de reserva e aparece com **`?vetor`**.
+Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** como padrão.
 
-- **Personagens em imagem**, uma folha de poses por pessoa: *parado* (quieto, ouvindo, contando), *susto* (acabou de ouvir, estrela na vitória) e *bravo* (vítima pega). A imagem vira pro lado de quem a pessoa conta. Elenco: **Seu Zé** (braço cruzado, chaveiro), **Neide** e **Lu** (fofoqueiras), **Beto** e **Lúcia** (exagerados, Beto de braços abertos), **Cida, Ana, Bia** (com o cachorro), **Rita, Lia, Davi, Rui, Edu**. Quem pode virar vítima tem a pose *bravo*.
-- **Prédio montado com peças:** 4 fundos de apartamento, 4 vazios à noite (aluga-se, mudança, lençol, gato), telhado (telhas, caixa d'água, antena, varal) e bairro ao fundo. Paredes, portas, escadas, setas e plaquinhas continuam em código porque mudam durante o jogo.
-- **Porta** = a parede some, batente e folha aberta; **escada** = um lance do chão de baixo até o buraco na laje.
-- **Leitura:** origem = selo de balão; vítima = octógono com "!"; estrela (com o balão do tamanho que exige e o número da vez); selecionado = 4 cantoneiras; pode ouvir = tracejado; **ouviu = luz amarela forte com moldura**; vítima pega = vermelho, "QUÊ?!" em letras soltas e a seta vermelha de quem contou.
-- **Balão por tamanho:** cochicho achatado e pontilhado, fofoca redonda, escândalo pontudo.
-- **Cores e letras:** tinta marrom e tons quentes; botão mostarda com texto escuro (botão de elevador). **Patua One** (marca e títulos) + **Asap** (interface).
+- **Prédio montado com peças ilustradas:** 4 fundos de apartamento (verde, rosa, listrado, azul, cada um com seu móvel), 4 vazios à noite (aluga-se, mudança, lençol, gato), telhado (telhas, caixa d'água, antena, varal) e bairro ao fundo. O que muda durante o jogo (paredes, portas, escadas, setas, plaquinhas, luz) é desenhado em código por cima.
+- **Leitura por forma, não só cor:** origem = selo de balão; vítima = octógono com "!"; estrela; selecionado = 4 cantoneiras; pode ouvir = tracejado; ouviu = luz amarela forte com moldura; vítima pega = vermelho, "QUÊ?!" e seta vermelha; +1 / −1 / ⇄ nas plaquinhas.
+- **A plaquinha mede o nome de verdade** (não chuta por letra): cabe com fonte nova e tradução.
+- **Cores e letras:** tinta marrom e tons quentes; botão mostarda com texto escuro (botão de elevador, afunda ao apertar). **Patua One** (marca e títulos) + **Asap** (interface).
 - **Céu pouco:** o prédio ocupa o palco; nas fases pequenas, sol e nuvens lentas no que sobra.
-- **O desfecho** flutua por cima da rua, sem empurrar o prédio; com advertência, ganha o **carimbo do síndico**; se foi a fofoqueira, ela se defende ("Eu ia te contar por último.").
-- Imagens em `public/arte/` (~900 KB), carregadas na abertura.
+- **Movimento:** cochicho e susto nas poses, balão viajando pela seta, luz acendendo, padaria balançando, "QUÊ?!" estourando. Tudo some com "movimento reduzido" (o balão aparece direto no destino).
+- **O desfecho** flutua por cima da rua, sem empurrar o prédio.
 
 ---
 
-## 11. Modo teste (com pessoas)
+## 12. Links
 
 | Link | O que abre |
 |---|---|
-| `?grupo=A` | as 10 fases do trilho e depois 4 fases de "giros" (mesmos prédios, setas prontas, você só gira) |
-| `?grupo=B` | a mesma coisa na ordem inversa |
-| `?bloco=hora` / `?bloco=ordem` / `?bloco=dificil` | só aquele bloco de 6 fases |
+| https://gui-zen.github.io/Fofoca/ | a campanha |
+| `?pesquisa` / `?pesquisa&zerar` | **teste com pessoas**: campanha igual pra todos, sem advertências, com registro exportável; `&zerar` = participante novo |
+| `?bloco=arnaldo` / `?bloco=nonato` | os protótipos de mecânica (com cena de chegada) |
+| `?bloco=hora` / `ordem` / `dificil` | blocos de 6 fases (diagnóstico) |
+| `?grupo=A` / `?grupo=B` | o antigo teste trilho × giros (diagnóstico) |
+| `?vetor` | o jogo com o desenho antigo em SVG |
+| `?prova` | a prova estática da direção visual (5 telas) |
 
-- No modo teste, **cada fase abre sempre igual** pra todo mundo (sem espelho, nomes fixos por fase), **sem advertência** e **sem cena de chegada**.
-- Protocolo no `README.md`: entregar sem explicar; pedir pra apontar origem, vítima, objetivo e próximo destino; separar erro de leitura de erro de plano; perguntar "o que você mudaria agora, e o que espera que aconteça?"; ajuda padrão depois de 2 minutos travado; anotar desde a fase 1.
-- **Ainda não rodou.** O jogo está publicado em https://gui-zen.github.io/Fofoca/ — o teste usa `?pesquisa&zerar` (campanha real, sem advertências; roteiro no README).
+Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra apontar origem, vítima, objetivo; separar erro de leitura de erro de plano; exportar o registro). **Ainda não rodou.**
 
 ---
 
-## 12. Por dentro (técnico)
+## 13. Por dentro (técnico)
 
-**Stack:** React + TypeScript + SVG, Vite, Vitest. Sem servidor: tudo no aparelho. Depois, Capacitor pra virar app Android.
+**Stack:** React + TypeScript + SVG, Vite, Vitest. Sem servidor: tudo no aparelho. Publicado no GitHub Pages a cada push no `main` (testes → build → deploy).
 
 | Arquivo | O que faz |
 |---|---|
-| `src/motor.ts` | regras puras: `espalhar`, avaliação de vitória/derrota |
-| `src/trilho.ts` | as 10 fases T, `jogar`, `resolverTrilho` (acha todas as soluções), `espelhar` |
-| `src/horaCerta.ts`, `src/ordem.ts`, `src/dificil.ts` | blocos H, O e D (6 fases cada) |
-| `src/campanha.ts` | a ordem intercalada dos 28 + o prédio sem fim |
-| `src/andares.json` | os 150 andares gerados |
-| `src/fabrica.ts` | a fábrica de fases (monta prédio aleatório e só aceita com certificado) |
-| `scripts/gerarAndares.ts`, `scripts/juntarAndares.ts` | geram e juntam o estoque |
-| `src/advertencias.ts` | regra das vidas (pura, testada) |
-| `src/elenco.ts` | troca de nomes e vítima ao abrir |
-| `src/App.tsx` | campanha, modo teste, a tela da fase, o desfecho |
+| `src/motor.ts` | regras puras: `espalhar`, avaliação, `abafados` (Arnaldo), `quemContou` |
+| `src/explicar.ts` | a causa da derrota pro prédio desenhar (vítima, tamanho, versão, ordem, padaria, sem notícia) |
+| `src/trilho.ts` | as 10 fases T, `jogar`, `resolverTrilho` (todas as soluções), `espelhar` |
+| `src/horaCerta.ts`, `ordem.ts`, `dificil.ts`, `arnaldo.ts`, `nonato.ts` | blocos H, O, D, A, N |
+| `src/campanha.ts`, `src/andares.json`, `src/fabrica.ts` | a campanha, o estoque gerado e a fábrica de fases |
+| `src/advertencias.ts`, `src/registro.ts`, `src/elenco.ts` | vidas, registro da pesquisa, troca de nomes e vítima |
+| `src/arte.ts` | carrega o manifesto da arte ilustrada (`?vetor` desliga) |
+| `src/App.tsx` | campanha, links de teste, a tela da fase, ×2, Rever, o desfecho |
 | `src/Menu.tsx`, `src/Chegada.tsx` | o prédio-menu e as cenas de chegada |
-| `src/Predio.tsx`, `src/Cena.tsx`, `src/Personagem.tsx`, `src/Vazio.tsx`, `src/Icones.tsx`, `src/estilo.css` | o desenho |
-| `src/comparacao.ts` | as 4 fases de giros do teste A/B |
-| `src/gerador.ts`, `src/trilha.ts`, `src/variar.ts`, `src/fases.ts` | mecânica antiga (origem livre + giros), fora da tela, só nos testes |
+| `src/Predio.tsx`, `Cena.tsx`, `Personagem.tsx`, `Vazio.tsx`, `Icones.tsx`, `estilo.css` | o desenho |
+| `src/prova/` | a prova estática da direção visual |
+| `src/comparacao.ts`, `gerador.ts`, `trilha.ts`, `variar.ts`, `fases.ts` | mecânica antiga (giros), só no diagnóstico e nos testes |
 
-**Resolvedor:** só decide a seta de quem de fato ouve, na ordem em que ouve. Dá o mesmo resultado da força bruta antiga (conferido em 485 casos) e é rápido o bastante pra prédio 3×4.
+**Certificado da fábrica:** uma única solução no menor número de setas; com uma seta a mais, no máximo 2; o caminho mais curto perde; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente muda a jogada.
 
-**Certificado da fábrica** (o que uma fase gerada precisa passar):
-1. uma única solução no menor número de setas;
-2. com uma seta a mais, no máximo 2 soluções;
-3. o caminho mais curto até as estrelas (ignorando vítima, horário, ordem e tamanho) **perde**;
-4. nas pesadas, quem só aprendeu "não cutucar o Zé nem a Fofoqueira colada nele" também perde;
-5. cada regra presente muda a jogada;
-6. no máximo 7 moradores comuns (só existem 7 desenhos de comum).
+**Números de hoje:** **609 testes em 17 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
 
-**Números de hoje:** 563 testes em 13 arquivos, todos passando; pacote do jogo ~330 KB (~79 KB comprimido). Os 150 andares gerados saem em ~15 s.
-
-**Guardado no aparelho:** `fofoca.campanha.liberada` (andar), `fofoca.campanha.tentativas`, `fofoca.advertencias`, `fofoca.visto.<andar>` (cenas vistas); no teste, `fofoca.teste.A/B.*` e `fofoca.<bloco>.*`.
+**Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 
 **Como rodar** (pasta `Fofoca`):
 ```bash
@@ -269,37 +324,39 @@ npm run dev
 npm test
 npm run build
 ```
-⚠️ Não use `npm run dev -- --host`: o Vite 5 / Vitest 2 instalados têm alerta de segurança no servidor de desenvolvimento. Pra jogar no celular, hospede a pasta `dist/`.
+⚠️ Não use `npm run dev -- --host` (alerta de segurança no servidor de desenvolvimento). Pra jogar no celular, use o site publicado.
 
 ---
 
-## 13. O que aprendemos medindo
+## 14. O que aprendemos medindo
 
-- **Com origem livre, sempre havia vitória de um toque** (399 de 399 prédios) → nasceu o trilho (Consulta 1, Sol).
-- **Em prédios aleatórios, o caminho mais curto ganha 98% das vezes.** A dificuldade vem de armadilha, não de regra a mais (Consulta 3).
-- "Armadilha possível" por mecânica: **padaria 20–33%**, passar por X 19–29%, ordem 15–18%, fonte 12–20%, desconfiado 7–19%, dedo-duro 7–15%; **"usar todas as setas" é trivial** (96–98%: basta gastar uma seta à toa).
-- **Vilão na ponta:** nas 20 fases com vítima, 0 no meio. Pôr o Zé no meio sozinho **não** dificulta (caminho curto acerta 99%): ele só ouve por seta sua ou por Fofoqueira colada. Quem dificulta é a Fofoqueira em volta dele.
-- **Opiniões externas** (Sol e Astra, modelos da OpenAI): o teste A/B tinha vícios (corrigidos); o visual pedia separar papéis de estados (corrigido); ainda é cedo pra mais mecânicas antes de testar com gente.
+- **Com origem livre, sempre havia vitória de um toque** (399 de 399) → nasceu o trilho (Consulta 1).
+- **Em prédios aleatórios, o caminho mais curto ganha 98% das vezes**: a dificuldade vem de armadilha, não de regra a mais (Consulta 3).
+- **Nas 178 fases:** mediana de 8 moradores, 5 ouvem, 4 setas, 1 estrela, 4 batidas. **Solução única em 178/178**, e ela já é a que faz **menos gente ouvir** → teto de ouvintes e "desafio de menos setas" não mudam nada nas fases atuais.
+- **A Fofoqueira é mais perigo que ajuda:** está em 171 fases; no caminho de uma estrela em 39; a armadilha perde por ela contar pra vítima em 83.
+- **Celular em 1 fase** (andar 13). Tamanho em 37, padaria em 55, ordem em 54. Última estreia no andar 15.
+- **Diagnóstico do Sol (Consulta 6):** falta **variedade** de raciocínio, não necessariamente dificuldade — e só gente jogando separa as duas coisas.
 
 ---
 
-## 14. O que ainda falta
+## 15. O que ainda falta
 
 **Jogo**
-- Mecânica nova a cada 25–50 andares no prédio sem fim (hoje os blocos só variam tamanho e combinação). Candidatas: **Fonte** ("só acredita se vier da Ana"), **Desconfiado** (precisa ouvir de duas pessoas), **síndico que fecha uma passagem** na batida N, **estrela opcional** "em até N setas", **festa do prédio** (todo mundo menos a vítima).
-- Padre e Do Contra no trilho (com cena de chegada).
-- O síndico fora do tabuleiro (cena de derrota com a vítima reclamando).
-- **Som:** "psst" a cada batida, "QUÊ?!" na derrota.
-- Visual pendente: porta e escada mais claras; destacar na derrota quem contou pra vítima; reações específicas por boato; desenhos novos de comum (as fases D ainda repetem Lia = Rita).
-- Ajustes, Fofoca do dia, Álbum de causos (meta).
+- **Jogar** o Arnaldo e o Nonato e decidir se entram na campanha (e no gerador).
+- Pôr os **12 personagens novos** no sorteio do elenco.
+- Próximo fiscal (Vera ou Dona Norma), uma regra por vez.
+- Decidir o **celular** (peça do quebra-cabeça ou ajuda).
+- Prédio de 5–6 andares (aí o prédio rola na vertical; com 6 andares o cômodo cairia pra ~78 px).
+- **Som** ("psst" a cada batida, "QUÊ?!" na derrota).
+- Mais adiante: capítulos com tema, álbum dos moradores, fofoca do dia.
 
 **Produto e lançamento**
-- O **teste com 5 pessoas** (já publicado; falta recrutar e rodar).
-- Analytics, app Android (Capacitor), conta no Google Play.
-- Nome global e tradução (en/es), criativos em vídeo.
-- Monetização: o plano ainda fala em "+1 giro" (no trilho seria "+1 seta") e "sem vidas no protótipo" (as advertências contradizem).
+- O **teste com 5 pessoas** (publicado; falta recrutar e rodar).
+- Analytics, app Android (Capacitor), Google Play, nome global e tradução, criativos.
+- Monetização ainda sem desenho que funcione com solução única.
 
 **Casa**
-- ~~Projeto sem git~~ → repositório público https://github.com/Gui-ZeN/Fofoca, publicado no Pages a cada push (testes → build → deploy). `PRODUCT.md` fica fora do repo. Sem licença definida (código "todos os direitos reservados").
+- Repositório público https://github.com/Gui-ZeN/Fofoca, sem licença definida. `PRODUCT.md` fica fora do repo.
+- Imagens geradas por IA no repositório público: conferir os termos da ferramenta.
 - Sem nota do projeto no vault (`Projetos/Fofoca.md`); só as consultas.
-- Mecânica antiga ainda no código, só nos testes.
+- A página `?prova` e a mecânica antiga (giros) ainda no código.
