@@ -17,7 +17,11 @@ export function CartoesAdvertencia({ restam }: { restam: number }) {
 // Menu = o próprio prédio: cada andar é uma fase; o elevador fica parado no andar onde você está.
 // Sobe de baixo pra cima: o térreo é a portaria do síndico.
 // Sem `vidas` (pesquisa com pessoas), nada de advertência no menu: nem cartões, nem ameaça na portaria.
-export function Menu({ titulos, liberada, vidas, aoJogar }: { titulos: string[]; liberada: number; vidas?: Vidas; aoJogar: (andar: number) => void }) {
+// `pesquisa`: pro observador do teste, o código do participante e o botão de baixar o registro das jogadas.
+export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa }: {
+  titulos: string[]; liberada: number; vidas?: Vidas; aoJogar: (andar: number) => void;
+  pesquisa?: { participante: string; aoExportar: () => void };
+}) {
   const atual = Math.min(liberada, titulos.length - 1);
   // o prédio vai crescendo: mostra os andares feitos, o atual e só uns poucos trancados em cima
   const visiveis = Math.min(titulos.length, liberada + 4);
@@ -69,6 +73,11 @@ export function Menu({ titulos, liberada, vidas, aoJogar }: { titulos: string[];
         <button className="principal" onClick={() => aoJogar(liberada >= titulos.length ? 0 : atual)}>
           {liberada >= titulos.length ? 'Jogar de novo · 1º andar' : `Jogar · ${atual + 1}º andar`}
         </button>
+        {pesquisa && (
+          <button className="exportar" onClick={pesquisa.aoExportar}>
+            Participante {pesquisa.participante} · exportar registro
+          </button>
+        )}
       </footer>
     </main>
   );

@@ -178,12 +178,22 @@ button { font: inherit; cursor: pointer; }
 .acoes .principal { width: auto; flex: 1; background: var(--ativa); color: #fff; }
 .acoes button:disabled { opacity: .45; }
 footer > .acoes { flex-wrap: nowrap; }
+/* pesquisa: linha discreta pro observador, embaixo do Jogar */
+.exportar { margin-top: 8px; background: none; border: none; color: #c9c5d1; font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; }
 .resumo, .zerou { font-size: 13px; color: #d9d6de; margin: 8px 0 0; }
 .fim .zerou { color: var(--suave); width: 100%; margin: 0; }
 
 /* derrota pela vítima: o elo que entregou o boato a ela */
 .elo-fatal line, .elo-fatal path { fill: none; stroke: var(--perigo); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
 .elo-fatal { animation: chega .4s both; }
+/* derrota por tamanho/ordem/padaria/estrela sem notícia: plaquinha no pé do apartamento */
+.placa-causa { animation: chega .4s both; }
+.placa-causa rect { fill: var(--cartao); stroke: var(--parede); stroke-width: 2; }
+.placa-causa.culpa rect { stroke: var(--perigo); stroke-width: 3; }
+.placa-causa text { font-family: var(--fonte); font-size: 12px; font-weight: 800; fill: var(--tinta); dominant-baseline: middle; }
+.placa-causa text.meio { text-anchor: middle; }
+.placa-causa text.curto { font-size: 11px; }
+.placa-causa.culpa text { fill: var(--perigo); }
 
 /* cena de chegada (estreia de morador ou regra): o estado final é o estilo base, a animação só chega nele
    — assim, com movimento reduzido, a cena aparece pronta */

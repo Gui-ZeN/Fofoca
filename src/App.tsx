@@ -15,6 +15,8 @@ import { MAX, atualizar, cheias, falta, gastar, relogio, type Advertencias } fro
 import { CartoesAdvertencia, Menu, type Vidas } from './Menu';
 import { Casa } from './Icones';
 import { APRESENTACOES, Chegada } from './Chegada';
+import { explicar } from './explicar';
+import { baixarRegistro, registro } from './registro';
 
 // Sem link: a campanha (menu-mapa do prédio + 28 andares intercalados + advertências do síndico).
 // Com link: o teste com pessoas — ?grupo=A/B (10 fases do trilho × 4 de giros, mesmos prédios) ou
@@ -56,6 +58,7 @@ if (PESQUISA && busca.has('zerar')) {
   try { Object.keys(localStorage).filter((k) => k.startsWith('fofoca.pesquisa')).forEach((k) => localStorage.removeItem(k)); } catch { /* sem armazenamento */ }
   busca.delete('zerar');
   history.replaceState(null, '', `${location.pathname}?${busca}${location.hash}`);
+  registro.novoParticipante(); // o registro das jogadas NÃO é apagado: só passa a contar outra pessoa
 }
 const sementeDe = (rotulo: string) => [...rotulo].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const TRILHO: Item[] = fasesTrilho.map((fase, i) => ({ modo: 'trilho', fase, rotulo: `T${i + 1}` }));
@@ -97,8 +100,23 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
   const vidas = pesquisa ? undefined : advertencias; // na pesquisa, nada de advertência: nem cobra, nem aparece
   const chave = pesquisa ? 'fofoca.pesquisa' : 'fofoca.campanha';
   const [andar, setAndar] = useState<number>();
+  // Pesquisa: registro das jogadas (sessão, telas, tentativas, resultado visto, app em segundo plano)
+  useEffect(() => {
+    if (!pesquisa) return;
+    registro.iniciar(
+      { modo: 'pesquisa', campanha: `${ANDARES.length} andares`, passo_ms: PASSO_MS, chegadas: true, advertencias: false, fixo: true },
+      { largura: innerWidth, altura: innerHeight },
+    );
+    const mudou = () => registro.registrar('visibility_change', { visivel: document.visibilityState === 'visible' });
+    document.addEventListener('visibilitychange', mudou);
+    return () => document.removeEventListener('visibilitychange', mudou);
+  }, []);
+  useEffect(() => { if (andar === undefined) registro.registrar('view_change', { vista: 'menu', liberada: ler(`${chave}.liberada`, 0) }); }, [andar]);
   if (andar === undefined) {
-    return <Menu titulos={ANDARES.map((a) => a.fase.titulo)} liberada={ler(`${chave}.liberada`, 0)} vidas={vidas} aoJogar={setAndar} />;
+    return (
+      <Menu titulos={ANDARES.map((a) => a.fase.titulo)} liberada={ler(`${chave}.liberada`, 0)} vidas={vidas} aoJogar={setAndar}
+        pesquisa={pesquisa ? { participante: registro.participante(), aoExportar: baixarRegistro } : undefined} />
+    );
   }
   return <Jogo key={andar} sequencia={ANDARES} chave={chave} nome={pesquisa ? 'Pesquisa' : 'Campanha'} inicio={andar} aoVoltar={() => setAndar(undefined)} vidas={vidas} chegadas fixo={pesquisa} />;
 }
@@ -171,6 +189,18 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
     if (!resultado) setAviso(undefined);
     else if (terminou && cobra && resultado.motivo === 'assunto_ouviu') setAviso(vidas!.gastar());
   }, [terminou, resultado]);
+
+  // Registro da pesquisa (não faz nada fora dela): em que tela a pessoa está, e o resultado que ela chegou a ver.
+  const vista = vendoChegada ? 'chegada' : montando ? 'edicao' : terminou ? 'resultado' : 'espalhando';
+  useEffect(() => { registro.registrar('view_change', { vista, andar: idx + 1, fase: item.rotulo }); }, [vista, idx]);
+  useEffect(() => {
+    if (terminou && resultado) {
+      registro.registrar('result_shown', {
+        andar: idx + 1, fase: item.rotulo, tentativa: tentativas[item.rotulo] ?? 0,
+        vitoria: resultado.vitoria, motivo: resultado.motivo ?? null, visivel: document.visibilityState === 'visible',
+      });
+    }
+  }, [terminou]);
 
   const porId = Object.fromEntries(fase.vizinhos.map((v) => [v.id, v]));
   // ⚠️ Na troca de fase, plano e seleção da fase anterior ainda valem por um render (o reset vem
@@ -245,8 +275,13 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
     setTentativas(novas);
     gravar(`${CHAVE}.tentativas`, novas);
     setSelecionado(undefined);
-    setResultado(girando ? espalhar(fase, { origem, setas: plano }) : jogar(fase, plano));
+    const r = girando ? espalhar(fase, { origem, setas: plano }) : jogar(fase, plano);
+    setResultado(r);
     setBatida(0);
+    registro.registrar('attempt_submit', {
+      andar: idx + 1, fase: item.rotulo, tentativa: novas[item.rotulo], plano, setas: custo(plano),
+      vitoria: r.vitoria, motivo: r.motivo ?? null, batidas: r.batidas.length,
+    });
   };
 
   const sel = selecionado ? porId[selecionado] : undefined;
@@ -358,13 +393,11 @@ function Fim(props: { fase: Fase; resultado: Resultado; ultima: boolean; aviso?:
     // com a linha da advertência embaixo, a 2ª frase sai: 3 linhas cobriam o térreo
     if (props.aviso === undefined) texto += ` Agora ${ele(vitima!)} sabe que estão falando ${dele(vitima!)}.`;
   } else if (resultado.motivo === 'interessado_nao_ouviu') {
-    // Hora certa: o recado chegou, mas a pessoa ainda estava na padaria (ver `chega` no motor).
-    // ⚠️ Procura entre TODAS as estrelas sem notícia, não só o culpado: o motor culpa a primeira da
-    // lista, e a que perdeu o recado na padaria pode ser outra (O5: a Cida "não soube" porque a Bia estava fora).
-    const naPadaria = fase.vizinhos.find((v) => v.interesse && !resultado.ouviu[v.id]
-      && resultado.batidas.some((ms, i) => ms.some((m) => m.para === v.id) && (v.chega ?? 0) > i + 1));
-    texto = naPadaria
-      ? `${naPadaria.nome} ainda estava na padaria quando o recado chegou.`
+    // Hora certa: o recado chegou, mas a pessoa ainda estava na padaria — `explicar` acha qual estrela foi
+    // (o motor culpa a 1ª da lista, que pode não ser ela; ver explicar.test).
+    const e = explicar(fase, resultado);
+    texto = e?.tipo === 'padaria'
+      ? `${nome(e.id)} ainda estava na padaria quando o recado chegou.`
       : `${culpado?.nome} não ficou sabendo de nada.`;
   } else if (resultado.motivo === 'tamanho_errado') {
     const queria = culpado!.interesse!.tamanho ?? culpado!.interesse!.minTamanho!;

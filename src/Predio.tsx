@@ -3,6 +3,7 @@ import { girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, type Fas
 import { Personagem, type Expressao } from './Personagem';
 import { Boato, Estrela, Girar, Telefone } from './Icones';
 import { Vazio } from './Vazio';
+import { explicar, type Explicacao } from './explicar';
 
 // Prédio em corte: cada célula da grade é um apartamento visto por dentro.
 const L = 120; // largura e altura de um apartamento
@@ -12,6 +13,21 @@ const RAIO = 28; // de onde a seta sai, a partir do ponto de ancoragem do morado
 // concluiu que o boato já começava no tamanho 2 e errou as fases do Exagerado. Começa sempre em cochicho.
 export const TAMANHO: Record<Tamanho, string> = { 1: 'um cochicho', 2: 'uma fofoca', 3: 'um escândalo' };
 export const NOME_TAMANHO: Record<Tamanho, string> = { 1: 'cochicho', 2: 'fofoca', 3: 'escândalo' };
+
+// O que vai em cada plaquinha da derrota (a vítima tem a seta vermelha, não plaquinha).
+type Placa = { id: string; culpa: boolean; texto?: string; icones?: [Tamanho, Tamanho] };
+function placasDa(e: Explicacao): Placa[] {
+  if (e.tipo === 'tamanho') return [{ id: e.id, culpa: true, icones: [e.queria, e.veio] }];
+  if (e.tipo === 'ordem') {
+    return [
+      { id: e.antes, culpa: false, texto: `ouviu na ${e.batidaAntes}` },
+      { id: e.depois, culpa: true, texto: e.batidaDepois === e.batidaAntes ? `junto, na ${e.batidaDepois}` : `ouviu na ${e.batidaDepois}` },
+    ];
+  }
+  if (e.tipo === 'padaria') return [{ id: e.id, culpa: true, texto: `recado na ${e.chegou} · volta na ${e.volta}` }];
+  if (e.tipo === 'sem_noticia') return [{ id: e.id, culpa: true, texto: 'não ouviu' }];
+  return [];
+}
 
 // Ponto de ancoragem do morador (altura da cabeça); o corpo desce até o piso.
 const cabeca = (v: Vizinho) => ({ x: v.pos[0] * L + L / 2, y: v.pos[1] * L + 70 });
@@ -121,6 +137,7 @@ export function Predio(props: {
   const falando = resultado?.batidas[batida - 1] ?? [];
   const ativa = (a: string, b: string) => falando.some((m) => (m.de === a && m.para === b) || (m.de === b && m.para === a));
   const fim = resultado !== undefined && batida > resultado.batidas.length;
+  const explicacao = fim && resultado ? explicar(fase, resultado) : undefined;
   const semGiro = girosUsados(fase, setas) >= fase.giros;
   // Fora de casa enquanto não deu a batida da volta (no fim, todo mundo já voltou).
   const fora = (v: Vizinho) => !!v.chega && !fim && (montando || batida < v.chega);
@@ -271,6 +288,27 @@ export function Predio(props: {
           <g key={'fatal' + de} className="elo-fatal" aria-hidden="true">
             <line x1={x1} y1={y1} x2={x2} y2={y2} />
             <path d="M-6,-8 L5,0 L-6,8" transform={`translate(${x2} ${y2}) rotate(${ang})`} />
+          </g>
+        );
+      })}
+
+      {/* derrota por tamanho, ordem, padaria ou estrela sem notícia: plaquinha no pé do apartamento de quem importa */}
+      {fim && explicacao && placasDa(explicacao).map((p) => {
+        const v = porId[p.id];
+        const x0 = v.pos[0] * L, y0 = v.pos[1] * L;
+        return (
+          <g key={'placa' + p.id} className={p.culpa ? 'placa-causa culpa' : 'placa-causa'} aria-hidden="true">
+            <rect x={x0 + 6} y={y0 + L - 40} width={L - 12} height={24} rx={6} />
+            {p.icones ? (
+              <>
+                <text x={x0 + 10} y={y0 + L - 27} className="curto">queria</text>
+                <g transform={`translate(${x0 + 56} ${y0 + L - 28}) scale(0.5)`}><Boato tamanho={p.icones[0]} /></g>
+                <text x={x0 + 67} y={y0 + L - 27} className="curto">veio</text>
+                <g transform={`translate(${x0 + 101} ${y0 + L - 28}) scale(0.5)`}><Boato tamanho={p.icones[1]} /></g>
+              </>
+            ) : (
+              <text x={x0 + L / 2} y={y0 + L - 27} className="meio">{p.texto}</text>
+            )}
           </g>
         );
       })}
