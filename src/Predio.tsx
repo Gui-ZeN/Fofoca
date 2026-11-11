@@ -11,7 +11,7 @@ import { ARTE, CENARIO, urlArte } from './arte';
 // do chão de baixo e atravessa a laje. Os papéis se leem pela forma: origem = selo de balão,
 // vítima = octógono, estrela; selecionado = cantoneiras; pra quem pode contar = tracejado.
 const L = 120; // largura de um apartamento
-const A = 136; // altura (mais alto que largo: o corpo dos moradores novos tem ~2,5 cabeças)
+export const A = 136; // altura (mais alto que largo: o corpo dos moradores novos tem ~2,5 cabeças)
 const ESCALA = 1.08; // cabeça ≈ 37 no desenho
 const RAIO = 28; // de onde a ligação de celular sai, a partir da cabeça
 

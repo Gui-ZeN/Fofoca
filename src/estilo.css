@@ -42,7 +42,11 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 
 /* palco: o prédio embaixo de uma faixa fixa pras fichas (fixa: a dica aparecer e sumir não muda o tamanho do prédio) */
 .palco { --folga: clamp(92px, 15vh, 128px); position: relative; flex: 1; min-height: 0; background: var(--ceu); }
-.tabuleiro { position: absolute; top: var(--folga); left: 0; right: 0; bottom: 0; width: 100%; height: calc(100% - var(--folga)); overflow: visible; user-select: none; touch-action: manipulation; }
+.tabuleiro { position: absolute; top: var(--folga); left: 0; right: 0; bottom: 0; user-select: none; touch-action: manipulation; }
+.tabuleiro > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+/* prédio alto: o palco rola na vertical (o cômodo não encolhe abaixo de ~100 px) */
+.tabuleiro.rola { overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.tabuleiro.rola > svg { position: static; display: block; margin: 0 auto; }
 .sobre-o-ceu { position: absolute; top: 8px; left: 14px; right: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
 .boato { margin: 0; padding: 5px 12px 5px 6px; background: var(--papel); border: 2.4px solid var(--tinta); border-radius: 4px; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; }
 .fichas { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }

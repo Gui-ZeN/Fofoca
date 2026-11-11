@@ -10,6 +10,7 @@ import { fasesOrdem } from './ordem';
 import { fasesDificil } from './dificil';
 import { fasesArnaldo } from './arnaldo';
 import { fasesNonato } from './nonato';
+import { fasesAlto } from './alto';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
 import { PREDIO, TUTORIAL } from './campanha';
@@ -48,9 +49,10 @@ const BLOCOS = {
   dificil: { nome: 'Prédio cheio', letra: 'D', fases: fasesDificil },
   arnaldo: { nome: 'Arnaldo', letra: 'A', fases: fasesArnaldo }, // protótipo do 1º fiscal (Consulta 6)
   nonato: { nome: 'Nonato', letra: 'N', fases: fasesNonato }, // o Do Contra (Consulta 6)
+  alto: { nome: 'Prédio alto', letra: 'P', fases: fasesAlto }, // 5 e 6 andares: a rolagem vertical
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|alto/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas
