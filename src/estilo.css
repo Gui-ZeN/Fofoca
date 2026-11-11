@@ -370,3 +370,20 @@ footer > .acoes { flex-wrap: nowrap; }
 .protecao p { margin: 0; font-size: 16px; max-width: 320px; }
 .protecao .principal { width: min(100%, 320px); }
 .protecao .detalhe { font-size: 13px; color: var(--suave); }
+
+/* capítulos: abertura (como a cena de chegada, com o aviso do síndico), fechamento no desfecho, índice */
+.abertura-capitulo { gap: 14px; }
+.cap-numero { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--suave); }
+.cap-titulo { margin: 0; font-family: var(--titulo); font-size: 32px; font-weight: 400; text-wrap: balance; }
+.cap-mural { width: min(100%, 340px); margin: 6px 0; }
+.cap-mural .papel-aviso { padding-right: 12px; min-height: 0; text-align: left; }
+.cap-andares { margin: 0; font-size: 14px; color: var(--suave); }
+.fim .fechou { margin: -4px 0 10px; font-size: 14.5px; display: block; color: var(--tinta); }
+.cap-indice { margin: 0; font-size: 15px; }
+.andares-grade .visto.estrela { color: #B8862B; font-size: 15px; }
+/* Fofoca do dia: botão secundário embaixo do Jogar */
+.menu footer .dia { margin-top: 10px; width: 100%; min-height: 44px; background: var(--papel); color: var(--tinta); border: 2.2px solid var(--tinta); border-radius: 7px; font-size: 16px; font-weight: 700; }
+.menu footer .dia.feita { background: var(--ouviu); }
+.cap-cena { display: flex; align-items: flex-end; gap: 6px; width: min(100%, 380px); }
+.cap-cena .cap-mural { flex: 1; min-width: 0; margin: 0 0 18px; }
+.cap-ze { width: 104px; height: auto; flex: none; overflow: visible; }

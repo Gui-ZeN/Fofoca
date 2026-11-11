@@ -13,7 +13,9 @@ import { fasesNonato } from './nonato';
 import { fasesAlto } from './alto';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
-import { PREDIO, TUTORIAL } from './campanha';
+import { ESTOQUE, ESTOQUE_PESOS, PREDIO, TUTORIAL } from './campanha';
+import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, textoDoDia, type Capitulo } from './capitulos';
+import { AberturaCapitulo } from './Capitulo';
 import { MAX, atualizar, cheias, falta, gastar, relogio, type Advertencias } from './advertencias';
 import { CartoesAdvertencia, Menu, type Vidas } from './Menu';
 import { Casa } from './Icones';
@@ -73,6 +75,10 @@ const GIROS: Item[] = fasesGiros.map((fase, i) => ({ modo: 'giros', fase, rotulo
 const DO_BLOCO: Item[] = (BLOCO?.fases ?? []).map((fase, i) => ({ modo: 'trilho', fase, rotulo: `${BLOCO!.letra}${i + 1}` }));
 const SEQ_TESTE: Item[] = BLOCO ? DO_BLOCO : GRUPO === 'A' ? [...TRILHO, ...GIROS] : [...GIROS, ...TRILHO];
 const ANDARES: Item[] = PREDIO.map(({ rotulo, fase }) => ({ modo: 'trilho', fase, rotulo }));
+const ROTULOS = ANDARES.map((a) => a.rotulo);
+const CAPITULOS = capitulos(ANDARES.length);
+// Fofoca do dia: só andares leves e médios (rápidos pra um desafio diário)
+const CANDIDATOS_DIA = ESTOQUE_PESOS.flatMap((p, i) => (p === 'leve' || p === 'media' ? [i] : []));
 
 export function App() {
   if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={pedido === 'arnaldo' || pedido === 'nonato'} />;
@@ -108,6 +114,8 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
   const chave = pesquisa ? 'fofoca.pesquisa' : 'fofoca.campanha';
   const [andar, setAndar] = useState<number>();
   const [apagou, setApagou] = useState(0); // remonta o menu depois de apagar o progresso
+  const [noDia, setNoDia] = useState(false); // jogando a Fofoca do dia
+  const hoje = dataLocal(new Date());
   // Pesquisa: registro das jogadas (sessão, telas, tentativas, resultado visto, app em segundo plano)
   useEffect(() => {
     if (!pesquisa) return;
@@ -120,22 +128,32 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
     return () => document.removeEventListener('visibilitychange', mudou);
   }, []);
   useEffect(() => { if (andar === undefined) registro.registrar('view_change', { vista: 'menu', liberada: ler(`${chave}.liberada`, 0) }); }, [andar]);
+  if (noDia) {
+    // Fofoca do dia: um andar leve/médio do estoque, o mesmo pra todo mundo hoje (elenco fixo pela data), sem advertência
+    const item: Item = { modo: 'trilho', fase: ESTOQUE[andarDoDia(new Date(), CANDIDATOS_DIA)], rotulo: `F${hoje}` };
+    return <Jogo key={hoje} sequencia={[item]} chave="fofoca.dia" nome="Fofoca do dia" fixo dia={hoje} aoVoltar={() => setNoDia(false)} />;
+  }
   if (andar === undefined) {
     return (
       // na pesquisa não tem "apagar progresso": entre participantes, quem zera é o observador (&zerar)
       <Menu key={apagou} titulos={ANDARES.map((a) => a.fase.titulo)} liberada={ler(`${chave}.liberada`, 0)} vidas={vidas} aoJogar={setAndar}
         aoApagar={pesquisa ? undefined : () => { apagarProgresso(armazemDoNavegador, chave); setApagou(apagou + 1); }}
+        capitulos={CAPITULOS} primeira={new Set(ler<string[]>(`${chave}.primeira`, []))} rotulos={ROTULOS}
+        // na pesquisa, nada de Fofoca do dia: o teste mede a campanha
+        dia={pesquisa ? undefined : { feita: ler(`fofoca.dia.feita.${hoje}`, 0), aoJogar: () => setNoDia(true) }}
         pesquisa={pesquisa ? { participante: registro.participante(), aoExportar: baixarRegistro } : undefined} />
     );
   }
-  return <Jogo key={andar} sequencia={ANDARES} chave={chave} nome={pesquisa ? 'Pesquisa' : 'Campanha'} inicio={andar} aoVoltar={() => setAndar(undefined)} vidas={vidas} chegadas fixo={pesquisa} />;
+  return <Jogo key={andar} sequencia={ANDARES} chave={chave} nome={pesquisa ? 'Pesquisa' : 'Campanha'} inicio={andar} aoVoltar={() => setAndar(undefined)} vidas={vidas} chegadas fixo={pesquisa} capitulos={CAPITULOS} />;
 }
 
 // `chegadas`: mostra as cenas de chegada (campanha). `vidas`: cobra advertências (só a campanha normal).
 // ⚠️ São separados de propósito: antes as cenas dependiam de `vidas`, e desligar as vidas desligava o ensino.
 // `fixo`: cada fase abre sempre igual (teste e pesquisa).
-function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVoltar, vidas, chegadas = false, fixo = false }: {
+// `capitulos`: abertura, ★ e fechamento de capítulo (campanha). `dia`: a data da Fofoca do dia (compartilhar).
+function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVoltar, vidas, chegadas = false, fixo = false, capitulos: CAPS, dia }: {
   sequencia: Item[]; chave: string; nome: string; inicio?: number; aoVoltar?: () => void; vidas?: Vidas; chegadas?: boolean; fixo?: boolean;
+  capitulos?: Capitulo[]; dia?: string;
 }) {
   const total = SEQUENCIA.length;
   const [liberada, setLiberada] = useState(() => Math.min(ler(`${CHAVE}.liberada`, 0), total - 1));
@@ -186,8 +204,13 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const terminou = resultado !== undefined && batida > resultado.batidas.length;
   const montando = resultado === undefined;
 
+  // ★ de primeira: o desafio opcional (andar vencido na primeira tentativa)
+  const [primeira, setPrimeira] = useState<string[]>(() => ler(`${CHAVE}.primeira`, []));
+  const dePrimeira = tentativas[item.rotulo] === 1;
   useEffect(() => {
     if (!terminou || !resultado?.vitoria) return;
+    if (dePrimeira && !primeira.includes(item.rotulo)) { const p = [...primeira, item.rotulo]; setPrimeira(p); gravar(`${CHAVE}.primeira`, p); }
+    if (dia && !ler(`fofoca.dia.feita.${dia}`, 0)) gravar(`fofoca.dia.feita.${dia}`, tentativas[item.rotulo]);
     // guarda até `total` (o menu mostra a última como feita); o estado daqui não passa da última fase
     if (idx + 1 > ler(`${CHAVE}.liberada`, 0)) gravar(`${CHAVE}.liberada`, idx + 1);
     if (idx + 1 > liberada && idx + 1 < total) setLiberada(idx + 1);
@@ -197,6 +220,24 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const apresentacao = chegadas ? APRESENTACOES[item.rotulo] ?? CHEGADAS_DE_TESTE[item.rotulo] : undefined;
   const [vendoChegada, setVendoChegada] = useState(false);
   useEffect(() => { setVendoChegada(!!apresentacao && !ler(`${CHAVE}.visto.${item.rotulo}`, false)); }, [idx]);
+  // Abertura de capítulo: no 1º andar dele, uma vez por aparelho; vem ANTES da cena de chegada
+  const cap = CAPS ? capituloDe(CAPS, idx) : undefined;
+  const [vendoCapitulo, setVendoCapitulo] = useState(false);
+  useEffect(() => { setVendoCapitulo(!!cap && idx === cap.inicio && !ler(`${CHAVE}.visto.cap${cap.numero}`, false)); }, [idx]);
+  const rotulos = SEQUENCIA.map((it) => it.rotulo);
+  // fechamento: venceu o último andar do capítulo (a ★ deste andar já conta)
+  const fechou = cap && idx === cap.fim - 1 && resultado?.vitoria
+    ? { numero: cap.numero, titulo: cap.titulo, total: cap.fim - cap.inicio,
+        estrelas: estrelas(cap, rotulos, new Set([...primeira, ...(dePrimeira ? [item.rotulo] : [])])) }
+    : undefined;
+  const [copiado, setCopiado] = useState(false);
+  const compartilhar = async () => {
+    const texto = textoDoDia(dia!, ler(`fofoca.dia.feita.${dia}`, tentativas[item.rotulo] ?? 1), 'gui-zen.github.io/Fofoca');
+    try {
+      if (navigator.share) await navigator.share({ text: texto });
+      else { await navigator.clipboard.writeText(texto); setCopiado(true); }
+    } catch { /* cancelou ou sem permissão: nada a fazer */ }
+  };
 
   // Advertência do síndico: só na campanha, depois do tutorial, e só quando a vítima descobre.
   const cobra = !!vidas && idx >= TUTORIAL;
@@ -208,7 +249,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   }, [terminou, resultado]);
 
   // Registro da pesquisa (não faz nada fora dela): em que tela a pessoa está, e o resultado que ela chegou a ver.
-  const vista = vendoChegada ? 'chegada' : montando ? 'edicao' : terminou ? 'resultado' : 'espalhando';
+  const vista = vendoCapitulo ? 'capitulo' : vendoChegada ? 'chegada' : montando ? 'edicao' : terminou ? 'resultado' : 'espalhando';
   useEffect(() => { registro.registrar('view_change', { vista, andar: idx + 1, fase: item.rotulo }); }, [vista, idx]);
   useEffect(() => {
     if (terminou && resultado) {
@@ -318,7 +359,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
           ? <button className="nav" onClick={aoVoltar} aria-label="Voltar ao prédio"><Casa /></button>
           : <button className="nav" disabled={idx === 0} onClick={() => setIdx(idx - 1)} aria-label="Fase anterior"><Seta lado="esq" /></button>}
         <div className="titulo">
-          <div className="numero">{aoVoltar ? `${idx + 1}º andar` : `Fase ${idx + 1} de ${total} · ${girando ? 'Girando as setas' : 'Desenhando o trilho'}`}</div>
+          <div className="numero">{dia ? `Fofoca do dia · ${dia.slice(8)}/${dia.slice(5, 7)}` : aoVoltar ? `${idx + 1}º andar` : `Fase ${idx + 1} de ${total} · ${girando ? 'Girando as setas' : 'Desenhando o trilho'}`}</div>
           <h1>{fase.titulo}</h1>
         </div>
         <button className="nav" disabled={idx >= liberada} onClick={() => setIdx(idx + 1)} aria-label="Próxima fase"><Seta lado="dir" /></button>
@@ -352,7 +393,9 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
         </div>
       </section>
 
-      {vendoChegada && apresentacao && (
+      {vendoCapitulo && cap ? (
+        <AberturaCapitulo cap={cap} aoFechar={() => { gravar(`${CHAVE}.visto.cap${cap.numero}`, true); setVendoCapitulo(false); }} />
+      ) : vendoChegada && apresentacao && (
         <Chegada fase={fase} apresentacao={apresentacao} aoFechar={() => { gravar(`${CHAVE}.visto.${item.rotulo}`, true); setVendoChegada(false); }} />
       )}
 
@@ -389,8 +432,11 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
               }}
               aoRever={() => setRevendo(1)}
               aoAvancar={() => setIdx(idx + 1)}
+              dePrimeira={!!CAPS && dePrimeira} fechou={fechou}
+              compartilhar={dia ? { acao: compartilhar, rotulo: copiado ? 'Copiado!' : 'Compartilhar' } : undefined}
             />
-            {resultado?.vitoria && idx === total - 1 && (
+            {/* resumo pro observador do teste antigo (não na Fofoca do dia, que tem uma fase só) */}
+            {resultado?.vitoria && idx === total - 1 && !dia && (
               <p className="resumo">{GRUPO} · tentativas: {SEQUENCIA.map((it) => `${it.rotulo}:${tentativas[it.rotulo] ?? 0}`).join(' · ')}</p>
             )}
           </div>
@@ -405,7 +451,11 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   );
 }
 
-function Fim(props: { fase: Fase; resultado: Resultado; ultima: boolean; aviso?: number; falta?: number; aoRepetir: () => void; aoAvancar: () => void; aoRever: () => void }) {
+function Fim(props: {
+  fase: Fase; resultado: Resultado; ultima: boolean; aviso?: number; falta?: number; aoRepetir: () => void; aoAvancar: () => void; aoRever: () => void;
+  dePrimeira?: boolean; fechou?: { numero: number; titulo: string; total: number; estrelas: number };
+  compartilhar?: { acao: () => void; rotulo: string };
+}) {
   const { fase, resultado, ultima } = props;
   const nome = (id?: string) => fase.vizinhos.find((v) => v.id === id)?.nome ?? '';
   const culpado = fase.vizinhos.find((v) => v.id === resultado.culpado);
@@ -455,6 +505,10 @@ function Fim(props: { fase: Fase; resultado: Resultado; ultima: boolean; aviso?:
       )}
       <p>{resultado.vitoria ? <Vitoria /> : <Derrota />} {texto}</p>
       {fala && <p className="fala"><b>{fala[0]}:</b> “{fala[1]}”</p>}
+      {resultado.vitoria && props.fechou && (
+        <p className="fechou">Capítulo {props.fechou.numero} concluído: <b>{props.fechou.titulo}</b> · ★ {props.fechou.estrelas} de {props.fechou.total}</p>
+      )}
+      {resultado.vitoria && !props.fechou && props.dePrimeira && <p className="fechou">★ De primeira!</p>}
       {props.aviso !== undefined && (
         <p className="aviso">
           <CartoesAdvertencia restam={props.aviso} />
@@ -468,8 +522,9 @@ function Fim(props: { fase: Fase; resultado: Resultado; ultima: boolean; aviso?:
         {/* reassistir uma batida por vez: ver onde o plano saiu do esperado */}
         {/* ⚠️ rótulo curto: "Passo a passo" quebrava os botões em duas linhas e o quadro cobria o térreo */}
         <button onClick={props.aoRever} aria-label="Rever passo a passo">Rever</button>
-        {resultado.vitoria && !ultima && <button className="principal" onClick={props.aoAvancar}>Próxima fase</button>}
-        {resultado.vitoria && ultima && <p className="zerou">Fim do protótipo. Obrigado por jogar!</p>}
+        {resultado.vitoria && props.compartilhar && <button className="principal" onClick={props.compartilhar.acao}>{props.compartilhar.rotulo}</button>}
+        {resultado.vitoria && !props.compartilhar && !ultima && <button className="principal" onClick={props.aoAvancar}>{props.fechou ? 'Próximo capítulo' : 'Próxima fase'}</button>}
+        {resultado.vitoria && !props.compartilhar && ultima && <p className="zerou">Fim do protótipo. Obrigado por jogar!</p>}
       </div>
     </div>
   );

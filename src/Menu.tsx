@@ -3,6 +3,7 @@ import { MAX, relogio } from './advertencias';
 import { Cartao } from './Icones';
 import { DonaGloria, Personagem, type Expressao } from './Personagem';
 import type { Tipo, Vizinho } from './motor';
+import { capituloDe, estrelas, type Capitulo } from './capitulos';
 import { ARTE, CENARIO, urlArte } from './arte';
 import { aplicarMovimento, armazemDoNavegador, gravarAjustes, lerAjustes, type Ajustes as ValoresAjustes } from './ajustes';
 
@@ -197,8 +198,10 @@ function Andar({ i, n, estado, elevador, aoEscolher }: {
 // trancado = porta fechada com plaquinha. Pra ir longe, "Ver andares" (dezenas).
 // Sem `vidas` (pesquisa com pessoas), nada de advertência no menu.
 // `pesquisa`: pro observador do teste, o código do participante e o botão de baixar o registro das jogadas.
-export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar }: {
+export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar, capitulos, primeira, rotulos, dia }: {
   titulos: string[]; liberada: number; vidas?: Vidas; aoJogar: (andar: number) => void; aoApagar?: () => void;
+  capitulos: Capitulo[]; primeira: Set<string>; rotulos: string[];
+  dia?: { feita: number; aoJogar: () => void }; // Fofoca do dia (feita = em quantas tentativas; 0 = ainda não)
   pesquisa?: { participante: string; aoExportar: () => void };
 }) {
   const zerou = liberada >= titulos.length;
@@ -256,7 +259,7 @@ export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar }: 
 
       <div className="placa-linha">
         <div className="placa-andar">
-          <span>{sel + 1}º andar</span>
+          <span>{sel + 1}º andar · capítulo {capituloDe(capitulos, sel)?.numero}</span>
           <strong>{titulos[sel]}</strong>
         </div>
         <button className="ver-andares" onClick={() => setIndice(true)}>Ver andares</button>
@@ -266,6 +269,11 @@ export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar }: 
         <button className="principal" onClick={() => aoJogar(sel)}>
           {zerou && sel === 0 ? 'Jogar de novo · 1º andar' : `Jogar · ${sel + 1}º andar`}
         </button>
+        {dia && (
+          <button className={dia.feita ? 'dia feita' : 'dia'} onClick={dia.aoJogar}>
+            Fofoca do dia{dia.feita ? ` · feita${dia.feita === 1 ? ' de primeira ★' : ''}` : ''}
+          </button>
+        )}
         {pesquisa && (
           <button className="exportar" onClick={pesquisa.aoExportar}>
             Participante {pesquisa.participante} · exportar registro
@@ -275,20 +283,24 @@ export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar }: 
 
       {ajustes && <Ajustes aoFechar={() => setAjustes(false)} aoApagar={aoApagar} />}
       {indice && (
-        <Indice total={titulos.length} liberada={liberada} sel={sel}
+        <Indice total={titulos.length} liberada={liberada} sel={sel} capitulos={capitulos} primeira={primeira} rotulos={rotulos}
           aoIr={(i) => { setSel(i); setIndice(false); }} aoFechar={() => setIndice(false)} />
       )}
     </main>
   );
 }
 
-// "Ver andares": dezenas numa faixa, os dez andares da dezena e o botão de ir
-function Indice({ total, liberada, sel, aoIr, aoFechar }: {
+// "Ver andares": os capítulos numa faixa, os andares do capítulo (★ = vencido de primeira) e o botão de ir
+function Indice({ total, liberada, sel, aoIr, aoFechar, capitulos, primeira, rotulos }: {
   total: number; liberada: number; sel: number; aoIr: (i: number) => void; aoFechar: () => void;
+  capitulos: Capitulo[]; primeira: Set<string>; rotulos: string[];
 }) {
-  const [dezena, setDezena] = useState(Math.floor(sel / 10));
+  const atual = capituloDe(capitulos, sel) ?? capitulos[0];
+  const [numero, setNumero] = useState(atual.numero);
   const [marcado, setMarcado] = useState(sel);
-  const ultima = Math.min(Math.floor(Math.min(liberada, total - 1) / 10) + 1, Math.ceil(total / 10) - 1);
+  // a faixa mostra os capítulos até o da vez e o próximo (trancado), como o prédio que "cresce"
+  const ultimo = Math.min((capituloDe(capitulos, Math.min(liberada, total - 1))?.numero ?? 1) + 1, capitulos.length);
+  const cap = capitulos[numero - 1];
   const faixa = useRef<HTMLDivElement>(null);
   // ⚠️ com chaves: no Chromium novo scrollIntoView devolve uma Promise, e o React a tomava por limpeza
   useEffect(() => { faixa.current?.querySelector('.atual')?.scrollIntoView({ inline: 'center', block: 'nearest' }); }, []);
@@ -300,22 +312,24 @@ function Indice({ total, liberada, sel, aoIr, aoFechar }: {
           <button className="fechar" onClick={aoFechar}>Fechar</button>
         </div>
         <div className="dezenas" ref={faixa}>
-          {Array.from({ length: ultima + 1 }, (_, d) => (
-            <button key={d} className={d === dezena ? 'atual' : undefined} disabled={d * 10 > liberada} onClick={() => setDezena(d)}>
-              {d * 10 + 1}–{Math.min(d * 10 + 10, total)}{(d + 1) * 10 <= liberada && <span aria-label=", feitos"> ✓</span>}
+          {capitulos.slice(0, ultimo).map((c) => (
+            <button key={c.numero} className={c.numero === numero ? 'atual' : undefined} disabled={c.inicio > liberada} onClick={() => setNumero(c.numero)}>
+              Cap. {c.numero}{c.fim <= liberada && <span aria-label=", concluído"> ✓</span>}
             </button>
           ))}
         </div>
+        <p className="cap-indice"><b>{cap.titulo}</b> · ★ {estrelas(cap, rotulos, primeira)} de {cap.fim - cap.inicio} de primeira</p>
         <div className="andares-grade">
-          {Array.from({ length: Math.min(10, total - dezena * 10) }, (_, k) => {
-            const i = dezena * 10 + k;
+          {Array.from({ length: cap.fim - cap.inicio }, (_, k) => {
+            const i = cap.inicio + k;
             const cls = i === marcado ? 'marcado' : i < liberada ? 'feito' : i === liberada ? 'proximo' : 'trancado';
+            const estrela = primeira.has(rotulos[i]);
             return (
               <button key={i} className={cls} disabled={i > liberada} onClick={() => setMarcado(i)}
-                aria-label={`${i + 1}º andar${i < liberada ? ', feito' : i > liberada ? ', trancado' : ''}`}>
+                aria-label={`${i + 1}º andar${estrela ? ', de primeira' : i < liberada ? ', feito' : i > liberada ? ', trancado' : ''}`}>
                 <b>{i + 1}</b>
                 <span className="portinha" aria-hidden="true" />
-                {i < liberada && <span className="visto" aria-hidden="true">✓</span>}
+                {i < liberada && <span className={estrela ? 'visto estrela' : 'visto'} aria-hidden="true">{estrela ? '★' : '✓'}</span>}
               </button>
             );
           })}

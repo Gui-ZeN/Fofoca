@@ -35,6 +35,7 @@ export const CAMPANHA: Andar[] = ORDEM_CAMPANHA.map((rotulo) => ({ rotulo, fase:
 // com a escada leve/média/pesada e um chefão no fim. Acabou o estoque, ele recomeça — espelhado numa
 // volta sim, outra não — então o prédio não termina. Mais andares únicos: rodar o script de novo.
 export const ESTOQUE = (estoque as unknown as { pos: number; fase: FaseTrilho }[]).map((a) => a.fase);
+export const ESTOQUE_PESOS = (estoque as unknown as { saiu: string }[]).map((a) => a.saiu); // o peso que de fato saiu
 export const VOLTAS = 20;
 export const PREDIO: Andar[] = [
   ...CAMPANHA,

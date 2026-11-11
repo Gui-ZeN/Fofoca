@@ -225,6 +225,13 @@ Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (
 - Temas sorteados: corrente de Fofoqueiras, padaria, ordem, tamanho, padaria+ordem.
 - Acabou o estoque, **recomeça** — espelhado numa volta sim, outra não. O prédio vai até o andar **3.028**.
 
+### 7.5 Capítulos, ★ e Fofoca do dia
+
+- **Capítulos** (`src/capitulos.ts`): os 28 feitos à mão viram 4 — *Primeiros boatos* (1–5), *Vizinhos novos* (6–14), *Fila da fofoca* (15–20), *Reunião de condomínio* (21–28); depois, **um a cada 25 andares**, sempre terminando num chefão de 6 andares, com temas de condomínio que se repetem (*A encomenda misteriosa*, *A festa surpresa*, *O bolo desaparecido*, *A obra no 302*, *O apagão*…).
+- **Abertura:** no 1º andar do capítulo (uma vez por aparelho, antes da cena de chegada), "Capítulo 5 · A encomenda misteriosa", o Seu Zé e o aviso da administração do tema. **Fechamento:** no último andar, o desfecho diz "Capítulo 5 concluído · ★ 18 de 25" e o botão vira **Próximo capítulo**.
+- **Desafio opcional = ★ de primeira:** o andar vencido na primeira tentativa ganha ★ ("★ De primeira!" no desfecho; ★ no índice). ⚠️ Não é "menos setas": toda fase tem solução única e mínima, então nunca aconteceria.
+- **Fofoca do dia:** botão no menu (fora do `?pesquisa`). Um andar leve ou médio do estoque, **o mesmo pra todo mundo no dia** (escolhido pela data do aparelho, elenco fixo pela data), sem advertência. Vencendo, **Compartilhar** manda o dia e o resultado ("espalhei de primeira ★ sem a vítima descobrir"), nunca a solução. O menu mostra "feita" (e "de primeira ★").
+
 ---
 
 ## 8. Advertências do síndico (as vidas)
@@ -242,7 +249,7 @@ Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (
 - Topo: o letreiro **"Fofoca!"** · EDIFÍCIO PRIMAVERA, e as advertências.
 - **Aviso da administração** com a resposta de um morador colada por cima, um por vez: "PROIBIDO OUVIR ATRÁS DA PORTA." / "Na frente pode?" · "A REUNIÃO SERÁ BREVE." / "Trouxe o jantar." · "ASSUNTO ENCERRADO." / "Qual assunto?" · "A PLANTA NÃO TEM DIREITO A VOTO." / "Ela pediu a palavra." · "FAVOR NÃO COMENTAR ESTE AVISO." / "Comentaram."
 - **Uma janela no prédio em corte:** três andares, cada um com três apartamentos (os mesmos fundos do jogo); o **elevador** com visor fica no andar escolhido. Andar **feito** = visto azul e um morador em cena; o **atual** tem a Neide ouvindo *na frente* da porta; **trancado** = de noite, porta fechada com a plaquinha "Trancado". Acima do último, o telhado; abaixo do 1º, a **portaria** (Seu Zé no balcão, cobogó, Dona Glória).
-- Tocar num andar liberado escolhe ele; **"Ver andares"** abre o índice por dezenas e o "Ir ao andar N".
+- Tocar num andar liberado escolhe ele; **"Ver andares"** abre o índice **por capítulo** (★ de primeira em cada andar, "★ 3 de 25") e o "Ir ao andar N". A placa mostra "9º andar · capítulo 2".
 - Placa esmaltada com o andar e o nome; botão de elevador **"Jogar · 9º andar"**. Dentro da fase, a **casinha** volta ao prédio.
 - No `?pesquisa`, embaixo: "Participante P-XXXX · exportar registro".
 - **Ajustes** (engrenagem no topo): velocidade do espalhar (normal ou ×2, que o botão ×2 da fase também grava), **menos animação** (vale além do "movimento reduzido" do sistema), **apagar progresso** com confirmação na própria tela (volta ao 1º andar; **não** zera as advertências; não existe no `?pesquisa`) e a versão do jogo. Guardado em `fofoca.ajustes`.
@@ -320,7 +327,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas; com uma seta a mais, no máximo 2; o caminho mais curto perde; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente muda a jogada.
 
-**Números de hoje:** **626 testes em 19 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
+**Números de hoje:** **633 testes em 20 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 
@@ -353,7 +360,7 @@ npm run build
 - Próximo fiscal (Vera ou Dona Norma), uma regra por vez.
 - Decidir o **celular** (peça do quebra-cabeça ou ajuda).
 - **Som** ("psst" a cada batida, "QUÊ?!" na derrota).
-- Mais adiante: capítulos com tema, álbum dos moradores, fofoca do dia.
+- Mais adiante: álbum dos moradores, variação visual por capítulo (chuva, festa junina, noite).
 
 **Produto e lançamento**
 - O **teste com 5 pessoas** (publicado; falta recrutar e rodar).
