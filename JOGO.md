@@ -156,8 +156,8 @@ Arte **ilustrada** (gerada por IA a partir de uma prancha do Guilherme), uma fol
 | Moradores novos | **Marlene, Caio, Jandira, Otávio, Celina, Nando, Solange, Ivo** |
 
 - 27 personagens, 114 imagens (~2,4 MB) em `public/arte/` com `manifesto.json`. O **Padre** (batina, crucifixo, bíblia) tem arte pronta, mas não aparece em nenhuma fase do trilho.
-- ⚠️ Os **12 novos** (fiscais e moradores) têm arte pronta, mas **ainda não entram no sorteio do elenco** (só o Arnaldo, no protótipo).
-- A cada abertura (fora do modo teste), os nomes dos comuns trocam dentro do mesmo gênero, o prédio pode espelhar, e em ~35% das vezes a vítima é outro morador. **Fiscal nunca é renomeado** (só a vítima que é o Seu Zé troca).
+- **Sorteio:** a cada abertura, os nomes dos comuns trocam dentro do mesmo gênero (Rita, Ana, Bia, Cida, Marlene, Jandira, Celina, Solange · Davi, Rui, Edu, Caio, Otávio, Nando, Ivo), o prédio pode espelhar, e em ~35% das vezes a vítima não é o Seu Zé: metade dessas vezes um **fiscal** (Vera, Dona Norma, Dr. Álvaro — sem regra própria), metade um morador. Os textos acompanham, inclusive títulos que dizem só "Zé".
+- ⚠️ O **Arnaldo** não entra no sorteio de vítima (ele tem regra; aparecer sem ela ensinaria errado) e nunca é renomeado.
 - ⚠️ A volta dos **bobes da Neide** foi decisão do Guilherme, contra o corte por estereótipo da Consulta 5.
 - O desenho antigo em SVG fica de reserva: pra quem não tem imagem e no link **`?vetor`**.
 
@@ -313,7 +313,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas; com uma seta a mais, no máximo 2; o caminho mais curto perde; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente muda a jogada.
 
-**Números de hoje:** **609 testes em 17 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
+**Números de hoje:** **613 testes em 17 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 
@@ -343,7 +343,7 @@ npm run build
 
 **Jogo**
 - **Jogar** o Arnaldo e o Nonato e decidir se entram na campanha (e no gerador).
-- Pôr os **12 personagens novos** no sorteio do elenco.
+- Regerar o estoque da fábrica com o elenco maior (hoje ela ainda limita a 7 moradores comuns por prédio).
 - Próximo fiscal (Vera ou Dona Norma), uma regra por vez.
 - Decidir o **celular** (peça do quebra-cabeça ou ajuda).
 - Prédio de 5–6 andares (aí o prédio rola na vertical; com 6 andares o cômodo cairia pra ~78 px).

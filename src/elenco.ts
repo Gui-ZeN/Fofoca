@@ -6,9 +6,13 @@
 import type { Fase } from './motor';
 
 // Trocas só dentro do mesmo gênero, pra "a Cida" / "o Davi" continuarem certos nas dicas.
-const FEMININAS = ['Rita', 'Ana', 'Bia', 'Cida'];
-const MASCULINOS = ['Davi', 'Rui', 'Edu'];
-export const ELAS = new Set(['Rita', 'Ana', 'Bia', 'Cida', 'Lia', 'Lúcia', 'Lu', 'Neide']);
+// Os 8 moradores novos (2026-11-11) entram aqui: todos têm arte ilustrada com as 4 poses.
+const FEMININAS = ['Rita', 'Ana', 'Bia', 'Cida', 'Marlene', 'Jandira', 'Celina', 'Solange'];
+const MASCULINOS = ['Davi', 'Rui', 'Edu', 'Caio', 'Otávio', 'Nando', 'Ivo'];
+// Fiscais que podem ser a vítima no lugar do Seu Zé, SEM regra própria (pedido do Guilherme: "sem mudar as mecânicas").
+// ⚠️ O Arnaldo fica de fora: ele tem regra (abafa), e aparecer como vítima comum ensinaria errado.
+const FISCAIS = ['Vera', 'Dona Norma', 'Dr. Álvaro'];
+export const ELAS = new Set(['Rita', 'Ana', 'Bia', 'Cida', 'Lia', 'Lúcia', 'Lu', 'Neide', 'Marlene', 'Jandira', 'Celina', 'Solange', 'Vera', 'Dona Norma']);
 export const SEU_ZE = 'Seu Zé';
 
 const ela = (nome: string) => ELAS.has(nome);
@@ -42,7 +46,8 @@ export function vestir<F extends Fase>(fase: F, sorte: () => number, chanceVitim
   let vitima = SEU_ZE;
   if (temZe && sorte() < chanceVitima) {
     const usados = new Set([...fase.vizinhos.filter((v) => v.tipo !== 'comum').map((v) => v.nome), ...troca.values()]);
-    const livres = [...FEMININAS, ...MASCULINOS].filter((n) => !usados.has(n));
+    // metade das vezes um fiscal do condomínio, metade um morador que não está no prédio
+    const livres = sorte() < 0.5 ? FISCAIS : [...FEMININAS, ...MASCULINOS].filter((n) => !usados.has(n));
     if (livres.length) vitima = livres[Math.floor(sorte() * livres.length)];
   }
 
@@ -54,10 +59,11 @@ export function vestir<F extends Fase>(fase: F, sorte: () => number, chanceVitim
     // ⚠️ a vítima entra depois das trocas: ela pode ter o nome antigo de alguém que foi trocado,
     // e se entrasse antes a troca a renomearia ("A Cida dorme de touca" com a Rita de vítima)
     if (vitima !== SEU_ZE) {
-      t = t.replace(/\b(O|o|pro|do) Seu Zé/g, (_, antes: string) => {
+      // ⚠️ "Seu Zé" ou só "Zé": os títulos "O Zé saiu" e "Antes do Zé voltar" falavam do Zé com outra vítima
+      t = t.replace(/\b(O|o|pro|do) (?:Seu )?Zé(?![A-Za-zÀ-ú])/g, (_, antes: string) => {
         const novo = antes === 'pro' ? pro(vitima) : antes === 'do' ? `d${o(vitima)}` : o(vitima);
         return `${antes === 'O' ? maiuscula(novo) : novo} ${vitima}`;
-      }).replace(/Seu Zé/g, vitima);
+      }).replace(/(?:Seu )?Zé(?![A-Za-zÀ-ú])/g, vitima);
     }
     return t;
   };
