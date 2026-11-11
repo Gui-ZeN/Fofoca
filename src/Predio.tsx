@@ -1,13 +1,19 @@
-import { useEffect, useState } from 'react';
-import { girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { abafados, girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
 import { Personagem, type Expressao } from './Personagem';
 import { Boato, Estrela, Girar, Telefone } from './Icones';
 import { Vazio } from './Vazio';
 import { explicar, type Explicacao } from './explicar';
+import { ARTE, CENARIO, urlArte } from './arte';
 
 // Prédio em corte: cada célula da grade é um apartamento visto por dentro.
-const L = 120; // largura e altura de um apartamento
-const RAIO = 28; // de onde a seta sai, a partir do ponto de ancoragem do morador
+// Paredes e lajes em tinta; porta = a parede some (batente e folha aberta); escada = um lance que sobe
+// do chão de baixo e atravessa a laje. Os papéis se leem pela forma: origem = selo de balão,
+// vítima = octógono, estrela; selecionado = cantoneiras; pra quem pode contar = tracejado.
+const L = 120; // largura de um apartamento
+const A = 136; // altura (mais alto que largo: o corpo dos moradores novos tem ~2,5 cabeças)
+const ESCALA = 1.08; // cabeça ≈ 37 no desenho
+const RAIO = 28; // de onde a ligação de celular sai, a partir da cabeça
 
 // ⚠️ O tamanho do meio não pode se chamar "boato": é o nome da coisa toda, e o Sol (jogando por texto)
 // concluiu que o boato já começava no tamanho 2 e errou as fases do Exagerado. Começa sempre em cochicho.
@@ -15,9 +21,11 @@ export const TAMANHO: Record<Tamanho, string> = { 1: 'um cochicho', 2: 'uma fofo
 export const NOME_TAMANHO: Record<Tamanho, string> = { 1: 'cochicho', 2: 'fofoca', 3: 'escândalo' };
 
 // O que vai em cada plaquinha da derrota (a vítima tem a seta vermelha, não plaquinha).
-type Placa = { id: string; culpa: boolean; texto?: string; icones?: [Tamanho, Tamanho] };
+type Placa = { id: string; culpa: boolean; texto?: string; icones?: [Tamanho, Tamanho]; versoes?: [boolean, boolean] };
 function placasDa(e: Explicacao): Placa[] {
   if (e.tipo === 'tamanho') return [{ id: e.id, culpa: true, icones: [e.queria, e.veio] }];
+  // versão: os mesmos "queria / veio", com o balão certo ou o ao contrário (invertido = azul com as setinhas trocadas)
+  if (e.tipo === 'versao') return [{ id: e.id, culpa: true, icones: [1, 1], versoes: [e.queria === 'invertida', e.veio === 'invertida'] }];
   if (e.tipo === 'ordem') {
     return [
       { id: e.antes, culpa: false, texto: `ouviu na ${e.batidaAntes}` },
@@ -29,65 +37,197 @@ function placasDa(e: Explicacao): Placa[] {
   return [];
 }
 
-// Ponto de ancoragem do morador (altura da cabeça); o corpo desce até o piso.
-const cabeca = (v: Vizinho) => ({ x: v.pos[0] * L + L / 2, y: v.pos[1] * L + 70 });
+// Altura da cabeça (de onde sai a ligação, pra onde o olhar aponta); o corpo pisa em y0 + A - 8.
+const cabeca = (v: Vizinho) => ({ x: v.pos[0] * L + L / 2, y: v.pos[1] * A + 74 });
+const pes = (v: Vizinho) => ({ x: v.pos[0] * L + L / 2 + 2, y: v.pos[1] * A + A - 8 });
 
-// Onde fica a passagem entre dois vizinhos: parede (lado a lado), escada (empilhados, no canto direito) ou telefone.
+// Onde fica a passagem entre dois vizinhos: porta (lado a lado), escada (empilhados, no canto direito) ou telefone.
 function passagem(a: Vizinho, b: Vizinho) {
   const [ca, ra] = a.pos, [cb, rb] = b.pos;
-  if (ra === rb && Math.abs(ca - cb) === 1) return { tipo: 'parede' as const, x: Math.max(ca, cb) * L, y: ra * L + 70 };
-  if (ca === cb && Math.abs(ra - rb) === 1) return { tipo: 'escada' as const, x: ca * L + L - 26, y: Math.max(ra, rb) * L };
+  if (ra === rb && Math.abs(ca - cb) === 1) return { tipo: 'parede' as const, x: Math.max(ca, cb) * L, y: ra * A + 98 };
+  if (ca === cb && Math.abs(ra - rb) === 1) return { tipo: 'escada' as const, x: ca * L + L - 14, y: Math.max(ra, rb) * A };
   const pa = cabeca(a), pb = cabeca(b);
   return { tipo: 'telefone' as const, x: (pa.x + pb.x) / 2, y: (pa.y + pb.y) / 2 };
 }
 
-// Etiqueta com o nome (e o que a pessoa exige para acreditar), no canto de cima.
-// No trilho o tamanho é exato e aparece com "=" ("quer exatamente um boato"); na mecânica antiga é mínimo.
-function Etiqueta({ v, x0, y0, contou }: { v: Vizinho; x0: number; y0: number; contou?: boolean }) {
-  const exato = v.interesse?.tamanho;
-  const req = exato ?? v.interesse?.minTamanho;
-  // quem você contou: a própria etiqueta fica laranja e carrega o cochicho (nada solto por cima do desenho)
-  // o Exagerado leva um selo "+1" fixo: a cor do apartamento some quando ele ouve (fica amarelo)
-  const mais = v.tipo === 'exagerado';
-  // bloco Ordem: o número da vez fica colado na estrela ("⭐1 Bia" sabe antes de "⭐2 Cida")
-  const vez = v.interesse?.ordem;
-  const w = v.nome.length * 7.6 + 14 + (v.interesse ? 16 : 0) + (vez ? 10 : 0) + (req ? 26 : 0) + (exato ? 10 : 0) + (contou ? 24 : 0) + (mais ? 26 : 0);
-  const textoX = x0 + 12 + (v.interesse ? 15 : 0) + (vez ? 10 : 0);
-  const maisX = textoX + v.nome.length * 7.6 + 4;
+// Caminho de uma seta de quem conta até quem ouve: na altura do peito pela porta; pela escada, no canto.
+function trajeto(de: Vizinho, para: Vizinho): [number, number, number, number] {
+  const q = passagem(de, para), p = cabeca(de);
+  if (q.tipo === 'parede') {
+    const dir = Math.sign(q.x - p.x);
+    return [p.x + dir * 26, q.y, q.x + dir * 22, q.y];
+  }
+  if (q.tipo === 'escada') {
+    const desce = para.pos[1] > de.pos[1];
+    return desce ? [q.x, de.pos[1] * A + 96, q.x, q.y + 42] : [q.x, de.pos[1] * A + 52, q.x, q.y - 30];
+  }
+  const r = cabeca(para), d = Math.hypot(r.x - p.x, r.y - p.y) || 1, ux = (r.x - p.x) / d, uy = (r.y - p.y) / d;
+  return [p.x + ux * RAIO, p.y + uy * RAIO, r.x - ux * 34, r.y - uy * 34];
+}
+const ponta = (x1: number, y1: number, x2: number, y2: number) =>
+  `translate(${x2} ${y2}) rotate(${(Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI})`;
+
+// selos de papel (os mesmos do cabeçalho)
+export function SeloOrigem() {
   return (
-    // a vítima do boato também ganha etiqueta própria (vermelha): nem sempre é o Seu Zé
-    <g className={contou ? 'etiqueta contou' : v.tipo === 'assunto' ? 'etiqueta vitima' : 'etiqueta'}
-      aria-label={contou ? `${v.nome}: você contou` : v.tipo === 'assunto' ? `${v.nome}: o boato é sobre essa pessoa` : undefined}>
-      <rect x={x0 + 7} y={y0 + 6} width={w} height={20} rx={4} />
-      {v.interesse && <g transform={`translate(${x0 + 19} ${y0 + 16})`}><Estrela r={6.5} /></g>}
-      {vez && <text x={x0 + 27} y={y0 + 17} className="vez">{vez}</text>}
-      <text x={textoX} y={y0 + 17}>{v.nome}</text>
-      {mais && (
-        <g className="exagera" aria-label="aumenta o boato um tamanho">
-          <rect x={maisX} y={y0 + 9} width={22} height={14} rx={7} />
-          <text x={maisX + 11} y={y0 + 16.5}>+1</text>
-        </g>
-      )}
-      {exato && <text x={x0 + 7 + w - 33} y={y0 + 17} className="igual">=</text>}
-      {req && (
-        <g transform={`translate(${x0 + 7 + w - 15} ${y0 + 16}) scale(0.62)`}><Boato tamanho={req as Tamanho} /></g>
-      )}
-      {contou && <g transform={`translate(${x0 + 7 + w - 14} ${y0 + 16}) scale(0.62)`}><Boato tamanho={1} /></g>}
+    <g>
+      <path d="M-5,6.9 L-9,12 L0.5,8 A10,8 0 1 0 -5,6.9 Z" fill="#E5B74F" stroke="#283C36" strokeWidth={1.8} strokeLinejoin="round" />
+      <circle cx={-4} cy={0} r={1.4} fill="#283C36" /><circle cx={0} cy={0} r={1.4} fill="#283C36" /><circle cx={4} cy={0} r={1.4} fill="#283C36" />
+    </g>
+  );
+}
+const OCT = Array.from({ length: 8 }, (_, k) => {
+  const a = (Math.PI / 4) * k + Math.PI / 8;
+  return `${(10 * Math.cos(a)).toFixed(2)},${(10 * Math.sin(a)).toFixed(2)}`;
+}).join(' ');
+export function SeloVitima() {
+  return (
+    <g>
+      <polygon points={OCT} fill="#A53D3D" stroke="#283C36" strokeWidth={1.6} strokeLinejoin="round" />
+      <rect x={-1.6} y={-6} width={3.2} height={7.5} rx={1.4} fill="#FBF4E5" />
+      <circle cx={0} cy={4.4} r={1.7} fill="#FBF4E5" />
     </g>
   );
 }
 
-// Placa pendurada na porta de quem foi na padaria: um pão e quantas batidas faltam para voltar.
+// Largura de um texto do SVG, medida de verdade (e de novo quando a fonte chega).
+// ⚠️ Antes era `nome.length * 7.6`: chute por caractere quebra com fonte nova e com tradução.
+function useLargura(texto: string, chute: number) {
+  const ref = useRef<SVGTextElement>(null);
+  const [w, setW] = useState(chute);
+  useLayoutEffect(() => {
+    let vivo = true;
+    const medir = () => { if (vivo && ref.current) setW(ref.current.getComputedTextLength()); };
+    medir();
+    document.fonts?.ready.then(medir);
+    return () => { vivo = false; };
+  }, [texto]);
+  return [ref, w] as const;
+}
+
+// Plaquinha com o nome (e o que a pessoa exige para acreditar), no canto de cima.
+// No trilho o tamanho é exato e aparece com "=" ("quer exatamente um boato"); na mecânica antiga é mínimo.
+function Etiqueta({ v, x0, y0, contou, menos }: { v: Vizinho; x0: number; y0: number; contou?: boolean; menos?: boolean }) {
+  const exato = v.interesse?.tamanho;
+  const versao = v.interesse?.versao; // quer a versão certa ou a ao contrário: o balão mostra qual
+  const req = exato ?? v.interesse?.minTamanho ?? (versao ? 1 : undefined);
+  const contra = v.tipo === 'docontra'; // selo ⇄: conta ao contrário
+  const mais = v.tipo === 'exagerado'; // selo "+1" fixo: a cor do apartamento some quando ele ouve
+  const vez = v.interesse?.ordem; // bloco Ordem: o número da vez colado na estrela
+  const vitima = v.tipo === 'assunto';
+  const selo = contou || vitima || v.interesse ? 21 : 0;
+  const [ref, nome] = useLargura(v.nome, v.nome.length * 7.4);
+  const tx = x0 + 14 + selo + (vez ? 9 : 0);
+  const fim = tx + nome + 6;
+  // "−1": mora colado no Arnaldo e fala um tamanho menor (o efeito no tabuleiro, não só no personagem)
+  const xMenos = fim + (mais ? 26 : 0);
+  const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 22 : 0);
+  return (
+    <g className={contou ? 'etiqueta contou' : vitima ? 'etiqueta vitima' : 'etiqueta'}
+      aria-label={contou ? `${v.nome}: você contou` : vitima ? `${v.nome}: o boato é sobre essa pessoa` : undefined}>
+      <rect x={x0 + 8} y={y0 + 8} width={w} height={22} rx={3} />
+      {contou && <g transform={`translate(${x0 + 21} ${y0 + 18}) scale(0.82)`}><SeloOrigem /></g>}
+      {!contou && vitima && <g transform={`translate(${x0 + 20} ${y0 + 19}) scale(0.82)`}><SeloVitima /></g>}
+      {!contou && !vitima && v.interesse && <g transform={`translate(${x0 + 20} ${y0 + 19.5})`}><Estrela r={8.5} /></g>}
+      {vez && <text x={x0 + 32} y={y0 + 24} className="vez">{vez}</text>}
+      <text ref={ref} x={tx} y={y0 + 24}>{v.nome}</text>
+      {mais && (
+        <g className="exagera" aria-label="aumenta o boato um tamanho">
+          <rect x={fim} y={y0 + 12} width={22} height={14} rx={3} />
+          <text x={fim + 11} y={y0 + 23}>+1</text>
+        </g>
+      )}
+      {menos && (
+        <g className="abafa" aria-label="fala um tamanho menor (mora colado no Arnaldo)">
+          <rect x={xMenos} y={y0 + 12} width={22} height={14} rx={3} />
+          <text x={xMenos + 11} y={y0 + 23}>−1</text>
+        </g>
+      )}
+      {exato && <text x={fim + (mais ? 26 : 0) + (menos ? 26 : 0) + 4} y={y0 + 24} className="igual">=</text>}
+      {contra && (
+        <g transform={`translate(${fim + (mais ? 26 : 0) + (menos ? 26 : 0) + 10} ${y0 + 19})`} aria-label="conta a versão ao contrário">
+          <circle r={7} fill="#E5B74F" stroke="#283C36" strokeWidth={1.4} />
+          <path d="M-3.5,-1.8 h6 l-2,-2 M3.5,1.8 h-6 l2,2" fill="none" stroke="#283C36" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+      )}
+      {req && <g transform={`translate(${x0 + 8 + w - 13} ${y0 + 19}) scale(0.62)`}><Boato tamanho={req as Tamanho} invertida={versao === 'invertida'} /></g>}
+    </g>
+  );
+}
+
+// Placa pendurada de quem foi na padaria: um pão e quantas batidas faltam para voltar.
 export function Padaria({ x, y, faltam, batendo }: { x: number; y: number; faltam: number; batendo: boolean }) {
   return (
     <g className="padaria" aria-label={`Volta em ${faltam} batida${faltam > 1 ? 's' : ''}`}>
-      <path d={`M${x - 12},${y - 20} L${x},${y - 30} L${x + 12},${y - 20}`} fill="none" stroke="#5a4636" strokeWidth={1.8} />
-      <rect x={x - 26} y={y - 20} width={52} height={40} rx={6} className="placa" />
+      <path d={`M${x - 12},${y - 20} L${x},${y - 30} L${x + 12},${y - 20}`} fill="none" stroke="#283C36" strokeWidth={1.8} />
+      <rect x={x - 26} y={y - 20} width={52} height={40} rx={4} className="placa" />
       {/* pão francês */}
-      <ellipse cx={x - 9} cy={y} rx={11} ry={6.5} fill="#e3a857" stroke="#2b2622" strokeWidth={1.8} transform={`rotate(-18 ${x - 9} ${y})`} />
-      <path d={`M${x - 15},${y + 1} l3,-4 M${x - 10},${y + 2} l3,-5 M${x - 5},${y} l3,-4`} stroke="#9a5f22" strokeWidth={1.6} strokeLinecap="round" />
+      <ellipse cx={x - 9} cy={y} rx={11} ry={6.5} fill="#D9A04E" stroke="#283C36" strokeWidth={1.8} transform={`rotate(-18 ${x - 9} ${y})`} />
+      <path d={`M${x - 15},${y + 1} l3,-4 M${x - 10},${y + 2} l3,-5 M${x - 5},${y} l3,-4`} stroke="#8A5A22" strokeWidth={1.6} strokeLinecap="round" />
       <text x={x + 13} y={y + 1} className="faltam">{faltam}</text>
       {batendo && <text x={x + 30} y={y - 34} className="toc">toc toc</text>}
+    </g>
+  );
+}
+
+// Reserva (arte sem as peças ilustradas): um móvel de fundo por apartamento (parede e chão), no traço da ilustração e apagado,
+// pra casa parecer de alguém sem disputar com o morador. Parede: à direita do meio (a plaquinha fica à
+// esquerda); chão: canto de baixo à esquerda (a escada sobe pela direita).
+function Movel({ x0, y0, n }: { x0: number; y0: number; n: number }) {
+  const t = { stroke: '#2B1E16', strokeWidth: 1.6, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
+  const px = x0 + 64, py = y0 + 36, chao = y0 + A - 12, fx = x0 + 18;
+  const parede = [
+    <g key="q">{/* quadro com paisagem */}
+      <rect x={px} y={py} width={26} height={20} fill="#B98552" {...t} />
+      <rect x={px + 3} y={py + 3} width={20} height={14} fill="#CFE0D8" {...t} strokeWidth={1} />
+      <path d={`M${px + 3},${py + 14} l6,-6 l5,4 l3,-3 l6,6 Z`} fill="#8DAA6E" />
+    </g>,
+    <g key="r">{/* relógio */}
+      <circle cx={px + 12} cy={py + 10} r={10} fill="#FFF6E6" {...t} />
+      <path d={`M${px + 12},${py + 10} v-6 M${px + 12},${py + 10} h5`} {...t} fill="none" />
+    </g>,
+    <g key="p">{/* prateleira com vasinhos */}
+      <rect x={px - 2} y={py + 16} width={30} height={4} fill="#B98552" {...t} />
+      <rect x={px + 2} y={py + 6} width={8} height={10} rx={1.5} fill="#C9694A" {...t} />
+      <path d={`M${px + 6},${py + 6} q-4,-6 -1,-9 M${px + 6},${py + 6} q3,-7 6,-6`} stroke="#5E7D4A" strokeWidth={2} fill="none" />
+      <rect x={px + 15} y={py + 9} width={9} height={7} rx={1} fill="#E9C46A" {...t} />
+    </g>,
+    <g key="j">{/* janelinha com cortina */}
+      <rect x={px} y={py - 2} width={24} height={24} fill="#CFE0D8" {...t} />
+      <path d={`M${px},${py - 2} q6,12 0,24 Z M${px + 24},${py - 2} q-6,12 0,24 Z`} fill="#D98C7A" {...t} strokeWidth={1.2} />
+    </g>,
+  ];
+  const chaoMoveis = [
+    <g key="v">{/* vaso com planta */}
+      <path d={`M${fx - 7},${chao} l-2,-12 h18 l-2,12 Z`} fill="#C9694A" {...t} />
+      <path d={`M${fx},${chao - 12} q-8,-14 -12,-12 M${fx},${chao - 12} q2,-18 7,-18 M${fx},${chao - 12} q9,-10 12,-8`} stroke="#5E7D4A" strokeWidth={2.4} fill="none" strokeLinecap="round" />
+    </g>,
+    <g key="a">{/* abajur de pé */}
+      <path d={`M${fx},${chao} v-46 M${fx - 7},${chao} h14`} {...t} fill="none" strokeWidth={2} />
+      <path d={`M${fx - 9},${chao - 46} l4,-12 h10 l4,12 Z`} fill="#F2C879" {...t} />
+    </g>,
+    <g key="b">{/* banquinho */}
+      <rect x={fx - 10} y={chao - 18} width={20} height={5} rx={2} fill="#B98552" {...t} />
+      <path d={`M${fx - 7},${chao - 13} l-2,13 M${fx + 7},${chao - 13} l2,13`} {...t} fill="none" strokeWidth={2} />
+    </g>,
+  ];
+  return (
+    <g className="movel" aria-hidden="true">
+      {parede[n % parede.length]}
+      {n % 4 !== 3 && chaoMoveis[n % chaoMoveis.length]}
+    </g>
+  );
+}
+
+// "QUÊ?!" em letras soltas que furam a laje
+function Que({ x, y }: { x: number; y: number }) {
+  const letras: [string, number, number, number][] = [['Q', 0, 4, -14], ['U', 20, -6, -5], ['Ê', 39, -10, 5], ['?', 59, -6, 13], ['!', 74, 2, 20]];
+  return (
+    <g className="grito" aria-hidden="true">
+      <path d={`M${x - 10},${y - 12} l-7,-6 M${x - 8},${y + 2} l-9,1 M${x + 92},${y - 8} l8,-6 M${x + 92},${y + 6} l9,0`} className="impacto" />
+      {letras.map(([l, dx, dy, r]) => (
+        <text key={l} x={x + dx} y={y + dy} transform={`rotate(${r} ${x + dx + 8} ${y + dy - 10})`}>{l}</text>
+      ))}
     </g>
   );
 }
@@ -104,8 +244,9 @@ export interface Desenho {
 export function Predio(props: {
   fase: Fase; origem?: string; setas: Record<string, string>; resultado?: Resultado; batida: number; montando: boolean;
   aoTocar: (v: Vizinho) => void; aoGirar: (v: Vizinho) => void; trilho?: Desenho;
+  ritmo?: number; // ms por batida (o balão que viaja acompanha o ×2)
 }) {
-  const { fase, origem, setas, resultado, batida, montando, trilho } = props;
+  const { fase, origem, setas, resultado, batida, montando, trilho, ritmo = 850 } = props;
 
   // Arrasto: no toque, o navegador entrega o soltar pro elemento onde o dedo começou,
   // então o destino é achado pelo ponto onde o dedo saiu.
@@ -126,9 +267,10 @@ export function Predio(props: {
     return () => { window.removeEventListener('pointerup', soltar); window.removeEventListener('pointercancel', cancelar); };
   }); // re-registra a cada render pra enxergar o trilho atual
   const porId = Object.fromEntries(fase.vizinhos.map((v) => [v.id, v]));
+  const baixo = abafados(fase);
   const colunas = Math.max(...fase.vizinhos.map((v) => v.pos[0])) + 1;
   const andares = Math.max(...fase.vizinhos.map((v) => v.pos[1])) + 1;
-  const largura = colunas * L, altura = andares * L;
+  const largura = colunas * L, altura = andares * A;
   const naCelula = (c: number, r: number) => fase.vizinhos.find((v) => v.pos[0] === c && v.pos[1] === r);
   const ouviuAte = (id: string) => {
     const o = resultado?.ouviu[id];
@@ -141,6 +283,22 @@ export function Predio(props: {
   const semGiro = girosUsados(fase, setas) >= fase.giros;
   // Fora de casa enquanto não deu a batida da volta (no fim, todo mundo já voltou).
   const fora = (v: Vizinho) => !!v.chega && !fim && (montando || batida < v.chega);
+  // a cor do cômodo (as duas metades da porta usam a mesma, pra parede sumir de verdade)
+  const comodo = (c: number, r: number) => {
+    const v = naCelula(c, r);
+    return ['comodo', ARTE && v && `parede-${(c + r * 2) % 4}`, !v && 'vazio', v && ouviuAte(v.id) && 'ouviu', v && fim && resultado.culpado === v.id && 'culpado'].filter(Boolean).join(' ');
+  };
+  // arte ilustrada: o fundo ilustrado de cada cômodo; a luz de quem ouviu vem por cima
+  const fundo = (c: number, r: number) => {
+    const lista = naCelula(c, r) ? CENARIO!.quartos : CENARIO!.vazios;
+    return lista[(c + r * 2) % lista.length];
+  };
+  const luz = (c: number, r: number) => {
+    const v = naCelula(c, r);
+    return ['luz', v && ouviuAte(v.id) && 'ouviu', v && fim && resultado.culpado === v.id && 'culpado'].filter(Boolean).join(' ');
+  };
+  // metade de porta e buraco de escada: a cor dominante do fundo, pra parede sumir sem emenda
+  const corDe = (c: number, r: number) => (CENARIO ? { fill: fundo(c, r).cor } : undefined);
 
   // direção (unitária) da passagem de quem o morador conta; quem não conta olha pra frente
   const olharPara = (v: Vizinho): [number, number] => {
@@ -163,40 +321,96 @@ export function Predio(props: {
 
   return (
     <g className="predio">
-      {/* telhado e caixa d'água; o chão é da cena */}
-      <rect x={largura - 64} y={-46} width={46} height={30} rx={4} className="caixa" />
-      <rect x={-10} y={-16} width={largura + 20} height={16} className="telhado" />
+      {/* caixa d'água e a estrutura (lajes e paredes em corte); o chão é da cena */}
+      {CENARIO ? (
+        // telhado ilustrado (telhas, caixa d'água, antena, varal), apoiado na laje de cima
+        <image href={urlArte(CENARIO.telhado.f)} x={-16} width={largura + 32} y={-6 - ((largura + 32) * CENARIO.telhado.h) / CENARIO.telhado.w}
+          height={((largura + 32) * CENARIO.telhado.h) / CENARIO.telhado.w} preserveAspectRatio="none" />
+      ) : (
+        <g className="caixa">
+          <rect x={largura - 70} y={-38} width={50} height={22} />
+          <rect x={largura - 74} y={-42} width={58} height={6} />
+        </g>
+      )}
+      <rect x={-6} y={-12} width={largura + 12} height={altura + 16} className="estrutura" />
+      {ARTE && (
+        <defs>
+          <linearGradient id="sombra-laje" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#3A2618" stopOpacity={0.22} /><stop offset="1" stopColor="#3A2618" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+      )}
 
       {/* apartamentos: acende a luz de quem já ouviu */}
       {Array.from({ length: andares }, (_, r) => Array.from({ length: colunas }, (_, c) => {
         const v = naCelula(c, r);
-        const cls = ['comodo', v ? v.tipo : 'vazio', v && ouviuAte(v.id) && 'ouviu', v && fim && resultado.culpado === v.id && 'culpado'];
-        return (
-          <g key={`${c},${r}`}>
-            <rect x={c * L} y={r * L} width={L} height={L} className={cls.filter(Boolean).join(' ')} />
-            <rect x={c * L + 3} y={r * L + L - 12} width={L - 6} height={9} className={v ? 'rodape' : 'rodape apagado'} />
-            {!v && <Vazio x0={c * L} y0={r * L} cena={c * 3 + r * 5 + fase.titulo.length} />}
-          </g>
-        );
-      }))}
-      <rect x={0} y={0} width={largura} height={altura} className="fachada" />
-
-      {/* passagens */}
-      {fase.amizades.map(([a, b]) => {
-        const p = passagem(porId[a], porId[b]);
-        // passagem por onde alguém vai contar fica contornada: o caminho se lê mesmo quando o rastro é curto (escada)
-        const usada = [a, b].some((de) => (setas[de] ?? porId[de].seta) === (de === a ? b : a));
-        const cls = (ativa(a, b) ? ' ativa' : '') + (usada ? ' usada' : '');
-        if (p.tipo === 'parede') return <rect key={a + b} x={p.x - 9} y={p.y - 17} width={18} height={34} rx={5} className={'passagem' + cls} />;
-        if (p.tipo === 'escada') {
+        if (CENARIO) {
           return (
-            <g key={a + b} className={'passagem escada' + cls}>
-              <rect x={p.x - 17} y={p.y - 9} width={34} height={18} rx={4} />
-              <path d={`M${p.x - 8},${p.y - 6} v12 M${p.x},${p.y - 6} v12 M${p.x + 8},${p.y - 6} v12`} />
+            <g key={`${c},${r}`}>
+              <image href={urlArte(fundo(c, r).f)} x={c * L + 4} y={r * A + 4} width={L - 8} height={A - 8} preserveAspectRatio="none" />
+              <rect x={c * L + 4} y={r * A + 4} width={L - 8} height={A - 8} className={luz(c, r)} />
+              <rect x={c * L + 4} y={r * A + 4} width={L - 8} height={18} fill="url(#sombra-laje)" />
             </g>
           );
         }
-        const pa = cabeca(porId[a]), pb = cabeca(porId[b]);
+        if (ARTE) {
+          return (
+            <g key={`${c},${r}`}>
+              <rect x={c * L + 4} y={r * A + 4} width={L - 8} height={A - 8} className={comodo(c, r)} />
+              {v && <Movel x0={c * L} y0={r * A} n={c * 5 + r * 3} />}
+              <rect x={c * L + 4} y={r * A + 4} width={L - 8} height={20} fill="url(#sombra-laje)" />
+              <rect x={c * L + 4} y={r * A + A - 12} width={L - 8} height={8} className={v ? 'rodape' : 'rodape apagado'} />
+              <path d={`M${c * L + 4},${r * A + A - 12} h${L - 8}`} className="rodape-linha" />
+              {!v && <Vazio x0={c * L} y0={r * A} chao={r * A + A - 8} cena={c * 3 + r * 5 + fase.titulo.length} />}
+            </g>
+          );
+        }
+        return (
+          <g key={`${c},${r}`}>
+            <rect x={c * L + 4} y={r * A + 4} width={L - 8} height={A - 8} className={comodo(c, r)} />
+            <rect x={c * L + 4} y={r * A + A - 10} width={L - 8} height={6} className={v ? 'rodape' : 'rodape apagado'} />
+            {!v && <Vazio x0={c * L} y0={r * A} chao={r * A + A - 6} cena={c * 3 + r * 5 + fase.titulo.length} />}
+          </g>
+        );
+      }))}
+
+      {/* passagens */}
+      {fase.amizades.map(([a, b]) => {
+        const va = porId[a], vb = porId[b], p = passagem(va, vb);
+        // passagem por onde alguém vai contar fica marcada: o caminho se lê mesmo quando o rastro é curto (escada)
+        const usada = [a, b].some((de) => (setas[de] ?? porId[de].seta) === (de === a ? b : a));
+        const cls = (ativa(a, b) ? ' ativa' : '') + (usada ? ' usada' : '');
+        if (p.tipo === 'parede') {
+          const r = va.pos[1], c = Math.min(va.pos[0], vb.pos[0]);
+          const gy = r * A + 54, gb = r * A + A - 4, wx = p.x;
+          return (
+            <g key={a + b} className={'passagem porta' + cls}>
+              <rect x={wx - 5} y={gy} width={5} height={gb - gy} className={comodo(c, r)} style={corDe(c, r)} />
+              <rect x={wx} y={gy} width={5} height={gb - gy} className={comodo(c + 1, r)} style={corDe(c + 1, r)} />
+              <path d={`M${wx - 6},${gb} V${gy - 1} H${wx + 6} V${gb}`} className="batente" />
+              <path d={`M${wx - 7.5},${gb} V${gy - 2.5} H${wx + 7.5} V${gb}`} className="contorno" />
+              <polygon points={`${wx + 6},${gy + 1} ${wx + 18},${gy + 6} ${wx + 18},${gb - 4} ${wx + 6},${gb}`} className="folha" />
+              <circle cx={wx + 15} cy={(gy + gb) / 2 + 6} r={1.6} className="macaneta" />
+            </g>
+          );
+        }
+        if (p.tipo === 'escada') {
+          // um lance de verdade, do chão de baixo até o buraco na laje; fica no fundo, atrás do morador
+          const baixo = Math.max(va.pos[1], vb.pos[1]), c = va.pos[0];
+          const dir = c * L + L - 4, chao = baixo * A + A - 4, topo = baixo * A - 4;
+          const n = 11, degrau = (chao - topo) / n, passo = 6, x0 = dir - n * passo;
+          let d = `M${x0},${chao}`;
+          for (let i = 0; i < n; i++) d += ` v${-degrau} h${passo}`;
+          d += ` V${chao} Z`;
+          return (
+            <g key={a + b} className={'passagem escada' + cls}>
+              <rect x={dir - 3 * passo - 2} y={topo} width={3 * passo + 2} height={8} className={comodo(c, baixo)} style={corDe(c, baixo)} />
+              <path d={d} className="lance" />
+              <path d={`M${x0 + 2},${chao - 24} L${dir - 2},${topo - 22} M${dir - 3 * passo - 2},${topo} v-16 M${dir - 2},${topo} v-22`} className="corrimao" />
+            </g>
+          );
+        }
+        const pa = cabeca(va), pb = cabeca(vb);
         return (
           <g key={a + b} className={'telefone' + cls}>
             <line x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y} />
@@ -207,24 +421,33 @@ export function Predio(props: {
 
       {/* moradores */}
       {fase.vizinhos.map((v) => {
-        const x0 = v.pos[0] * L, y0 = v.pos[1] * L;
-        const { x, y } = cabeca(v);
+        const x0 = v.pos[0] * L, y0 = v.pos[1] * A;
         const perdeu = fim && resultado.culpado === v.id;
         const clicavel = montando && (trilho ? true : podeSerOrigem(fase, v));
+        const selecionado = montando && trilho?.selecionado === v.id;
         const cls = [
           'morador', origem === v.id && 'origem', perdeu && 'culpado', clicavel && 'clicavel',
-          montando && trilho?.selecionado === v.id && 'selecionado', montando && trilho?.alvos.includes(v.id) && 'alvo',
+          selecionado && 'selecionado', montando && trilho?.alvos.includes(v.id) && 'alvo',
         ];
+        const pe = pes(v);
         return (
           <g key={v.id} data-morador={v.id} className={cls.filter(Boolean).join(' ')}
             onClick={trilho ? undefined : () => props.aoTocar(v)}
             onPointerDown={trilho && montando ? (e) => { setArrasto({ de: v.id, x: e.clientX, y: e.clientY }); trilho.aoApertar(v); } : undefined}>
-            <rect x={x0 + 4} y={y0 + 4} width={L - 8} height={L - 8} rx={6} className="toque" />
+            <rect x={x0 + 9} y={y0 + 9} width={L - 18} height={A - 18} className="toque" />
             {fora(v)
-              ? <Padaria x={x} y={y + 6} faltam={montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
-              : <Personagem v={v} expressao={expressao(v)} x={x} y={y} olha={olharPara(v)} />}
-            <Etiqueta v={v} x0={x0} y0={y0} contou={!!fase.origens && origem === v.id} />
-            {v.celular && <g transform={`translate(${x0 + 22} ${y0 + L - 26}) scale(0.9)`} className="tem-celular"><Telefone /></g>}
+              ? <Padaria x={pe.x} y={y0 + 84} faltam={montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
+              : <Personagem v={v} expressao={expressao(v)} x={pe.x} y={pe.y} olha={olharPara(v)} escala={ESCALA} />}
+            <Etiqueta v={v} x0={x0} y0={y0} contou={!!fase.origens && origem === v.id} menos={baixo.has(v.id) && v.tipo !== 'assunto'} />
+            {v.celular && <g transform={`translate(${x0 + 22} ${y0 + A - 28}) scale(0.9)`} className="tem-celular"><Telefone /></g>}
+            {selecionado && (
+              // seleção = 4 cantoneiras grossas (forma, não só cor)
+              <g className="cantoneiras">
+                {[[x0 + 3, y0 + 3, 1, 1], [x0 + L - 3, y0 + 3, -1, 1], [x0 + 3, y0 + A - 3, 1, -1], [x0 + L - 3, y0 + A - 3, -1, -1]].map(([x, y, sx, sy]) => (
+                  <path key={`${x},${y}`} d={`M${x},${y + sy * 18} V${y} H${x + sx * 18}`} />
+                ))}
+              </g>
+            )}
           </g>
         );
       })}
@@ -233,46 +456,42 @@ export function Predio(props: {
       {fase.vizinhos.map((v) => {
         const alvo = setas[v.id] ?? v.seta;
         if (!alvo) return null;
-        const p = cabeca(v);
         if (trilho && porCelular(fase, v.id, alvo)) {
           // ligação de celular: o telefone fica com quem liga e a ponta aponta pra quem atende
-          const q = cabeca(porId[alvo]);
+          const p = cabeca(v), q = cabeca(porId[alvo]);
           const d = Math.hypot(q.x - p.x, q.y - p.y), ux = (q.x - p.x) / d, uy = (q.y - p.y) / d;
           const ligando = falando.some((m) => m.de === v.id && m.para === alvo);
-          const ang = (Math.atan2(uy, ux) * 180) / Math.PI;
           const [fx, fy] = [q.x - ux * 30, q.y - uy * 30];
           return (
             <g key={'s' + v.id} className={ligando ? 'seta ligacao ativa' : 'seta ligacao'}>
               <line x1={p.x + ux * 48} y1={p.y + uy * 48} x2={fx} y2={fy} />
-              <path d="M-4,-6 L3,0 L-4,6" transform={`translate(${fx} ${fy}) rotate(${ang})`} />
+              <path d="M-4,-6 L3,0 L-4,6" transform={ponta(p.x, p.y, fx, fy)} />
               <g transform={`translate(${p.x + ux * 37} ${p.y + uy * 37}) scale(0.7)`}><Telefone /></g>
             </g>
           );
         }
-        const q = passagem(v, porId[alvo]);
-        let x1: number, y1: number, x2: number, y2: number;
-        if (q.tipo === 'parede') {
-          const dir = Math.sign(q.x - p.x);
-          [x1, y1, x2, y2] = [p.x + dir * 24, p.y + 8, q.x - dir * 14, q.y + 8]; // na altura da boca
-        } else if (q.tipo === 'escada') {
-          // ao lado do corpo, não por cima: desce do ombro ou sobe da cabeça até o alçapão
-          const dir = Math.sign(q.y - p.y);
-          [x1, y1, x2, y2] = [q.x, dir > 0 ? p.y + 10 : p.y - 8, q.x, q.y - dir * 11];
-        } else {
-          const d = Math.hypot(q.x - p.x, q.y - p.y);
-          const ux = (q.x - p.x) / d, uy = (q.y - p.y) / d;
-          [x1, y1, x2, y2] = [p.x + ux * RAIO, p.y + uy * RAIO, q.x - ux * 16, q.y - uy * 16];
-        }
-        // rastro de cochicho: bolinhas que crescem na direção de quem vai ouvir
-        const ang = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
-        const ponto = (t: number) => [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t];
+        const [x1, y1, x2, y2] = trajeto(v, porId[alvo]);
         return (
           <g key={'s' + v.id} className={setas[v.id] ? 'seta girada' : 'seta'}>
-            {[[0, 2.8], [0.45, 3.6], [0.85, 4.4]].map(([t, r]) => {
-              const [cx, cy] = ponto(t);
-              return <circle key={t} cx={cx} cy={cy} r={r} />;
-            })}
-            <path d="M-3,-5 L3,0 L-3,5" transform={`translate(${x2 + Math.cos((ang * Math.PI) / 180) * 5} ${y2 + Math.sin((ang * Math.PI) / 180) * 5}) rotate(${ang})`} />
+            <line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" />
+            <line x1={x1} y1={y1} x2={x2} y2={y2} />
+            <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(x1, y1, x2, y2)} />
+          </g>
+        );
+      })}
+
+      {/* o boato andando: em cada batida, um balão do tamanho que foi enviado sai de quem conta e percorre a seta
+          até quem ouve (a Fofoqueira manda vários de uma vez). ⚠️ A posição final também está no estilo base:
+          com movimento reduzido a animação some e o balão aparece direto no destino, não no canto do prédio. */}
+      {falando.map((m) => {
+        const [x1, y1, x2, y2] = trajeto(porId[m.de], porId[m.para]);
+        const estilo = {
+          '--x1': `${x1}px`, '--y1': `${y1 - 16}px`, '--x2': `${x2}px`, '--y2': `${y2 - 16}px`,
+          transform: `translate(${x2}px, ${y2 - 16}px)`, animationDuration: `${Math.round(ritmo * 0.72)}ms`,
+        } as CSSProperties;
+        return (
+          <g key={`viaja${batida}-${m.de}-${m.para}`} className="viaja" style={estilo} aria-hidden="true">
+            <g transform="scale(1.15)"><Boato tamanho={m.tamanho} invertida={m.versao === 'invertida'} /></g>
           </g>
         );
       })}
@@ -280,34 +499,33 @@ export function Predio(props: {
       {/* derrota pela vítima: o último elo, de quem contou de fato (inclusive a Fofoqueira) até ela, com direção.
           Fica enquanto o resultado está aberto. No empate, todos que entregaram juntos. */}
       {fim && resultado.motivo === 'assunto_ouviu' && quemContou(resultado, resultado.culpado!).map((de) => {
-        const p = cabeca(porId[de]), q = cabeca(porId[resultado.culpado!]);
-        const d = Math.hypot(q.x - p.x, q.y - p.y) || 1, ux = (q.x - p.x) / d, uy = (q.y - p.y) / d;
-        const [x1, y1, x2, y2] = [p.x + ux * 30, p.y + uy * 30, q.x - ux * 36, q.y - uy * 36];
-        const ang = (Math.atan2(uy, ux) * 180) / Math.PI;
+        const [x1, y1, x2, y2] = trajeto(porId[de], porId[resultado.culpado!]);
         return (
           <g key={'fatal' + de} className="elo-fatal" aria-hidden="true">
+            <line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" />
             <line x1={x1} y1={y1} x2={x2} y2={y2} />
-            <path d="M-6,-8 L5,0 L-6,8" transform={`translate(${x2} ${y2}) rotate(${ang})`} />
+            <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(x1, y1, x2, y2)} />
           </g>
         );
       })}
 
-      {/* derrota por tamanho, ordem, padaria ou estrela sem notícia: plaquinha no pé do apartamento de quem importa */}
+      {/* derrota por tamanho, ordem, padaria ou estrela sem notícia: plaquinha no meio do apartamento de quem importa
+          (⚠️ no pé, o quadro da derrota a cobria no térreo) */}
       {fim && explicacao && placasDa(explicacao).map((p) => {
         const v = porId[p.id];
-        const x0 = v.pos[0] * L, y0 = v.pos[1] * L;
+        const x0 = v.pos[0] * L, y0 = v.pos[1] * A;
         return (
           <g key={'placa' + p.id} className={p.culpa ? 'placa-causa culpa' : 'placa-causa'} aria-hidden="true">
-            <rect x={x0 + 6} y={y0 + L - 40} width={L - 12} height={24} rx={6} />
+            <rect x={x0 + 6} y={y0 + 60} width={L - 12} height={24} rx={3} />
             {p.icones ? (
               <>
-                <text x={x0 + 10} y={y0 + L - 27} className="curto">queria</text>
-                <g transform={`translate(${x0 + 56} ${y0 + L - 28}) scale(0.5)`}><Boato tamanho={p.icones[0]} /></g>
-                <text x={x0 + 67} y={y0 + L - 27} className="curto">veio</text>
-                <g transform={`translate(${x0 + 101} ${y0 + L - 28}) scale(0.5)`}><Boato tamanho={p.icones[1]} /></g>
+                <text x={x0 + 10} y={y0 + 73} className="curto">queria</text>
+                <g transform={`translate(${x0 + 56} ${y0 + 72}) scale(0.5)`}><Boato tamanho={p.icones[0]} invertida={p.versoes?.[0]} /></g>
+                <text x={x0 + 67} y={y0 + 73} className="curto">veio</text>
+                <g transform={`translate(${x0 + 101} ${y0 + 72}) scale(0.5)`}><Boato tamanho={p.icones[1]} invertida={p.versoes?.[1]} /></g>
               </>
             ) : (
-              <text x={x0 + L / 2} y={y0 + L - 27} className="meio">{p.texto}</text>
+              <text x={x0 + L / 2} y={y0 + 73} className="meio">{p.texto}</text>
             )}
           </g>
         );
@@ -315,30 +533,16 @@ export function Predio(props: {
 
       {/* balões e botões de girar, sempre na camada de cima */}
       {fase.vizinhos.map((v) => {
-        const x0 = v.pos[0] * L, y0 = v.pos[1] * L;
+        const x0 = v.pos[0] * L, y0 = v.pos[1] * A;
         const o = ouviuAte(v.id);
         const perdeu = fim && resultado.culpado === v.id;
-        if (o && perdeu && v.tipo === 'assunto') {
-          return (
-            <g key={'b' + v.id} className="balao grito">
-              <rect x={x0 + L - 80} y={y0 + 28} width={72} height={24} rx={12} />
-              <text x={x0 + L - 44} y={y0 + 41}>QUÊ?!</text>
-            </g>
-          );
-        }
-        if (o) {
-          return (
-            // a animação do balão usa transform do CSS, então a posição fica num grupo de fora
-            <g key={'b' + v.id} transform={`translate(${x0 + 86} ${y0 + 40}) scale(1.15)`}>
-              <g className="balao"><Boato tamanho={o.tamanho} invertida={o.versao === 'invertida'} /></g>
-            </g>
-          );
-        }
-        if (montando && trilho && v.id === origem) {
+        if (o && perdeu && v.tipo === 'assunto') return <Que key={'b' + v.id} x={x0 + 18} y={y0 - 2} />;
+        if (o || (montando && trilho && v.id === origem)) {
           // antes de espalhar, quem você contou já mostra o tamanho com que o boato começa: cochicho
           return (
-            <g key={'b' + v.id} transform={`translate(${x0 + 86} ${y0 + 40}) scale(1.15)`}>
-              <g className="balao"><Boato tamanho={1} /></g>
+            // a animação do balão usa transform do CSS, então a posição fica num grupo de fora
+            <g key={'b' + v.id} transform={`translate(${x0 + 24} ${y0 + 48}) scale(1.1)`}>
+              <g className="balao"><Boato tamanho={o ? o.tamanho : 1} invertida={o?.versao === 'invertida'} /></g>
             </g>
           );
         }
@@ -346,10 +550,9 @@ export function Predio(props: {
           return (
             <g key={'g' + v.id} className={semGiro && !setas[v.id] ? 'girar esgotado' : 'girar'}
               onClick={(e) => { e.stopPropagation(); props.aoGirar(v); }}>
-              {/* canto de baixo à esquerda: o de cima à direita é o caminho das setas pra escada */}
-              {/* menor e encostado no canto, fora do corpo do morador (no centro do apartamento) */}
-              <circle cx={x0 + 17} cy={y0 + L - 22} r={12} />
-              <g transform={`translate(${x0 + 17} ${y0 + L - 22}) scale(0.85)`}><Girar /></g>
+              {/* canto de baixo à esquerda, fora do corpo do morador (no centro do apartamento) */}
+              <circle cx={x0 + 19} cy={y0 + A - 24} r={12} />
+              <g transform={`translate(${x0 + 19} ${y0 + A - 24}) scale(0.85)`}><Girar /></g>
             </g>
           );
         }
@@ -359,8 +562,8 @@ export function Predio(props: {
   );
 }
 
-// Tamanho do prédio em unidades do desenho (sem telhado, que sobe 46 acima do 0).
+// Tamanho do prédio em unidades do desenho (sem telhado, que sobe 42 acima do 0).
 export const medidas = (fase: Fase) => ({
   largura: (Math.max(...fase.vizinhos.map((v) => v.pos[0])) + 1) * L,
-  altura: (Math.max(...fase.vizinhos.map((v) => v.pos[1])) + 1) * L,
+  altura: (Math.max(...fase.vizinhos.map((v) => v.pos[1])) + 1) * A,
 });

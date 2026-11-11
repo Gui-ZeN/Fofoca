@@ -1,59 +1,73 @@
 import type { ComponentProps } from 'react';
 import { Predio, medidas } from './Predio';
+import { CENARIO, urlArte } from './arte';
 
-// A rua do prédio: céu, prédios ao fundo, calçada e asfalto. O prédio pisa na calçada e cresce
-// até ocupar o espaço livre. O desenho tem 400 de largura e transborda para os lados, então em
-// tela larga o chão e o céu continuam em vez de o prédio flutuar numa caixa.
+// A rua do prédio. O desenho envolve só o prédio (mais o telhado e a calçada), então ele ocupa
+// todo o palco e o céu fica pouco — a Consulta 5 cortou o céu que ocupava meia tela.
+// Bairro, calçada e rua transbordam pros lados e pra baixo (overflow visível): em tela larga
+// o chão continua em vez de o prédio flutuar numa caixa; embaixo, o rodapé cobre a rua.
 
-const W = 400, H = 620, CHAO = 540;
+const TOPO = 50; // caixa d'água
+const BASE = 22; // calçada e meio-fio
+const MIN = 400; // ⚠️ largura mínima: sem ela, um prédio de 2 colunas crescia até cada cômodo ter ~170 px
 
+// Silhuetas dos prédios do bairro, sem detalhe para não disputar com o tabuleiro (altura em fração do prédio).
+const FUNDO: [number, number, number][] = [
+  [-620, 0.5, 90], [-520, 0.7, 70], [-430, 0.4, 60], [-350, 0.6, 80], [-250, 0.45, 50], [-180, 0.75, 90], [-70, 0.55, 60],
+  [40, 0.65, 70], [120, 0.5, 60], [190, 0.7, 80], [280, 0.4, 70], [360, 0.6, 90], [470, 0.5, 60], [540, 0.7, 80], [640, 0.45, 70],
+];
+
+// Céu: nas fases pequenas (1 ou 2 andares) sobra tela em cima do prédio; umas nuvens lentas e o sol
+// ocupam o vazio sem disputar com o tabuleiro. Ficam acima do desenho (overflow visível): em tela baixa somem.
 function Nuvem({ x, y, s, dur, atraso }: { x: number; y: number; s: number; dur: number; atraso: number }) {
   return (
     <g className="nuvem" style={{ animationDuration: `${dur}s`, animationDelay: `${-atraso}s` }}>
-      <g transform={`translate(${x} ${y}) scale(${s})`}>
-        <path d="M0,0 q4,-16 20,-12 q8,-14 24,-6 q14,-6 18,8 q12,2 8,10 h-74 q-6,-2 4,0 Z" />
-      </g>
+      <path transform={`translate(${x} ${y}) scale(${s})`} d="M0,0 q4,-16 20,-12 q8,-14 24,-6 q14,-6 18,8 q12,2 8,10 h-74 q-6,-2 4,0 Z" />
     </g>
   );
 }
 
-// Silhuetas dos prédios do bairro, sem detalhe para não disputar com o tabuleiro.
-const FUNDO: [number, number, number][] = [
-  [-260, 150, 90], [-160, 210, 70], [-80, 120, 60], [-10, 180, 80], [80, 140, 50], [140, 230, 90],
-  [240, 160, 70], [320, 200, 60], [390, 130, 80], [480, 190, 70], [560, 150, 90],
-];
-
 export function Cena(props: ComponentProps<typeof Predio>) {
   const { largura, altura } = medidas(props.fase);
-  const lw = largura + 20, lh = altura + 46; // com beiral e caixa d'água
-  // prédio estreito (2 colunas) pode crescer até 1,6×; com 3 colunas é a largura do celular que manda
-  // ⚠️ 80 de folga no alto (era 120): com 4 andares a altura é que manda, e com 120 o prédio encolhia
-  // pra 0,80 e os nomes caíam pra ~10 px com céu vazio em cima. Nos prédios menores a largura manda e nada muda.
-  const s = Math.min((W - 16) / lw, (CHAO - 80) / lh, 1.6);
-  const x = W / 2 - (largura * s) / 2;
-  const y = CHAO - altura * s;
+  const W = Math.max(largura + 36, MIN);
+  const x0 = (W - largura) / 2;
+  const topo = CENARIO ? 66 : TOPO; // o telhado ilustrado é mais alto que a caixa d'água
+  const chao = topo + altura + 4;
+  const H = chao + BASE;
 
   return (
+    // ⚠️ assentado na calçada (YMax): preso no alto, num prédio de 3 andares sobrava um bloco de asfalto
+    // embaixo; o que sobra fica de céu em cima, onde a dica aparece
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax meet" className="tabuleiro" role="img" aria-label="Prédio em corte com os vizinhos">
       <g aria-hidden="true">
-        <circle cx={330} cy={70} r={30} className="sol" />
-        <Nuvem x={-40} y={90} s={1.1} dur={70} atraso={10} />
-        <Nuvem x={150} y={50} s={0.8} dur={90} atraso={50} />
-        <Nuvem x={260} y={150} s={0.65} dur={110} atraso={80} />
-        {FUNDO.map(([fx, fh, fw]) => <rect key={fx} x={fx} y={CHAO - fh} width={fw} height={fh} className="bairro" />)}
+        {CENARIO && (
+          <g>
+            <circle cx={W - 80} cy={-150} r={26} className="sol" />
+            <Nuvem x={20} y={-30} s={1.1} dur={90} atraso={20} />
+            <Nuvem x={180} y={-190} s={0.8} dur={120} atraso={70} />
+            <Nuvem x={-80} y={-320} s={0.9} dur={140} atraso={40} />
+            <Nuvem x={120} y={-440} s={0.7} dur={160} atraso={110} />
+          </g>
+        )}
+        {CENARIO ? (
+          // faixa ilustrada do bairro, repetida pros lados
+          [-2, -1, 0, 1].map((k) => {
+            const h = 110, w = (h * CENARIO!.bairro.w) / CENARIO!.bairro.h;
+            return <image key={k} href={urlArte(CENARIO!.bairro.f)} x={W / 2 + k * w} y={chao - h} width={w} height={h} />;
+          })
+        ) : FUNDO.map(([fx, fh, fw]) => <rect key={fx} x={W / 2 + fx} y={chao - altura * fh} width={fw} height={altura * fh} className="bairro" />)}
         {/* calçada, meio-fio e rua, largos o bastante para qualquer tela */}
-        <rect x={-1200} y={CHAO} width={W + 2400} height={16} className="calcada" />
-        <rect x={-1200} y={CHAO + 16} width={W + 2400} height={6} className="meiofio" />
-        <rect x={-1200} y={CHAO + 22} width={W + 2400} height={400} className="rua" />
-        <path d={`M-1200,${CHAO + 58} H${W + 1200}`} className="faixa" />
+        <rect x={-1200} y={chao} width={W + 2400} height={16} className="calcada" />
+        <rect x={-1200} y={chao + 16} width={W + 2400} height={6} className="meiofio" />
+        <rect x={-1200} y={chao + 22} width={W + 2400} height={400} className="rua" />
         {/* poste */}
         <g className="poste">
-          <rect x={x - 34} y={CHAO - 150} width={6} height={150} />
-          <path d={`M${x - 31},${CHAO - 150} q0,-14 18,-12`} fill="none" />
-          <ellipse cx={x - 12} cy={CHAO - 160} rx={9} ry={5} className="lampada" />
+          <rect x={x0 - 30} y={chao - 150} width={6} height={150} />
+          <path d={`M${x0 - 27},${chao - 150} q0,-14 18,-12`} fill="none" />
+          <ellipse cx={x0 - 8} cy={chao - 160} rx={9} ry={5} className="lampada" />
         </g>
       </g>
-      <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <g transform={`translate(${x0} ${topo})`}>
         <Predio {...props} />
       </g>
     </svg>

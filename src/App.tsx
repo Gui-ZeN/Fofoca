@@ -2,19 +2,21 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { alvosDe, amigosDe, controlavel, espalhar, girosUsados, porCelular, quemContou, type Fase, type Resultado, type Vizinho } from './motor';
 import { NOME_TAMANHO, TAMANHO } from './Predio';
 import { Cena } from './Cena';
-import { BoatoMini, Derrota, Seta, Vitoria } from './Icones';
+import { BoatoMini, Derrota, OrigemMini, Seta, Vitoria } from './Icones';
 import { custo, espelhar, fasesTrilho, jogar, type FaseTrilho, type Plano } from './trilho';
 import { fasesGiros, type FaseGiros } from './comparacao';
 import { fasesHora } from './horaCerta';
 import { fasesOrdem } from './ordem';
 import { fasesDificil } from './dificil';
+import { fasesArnaldo } from './arnaldo';
+import { fasesNonato } from './nonato';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
 import { PREDIO, TUTORIAL } from './campanha';
 import { MAX, atualizar, cheias, falta, gastar, relogio, type Advertencias } from './advertencias';
 import { CartoesAdvertencia, Menu, type Vidas } from './Menu';
 import { Casa } from './Icones';
-import { APRESENTACOES, Chegada } from './Chegada';
+import { APRESENTACOES, CHEGADAS_DE_TESTE, Chegada } from './Chegada';
 import { explicar } from './explicar';
 import { baixarRegistro, registro } from './registro';
 
@@ -43,9 +45,11 @@ const BLOCOS = {
   hora: { nome: 'Hora certa', letra: 'H', fases: fasesHora },
   ordem: { nome: 'Ordem', letra: 'O', fases: fasesOrdem },
   dificil: { nome: 'Prédio cheio', letra: 'D', fases: fasesDificil },
+  arnaldo: { nome: 'Arnaldo', letra: 'A', fases: fasesArnaldo }, // protótipo do 1º fiscal (Consulta 6)
+  nonato: { nome: 'Nonato', letra: 'N', fases: fasesNonato }, // o Do Contra (Consulta 6)
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas
@@ -68,7 +72,7 @@ const SEQ_TESTE: Item[] = BLOCO ? DO_BLOCO : GRUPO === 'A' ? [...TRILHO, ...GIRO
 const ANDARES: Item[] = PREDIO.map(({ rotulo, fase }) => ({ modo: 'trilho', fase, rotulo }));
 
 export function App() {
-  if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo />;
+  if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={pedido === 'arnaldo' || pedido === 'nonato'} />;
   return <Campanha pesquisa={PESQUISA} />;
 }
 
@@ -155,15 +159,21 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const acabouDeSelecionar = useRef(false);
   const [resultado, setResultado] = useState<Resultado>();
   const [batida, setBatida] = useState(0);
+  const [rapido, setRapido] = useState(false); // ×2: vale até a pessoa desligar
+  const ritmo = rapido ? PASSO_MS / 2 : PASSO_MS;
+  // Passo a passo depois da tentativa: uma batida PRÓPRIA, só pra tela.
+  // ⚠️ Não reaproveitar `batida`: voltar ela desfaz o `terminou`, e ao avançar de novo os efeitos do fim rodam outra
+  // vez — cobrava a advertência de novo e registrava o resultado duas vezes na pesquisa.
+  const [revendo, setRevendo] = useState<number>();
 
-  const recomecar = () => { setPlano({}); setHistorico([]); setSelecionado(girando ? undefined : origem); setResultado(undefined); setBatida(0); };
+  const recomecar = () => { setPlano({}); setHistorico([]); setSelecionado(girando ? undefined : origem); setResultado(undefined); setBatida(0); setRevendo(undefined); };
   useEffect(() => { setEspelho(Math.random() < 0.5); setElenco(novoElenco()); }, [idx]);
   useEffect(recomecar, [fase]); // fase nova (ou espelhada): plano zerado, origem selecionada
 
   // Anima o espalhamento: uma batida por vez.
   useEffect(() => {
     if (!resultado || batida > resultado.batidas.length) return;
-    const t = setTimeout(() => setBatida((b) => b + 1), batida === 0 ? 350 : PASSO_MS);
+    const t = setTimeout(() => setBatida((b) => b + 1), batida === 0 ? 350 : ritmo);
     return () => clearTimeout(t);
   }, [resultado, batida]);
   const terminou = resultado !== undefined && batida > resultado.batidas.length;
@@ -177,7 +187,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   }, [terminou]); // só reage ao fim da animação
 
   // Cena de chegada: na campanha, na 1ª vez que algo novo estreia (uma vez só por aparelho).
-  const apresentacao = chegadas ? APRESENTACOES[item.rotulo] : undefined;
+  const apresentacao = chegadas ? APRESENTACOES[item.rotulo] ?? CHEGADAS_DE_TESTE[item.rotulo] : undefined;
   const [vendoChegada, setVendoChegada] = useState(false);
   useEffect(() => { setVendoChegada(!!apresentacao && !ler(`${CHAVE}.visto.${item.rotulo}`, false)); }, [idx]);
 
@@ -309,12 +319,12 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
 
       <section className="palco">
         <Cena
-          fase={fase} origem={origem} setas={plano_} resultado={resultado} batida={batida} montando={montando}
+          fase={fase} origem={origem} setas={plano_} resultado={resultado} batida={revendo ?? batida} montando={montando} ritmo={ritmo}
           aoTocar={() => {}} aoGirar={girar}
           trilho={girando ? undefined : { selecionado, alvos, aoApertar: apertar, aoTocar: tocar, aoSoltar: soltar }}
         />
         <div className="sobre-o-ceu">
-          <p className="boato"><BoatoMini tamanho={1} /> {fase.boato}</p>
+          <p className="boato"><OrigemMini /> {fase.boato}</p>
           <div className="fichas">
             <span className={cheio ? 'ficha setas cheio' : 'ficha setas'}>{girando ? 'Giros' : 'Setas'} {usadas}/{limite}</span>
             {cobra && <span className="ficha advertencias"><CartoesAdvertencia restam={vidas!.restam} /></span>}
@@ -350,6 +360,16 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
               </button>
             </div>
           </>
+        ) : terminou && revendo !== undefined ? (
+          // passo a passo: avança e volta uma batida por vez; "Resultado" é o fim, com as plaquinhas
+          <div className="acoes passos">
+            <button onClick={() => setRevendo(Math.max(1, revendo - 1))} disabled={revendo <= 1} aria-label="Batida anterior">‹</button>
+            <span className="passo-atual" aria-live="polite">
+              {revendo > resultado!.batidas.length ? 'Resultado' : `Batida ${revendo} de ${resultado!.batidas.length}`}
+            </span>
+            <button onClick={() => setRevendo(revendo + 1)} disabled={revendo > resultado!.batidas.length} aria-label="Próxima batida">›</button>
+            <button className="principal" onClick={() => setRevendo(undefined)}>Fechar</button>
+          </div>
         ) : terminou ? (
           // ⚠️ O desfecho flutua por cima da rua em vez de crescer o rodapé: crescer encolhia o palco
           // e o prédio subia ~78 px bem na hora de ver o que aconteceu (Astra, Consulta 2).
@@ -360,6 +380,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
                 if (resultado!.vitoria) { setEspelho(!espelho); setElenco(novoElenco()); } // repetir: outro prédio e outro elenco (no teste, a mesma fase de novo)
                 else { setResultado(undefined); setBatida(0); setSelecionado(undefined); } // tentar de novo: o plano fica
               }}
+              aoRever={() => setRevendo(1)}
               aoAvancar={() => setIdx(idx + 1)}
             />
             {resultado?.vitoria && idx === total - 1 && (
@@ -367,14 +388,17 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
             )}
           </div>
         ) : (
-          <button className="principal" disabled>Espalhando… batida {Math.max(1, batida)}</button>
+          <div className="acoes">
+            <button className="principal" disabled>Espalhando… batida {Math.max(1, batida)}</button>
+            <button className={rapido ? 'rapido ligado' : 'rapido'} onClick={() => setRapido(!rapido)} aria-pressed={rapido}>×2</button>
+          </div>
         )}
       </footer>
     </main>
   );
 }
 
-function Fim(props: { fase: Fase; resultado: Resultado; ultima: boolean; aviso?: number; falta?: number; aoRepetir: () => void; aoAvancar: () => void }) {
+function Fim(props: { fase: Fase; resultado: Resultado; ultima: boolean; aviso?: number; falta?: number; aoRepetir: () => void; aoAvancar: () => void; aoRever: () => void }) {
   const { fase, resultado, ultima } = props;
   const nome = (id?: string) => fase.vizinhos.find((v) => v.id === id)?.nome ?? '';
   const culpado = fase.vizinhos.find((v) => v.id === resultado.culpado);
@@ -385,9 +409,14 @@ function Fim(props: { fase: Fase; resultado: Resultado; ultima: boolean; aviso?:
   const lista = quem.length > 1 ? `${quem.slice(0, -1).join(', ')} e ${quem[quem.length - 1]}` : quem[0];
   const souberam = `${lista} ${quem.length > 1 ? 'ficaram' : 'ficou'} sabendo.`;
   let texto = vitima ? `${souberam} ${vitima} nem desconfia.` : souberam;
+  // a fofoqueira pega no flagra se defende com uma frase (só quando foi ela quem contou)
+  let fala: [string, string] | undefined;
   if (resultado.motivo === 'assunto_ouviu') {
     // ⚠️ quem contou DE FATO (motor: `de`), não o primeiro envio da batida — antes podia culpar quem perdeu o desempate
-    const quem = quemContou(resultado, resultado.culpado!).map(nome);
+    const ids = quemContou(resultado, resultado.culpado!);
+    const fofoqueira = fase.vizinhos.find((v) => ids.includes(v.id) && v.tipo === 'fofoqueira');
+    if (fofoqueira && ids.length === 1) fala = [fofoqueira.nome, 'Eu ia te contar por último.'];
+    const quem = ids.map(nome);
     const lista = quem.length > 1 ? `${quem.slice(0, -1).join(', ')} e ${quem[quem.length - 1]}` : quem[0];
     texto = `${lista} ${quem.length > 1 ? 'contaram' : 'contou'} ${pro(vitima!)} ${vitima}!`;
     // com a linha da advertência embaixo, a 2ª frase sai: 3 linhas cobriam o térreo
@@ -406,12 +435,19 @@ function Fim(props: { fase: Fase; resultado: Resultado; ultima: boolean; aviso?:
     const antes = nome(resultado.antes), depois = culpado!.nome;
     texto = `${o(antes) === 'a' ? 'A' : 'O'} ${antes} tinha que saber antes ${o(depois) === 'a' ? 'da' : 'do'} ${depois}.`;
   } else if (resultado.motivo === 'versao_errada') {
-    texto = `${culpado?.nome} ouviu a versão ao contrário e não acreditou.`;
+    texto = culpado?.interesse?.versao === 'invertida'
+      ? `${culpado?.nome} só acredita na versão ao contrário, e ouviu a certa.`
+      : `${culpado?.nome} ouviu a versão ao contrário e não acreditou.`;
   }
 
   return (
     <div className={resultado.vitoria ? 'fim vitoria' : 'fim derrota'}>
+      {/* carimbo do síndico: só quando a advertência é de verdade */}
+      {props.aviso !== undefined && (
+        <span className="carimbo" aria-hidden="true">ADVERTÊNCIA<small>{MAX - props.aviso} de {MAX} · o síndico</small></span>
+      )}
       <p>{resultado.vitoria ? <Vitoria /> : <Derrota />} {texto}</p>
+      {fala && <p className="fala"><b>{fala[0]}:</b> “{fala[1]}”</p>}
       {props.aviso !== undefined && (
         <p className="aviso">
           <CartoesAdvertencia restam={props.aviso} />
@@ -422,6 +458,9 @@ function Fim(props: { fase: Fase; resultado: Resultado; ultima: boolean; aviso?:
       )}
       <div className="acoes">
         <button onClick={props.aoRepetir}>{resultado.vitoria ? 'Repetir' : 'Tentar de novo'}</button>
+        {/* reassistir uma batida por vez: ver onde o plano saiu do esperado */}
+        {/* ⚠️ rótulo curto: "Passo a passo" quebrava os botões em duas linhas e o quadro cobria o térreo */}
+        <button onClick={props.aoRever} aria-label="Rever passo a passo">Rever</button>
         {resultado.vitoria && !ultima && <button className="principal" onClick={props.aoAvancar}>Próxima fase</button>}
         {resultado.vitoria && ultima && <p className="zerou">Fim do protótipo. Obrigado por jogar!</p>}
       </div>

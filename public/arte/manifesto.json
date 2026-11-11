@@ -1,0 +1,707 @@
+{
+ "Lúcia": {
+  "olha": 1,
+  "alt": 0.95,
+  "poses": {
+   "parado": {
+    "f": "lucia-parado.webp",
+    "w": 143,
+    "h": 300
+   },
+   "susto": {
+    "f": "lucia-susto.webp",
+    "w": 144,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "lucia-cochicho.webp",
+    "w": 181,
+    "h": 300
+   }
+  }
+ },
+ "Lia": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "lia-parado.webp",
+    "w": 138,
+    "h": 300
+   },
+   "susto": {
+    "f": "lia-susto.webp",
+    "w": 142,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "lia-cochicho.webp",
+    "w": 168,
+    "h": 300
+   }
+  }
+ },
+ "Cida": {
+  "olha": 1,
+  "alt": 0.8,
+  "poses": {
+   "parado": {
+    "f": "cida-parado.webp",
+    "w": 168,
+    "h": 300
+   },
+   "susto": {
+    "f": "cida-susto.webp",
+    "w": 174,
+    "h": 300
+   },
+   "bravo": {
+    "f": "cida-bravo.webp",
+    "w": 179,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "cida-cochicho.webp",
+    "w": 174,
+    "h": 300
+   }
+  }
+ },
+ "Lu": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "lu-parado.webp",
+    "w": 144,
+    "h": 300
+   },
+   "susto": {
+    "f": "lu-susto.webp",
+    "w": 140,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "lu-cochicho.webp",
+    "w": 193,
+    "h": 300
+   }
+  }
+ },
+ "Ana": {
+  "olha": 1,
+  "alt": 0.96,
+  "poses": {
+   "parado": {
+    "f": "ana-parado.webp",
+    "w": 163,
+    "h": 300
+   },
+   "susto": {
+    "f": "ana-susto.webp",
+    "w": 165,
+    "h": 300
+   },
+   "bravo": {
+    "f": "ana-bravo.webp",
+    "w": 169,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "ana-cochicho.webp",
+    "w": 184,
+    "h": 300
+   }
+  }
+ },
+ "Bia": {
+  "olha": 1,
+  "alt": 0.88,
+  "poses": {
+   "parado": {
+    "f": "bia-parado.webp",
+    "w": 184,
+    "h": 300
+   },
+   "susto": {
+    "f": "bia-susto.webp",
+    "w": 183,
+    "h": 300
+   },
+   "bravo": {
+    "f": "bia-bravo.webp",
+    "w": 183,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "bia-cochicho.webp",
+    "w": 174,
+    "h": 300
+   }
+  }
+ },
+ "Neide": {
+  "olha": 1,
+  "alt": 0.88,
+  "poses": {
+   "parado": {
+    "f": "neide-parado.webp",
+    "w": 143,
+    "h": 300
+   },
+   "susto": {
+    "f": "neide-susto.webp",
+    "w": 156,
+    "h": 300
+   },
+   "ouvindo": {
+    "f": "neide-ouvindo.webp",
+    "w": 194,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "neide-cochicho.webp",
+    "w": 191,
+    "h": 300
+   }
+  }
+ },
+ "Davi": {
+  "olha": 1,
+  "alt": 0.92,
+  "poses": {
+   "parado": {
+    "f": "davi-parado.webp",
+    "w": 169,
+    "h": 300
+   },
+   "susto": {
+    "f": "davi-susto.webp",
+    "w": 171,
+    "h": 300
+   },
+   "bravo": {
+    "f": "davi-bravo.webp",
+    "w": 179,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "davi-cochicho.webp",
+    "w": 191,
+    "h": 300
+   }
+  }
+ },
+ "Rita": {
+  "olha": 1,
+  "alt": 0.95,
+  "poses": {
+   "parado": {
+    "f": "rita-parado.webp",
+    "w": 141,
+    "h": 300
+   },
+   "susto": {
+    "f": "rita-susto.webp",
+    "w": 125,
+    "h": 300
+   },
+   "bravo": {
+    "f": "rita-bravo.webp",
+    "w": 161,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "rita-cochicho.webp",
+    "w": 166,
+    "h": 300
+   }
+  }
+ },
+ "Rui": {
+  "olha": -1,
+  "alt": 1.0,
+  "poses": {
+   "parado": {
+    "f": "rui-parado.webp",
+    "w": 134,
+    "h": 300
+   },
+   "susto": {
+    "f": "rui-susto.webp",
+    "w": 132,
+    "h": 300
+   },
+   "bravo": {
+    "f": "rui-bravo.webp",
+    "w": 142,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "rui-cochicho.webp",
+    "w": 137,
+    "h": 300,
+    "olha": 1
+   }
+  }
+ },
+ "Beto": {
+  "olha": 1,
+  "alt": 0.92,
+  "poses": {
+   "parado": {
+    "f": "beto-parado.webp",
+    "w": 255,
+    "h": 300
+   },
+   "susto": {
+    "f": "beto-susto.webp",
+    "w": 131,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "beto-cochicho.webp",
+    "w": 181,
+    "h": 300
+   }
+  }
+ },
+ "Seu Zé": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "seu-ze-parado.webp",
+    "w": 153,
+    "h": 300
+   },
+   "susto": {
+    "f": "seu-ze-susto.webp",
+    "w": 153,
+    "h": 300
+   },
+   "bravo": {
+    "f": "seu-ze-bravo.webp",
+    "w": 156,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "seu-ze-cochicho.webp",
+    "w": 174,
+    "h": 300
+   }
+  }
+ },
+ "_cenario": {
+  "quartos": [
+   {
+    "f": "quarto-1.webp",
+    "cor": "#A6A888"
+   },
+   {
+    "f": "quarto-2.webp",
+    "cor": "#E09E7E"
+   },
+   {
+    "f": "quarto-3.webp",
+    "cor": "#F6D49B"
+   },
+   {
+    "f": "quarto-4.webp",
+    "cor": "#8FA6B5"
+   }
+  ],
+  "vazios": [
+   {
+    "f": "vazio-1.webp",
+    "cor": "#506481"
+   },
+   {
+    "f": "vazio-2.webp",
+    "cor": "#506582"
+   },
+   {
+    "f": "vazio-3.webp",
+    "cor": "#506482"
+   },
+   {
+    "f": "vazio-4.webp",
+    "cor": "#506482"
+   }
+  ],
+  "telhado": {
+   "f": "telhado.webp",
+   "w": 1400,
+   "h": 198
+  },
+  "bairro": {
+   "f": "bairro.webp",
+   "w": 1400,
+   "h": 121
+  }
+ },
+ "Edu": {
+  "olha": 1,
+  "alt": 0.95,
+  "poses": {
+   "parado": {
+    "f": "edu-parado.webp",
+    "w": 124,
+    "h": 300
+   },
+   "susto": {
+    "f": "edu-susto.webp",
+    "w": 146,
+    "h": 300
+   },
+   "bravo": {
+    "f": "edu-bravo.webp",
+    "w": 137,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "edu-cochicho.webp",
+    "w": 156,
+    "h": 300
+   }
+  }
+ },
+ "Vera": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "vera-parado.webp",
+    "w": 185,
+    "h": 300
+   },
+   "susto": {
+    "f": "vera-susto.webp",
+    "w": 183,
+    "h": 300
+   },
+   "bravo": {
+    "f": "vera-bravo.webp",
+    "w": 186,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "vera-cochicho.webp",
+    "w": 190,
+    "h": 300
+   }
+  }
+ },
+ "Dr. Álvaro": {
+  "olha": 1,
+  "alt": 0.95,
+  "poses": {
+   "parado": {
+    "f": "dr-alvaro-parado.webp",
+    "w": 187,
+    "h": 300
+   },
+   "susto": {
+    "f": "dr-alvaro-susto.webp",
+    "w": 185,
+    "h": 300
+   },
+   "bravo": {
+    "f": "dr-alvaro-bravo.webp",
+    "w": 190,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "dr-alvaro-cochicho.webp",
+    "w": 195,
+    "h": 300
+   }
+  }
+ },
+ "Arnaldo": {
+  "olha": 1,
+  "alt": 0.88,
+  "poses": {
+   "parado": {
+    "f": "arnaldo-parado.webp",
+    "w": 206,
+    "h": 300
+   },
+   "susto": {
+    "f": "arnaldo-susto.webp",
+    "w": 202,
+    "h": 300
+   },
+   "bravo": {
+    "f": "arnaldo-bravo.webp",
+    "w": 208,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "arnaldo-cochicho.webp",
+    "w": 228,
+    "h": 300
+   }
+  }
+ },
+ "Solange": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "solange-parado.webp",
+    "w": 202,
+    "h": 300
+   },
+   "susto": {
+    "f": "solange-susto.webp",
+    "w": 202,
+    "h": 300
+   },
+   "bravo": {
+    "f": "solange-bravo.webp",
+    "w": 210,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "solange-cochicho.webp",
+    "w": 210,
+    "h": 300
+   }
+  }
+ },
+ "Ivo": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "ivo-parado.webp",
+    "w": 210,
+    "h": 300
+   },
+   "susto": {
+    "f": "ivo-susto.webp",
+    "w": 205,
+    "h": 300
+   },
+   "bravo": {
+    "f": "ivo-bravo.webp",
+    "w": 208,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "ivo-cochicho.webp",
+    "w": 212,
+    "h": 300
+   }
+  }
+ },
+ "Dona Norma": {
+  "olha": 1,
+  "alt": 0.88,
+  "poses": {
+   "parado": {
+    "f": "dona-norma-parado.webp",
+    "w": 186,
+    "h": 300
+   },
+   "susto": {
+    "f": "dona-norma-susto.webp",
+    "w": 187,
+    "h": 300
+   },
+   "bravo": {
+    "f": "dona-norma-bravo.webp",
+    "w": 185,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "dona-norma-cochicho.webp",
+    "w": 177,
+    "h": 300
+   }
+  }
+ },
+ "Otávio": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "otavio-parado.webp",
+    "w": 183,
+    "h": 300
+   },
+   "susto": {
+    "f": "otavio-susto.webp",
+    "w": 183,
+    "h": 300
+   },
+   "bravo": {
+    "f": "otavio-bravo.webp",
+    "w": 187,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "otavio-cochicho.webp",
+    "w": 194,
+    "h": 300
+   }
+  }
+ },
+ "Celina": {
+  "olha": 1,
+  "alt": 0.92,
+  "poses": {
+   "parado": {
+    "f": "celina-parado.webp",
+    "w": 180,
+    "h": 300
+   },
+   "susto": {
+    "f": "celina-susto.webp",
+    "w": 176,
+    "h": 300
+   },
+   "bravo": {
+    "f": "celina-bravo.webp",
+    "w": 174,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "celina-cochicho.webp",
+    "w": 193,
+    "h": 300
+   }
+  }
+ },
+ "Nando": {
+  "olha": 1,
+  "alt": 0.95,
+  "poses": {
+   "parado": {
+    "f": "nando-parado.webp",
+    "w": 173,
+    "h": 300
+   },
+   "susto": {
+    "f": "nando-susto.webp",
+    "w": 161,
+    "h": 300
+   },
+   "bravo": {
+    "f": "nando-bravo.webp",
+    "w": 165,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "nando-cochicho.webp",
+    "w": 194,
+    "h": 300
+   }
+  }
+ },
+ "Jandira": {
+  "olha": 1,
+  "alt": 0.85,
+  "poses": {
+   "parado": {
+    "f": "jandira-parado.webp",
+    "w": 203,
+    "h": 300
+   },
+   "susto": {
+    "f": "jandira-susto.webp",
+    "w": 203,
+    "h": 300
+   },
+   "bravo": {
+    "f": "jandira-bravo.webp",
+    "w": 210,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "jandira-cochicho.webp",
+    "w": 192,
+    "h": 300
+   }
+  }
+ },
+ "Caio": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "caio-parado.webp",
+    "w": 155,
+    "h": 300
+   },
+   "susto": {
+    "f": "caio-susto.webp",
+    "w": 155,
+    "h": 300
+   },
+   "bravo": {
+    "f": "caio-bravo.webp",
+    "w": 155,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "caio-cochicho.webp",
+    "w": 180,
+    "h": 300
+   }
+  }
+ },
+ "Marlene": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "marlene-parado.webp",
+    "w": 180,
+    "h": 300
+   },
+   "susto": {
+    "f": "marlene-susto.webp",
+    "w": 179,
+    "h": 300
+   },
+   "bravo": {
+    "f": "marlene-bravo.webp",
+    "w": 184,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "marlene-cochicho.webp",
+    "w": 170,
+    "h": 300
+   }
+  }
+ },
+ "Nonato": {
+  "olha": 1,
+  "alt": 0.88,
+  "poses": {
+   "parado": {
+    "f": "do-contra-parado.webp",
+    "w": 145,
+    "h": 300
+   },
+   "susto": {
+    "f": "do-contra-susto.webp",
+    "w": 139,
+    "h": 300
+   },
+   "bravo": {
+    "f": "do-contra-bravo.webp",
+    "w": 162,
+    "h": 300
+   },
+   "cochicho": {
+    "f": "do-contra-cochicho.webp",
+    "w": 171,
+    "h": 300
+   }
+  }
+ }
+}

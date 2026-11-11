@@ -21,6 +21,9 @@ export interface Vizinho {
   interesse?: Interesse; // presente = precisa ouvir
   chega?: number; // fora de casa até esta batida: recado que chega antes se perde
   celular?: string[]; // trilho: pode ligar pra um destes (sem passagem), em vez de contar pra um vizinho
+  // Arnaldo, o fiscal do barulho (Consulta 6): quem está colado nele (por passagem) conta um tamanho menor.
+  // Vale pro tamanho ENVIADO (Exagerado aumenta antes, ele reduz depois); cochicho continua cochicho.
+  abafa?: boolean;
 }
 
 export interface Fase {
@@ -72,6 +75,10 @@ export interface Resultado {
 export const amigosDe = (fase: Fase, id: string): string[] =>
   fase.amizades.flatMap(([a, b]) => (a === id ? [b] : b === id ? [a] : []));
 
+// Quem está colado em alguém que abafa (Arnaldo): conta um tamanho menor.
+export const abafados = (fase: Fase): Set<string> =>
+  new Set(fase.vizinhos.filter((w) => w.abafa).flatMap((w) => amigosDe(fase, w.id)));
+
 const temSeta = (t: Tipo) => t === 'comum' || t === 'exagerado' || t === 'docontra';
 
 // Trilho: quem aceita seta desenhada (a Fofoqueira conta sozinha; Padre e Seu Zé não contam).
@@ -106,6 +113,10 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
   const ouviu: Record<string, Ouvido> = { [jogada.origem]: { tamanho: 1, versao: 'normal', batida: 0, de: null } };
   const batidas: Mensagem[][] = [];
   let fronteira = [jogada.origem];
+  const baixo = abafados(fase);
+  // ⚠️ ordem fixa: o Exagerado aumenta primeiro e o Arnaldo reduz depois. Com o teto em escândalo, +1 e −1
+  // nem sempre se anulam (escândalo → escândalo → fofoca).
+  const enviado = (id: string, t: Tamanho) => (baixo.has(id) ? (Math.max(1, t - 1) as Tamanho) : t);
 
   for (let batida = 1; fronteira.length > 0; batida++) {
     const saindo: Mensagem[] = [];
@@ -114,12 +125,12 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       const { tamanho, versao } = ouviu[id];
       const seta = jogada.setas[id] ?? v.seta;
       if (v.tipo === 'fofoqueira') {
-        for (const para of amigosDe(fase, id)) saindo.push({ de: id, para, tamanho, versao });
+        for (const para of amigosDe(fase, id)) saindo.push({ de: id, para, tamanho: enviado(id, tamanho), versao });
       } else if (temSeta(v.tipo) && seta) {
         saindo.push({
           de: id,
           para: seta,
-          tamanho: v.tipo === 'exagerado' ? (Math.min(3, tamanho + 1) as Tamanho) : tamanho,
+          tamanho: enviado(id, v.tipo === 'exagerado' ? (Math.min(3, tamanho + 1) as Tamanho) : tamanho),
           versao: v.tipo === 'docontra' ? inverter(versao) : versao,
         });
       }

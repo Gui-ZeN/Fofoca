@@ -2,11 +2,12 @@
 // Consulta 4 (UX): "tamanho: pedido × recebido; ordem: quem ouviu em qual batida; padaria: chegada do
 // recado × volta; estrela sem notícia: destacada, sem inventar culpado". Pura, testada; o Predio só desenha.
 
-import { quemContou, type Fase, type Resultado, type Tamanho } from './motor';
+import { quemContou, type Fase, type Resultado, type Tamanho, type Versao } from './motor';
 
 export type Explicacao =
   | { tipo: 'vitima'; de: string[]; para: string }
   | { tipo: 'tamanho'; id: string; queria: Tamanho; veio: Tamanho }
+  | { tipo: 'versao'; id: string; queria: Versao; veio: Versao }
   | { tipo: 'ordem'; antes: string; depois: string; batidaAntes: number; batidaDepois: number }
   | { tipo: 'padaria'; id: string; chegou: number; volta: number }
   | { tipo: 'sem_noticia'; id: string };
@@ -17,6 +18,10 @@ export function explicar(fase: Fase, r: Resultado): Explicacao | undefined {
   if (r.motivo === 'tamanho_errado') {
     const v = fase.vizinhos.find((x) => x.id === r.culpado)!;
     return { tipo: 'tamanho', id: v.id, queria: (v.interesse!.tamanho ?? v.interesse!.minTamanho)!, veio: r.ouviu[v.id].tamanho };
+  }
+  if (r.motivo === 'versao_errada') {
+    const v = fase.vizinhos.find((x) => x.id === r.culpado)!;
+    return { tipo: 'versao', id: v.id, queria: v.interesse!.versao!, veio: r.ouviu[v.id].versao };
   }
   if (r.motivo === 'ordem_errada') {
     return { tipo: 'ordem', antes: r.antes!, depois: r.culpado!, batidaAntes: r.ouviu[r.antes!].batida, batidaDepois: r.ouviu[r.culpado!].batida };

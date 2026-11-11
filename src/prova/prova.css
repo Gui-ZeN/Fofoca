@@ -1,0 +1,9 @@
+/* Só a página ?prova. */
+.prova-uma, .prova-galeria { font-family: Asap, 'Segoe UI', sans-serif; color: #283C36; }
+.prova-uma { background: #E8DFC9; min-height: 100vh; }
+.prova-uma .prova-tela { display: block; width: 100%; max-width: 430px; height: auto; margin: 0 auto; }
+.prova-galeria { display: flex; flex-wrap: wrap; gap: 28px; padding: 24px; background: #CFC6B0; align-items: flex-start; }
+.prova-galeria section { width: 390px; }
+.prova-galeria h2 { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
+.prova-galeria a { color: inherit; }
+.prova-galeria .prova-tela { display: block; width: 390px; height: auto; box-shadow: 0 0 0 2px #283C36; }

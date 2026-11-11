@@ -9,7 +9,7 @@ import { o } from './elenco';
 // pra algo novo". Uma vez só por estreia; "Bora!" pula a qualquer momento. A etiqueta NOVO continua na fase.
 // Quem aparece é o morador da própria fase (já com o nome sorteado), achado pelo papel.
 
-type Demo = 'espalha' | 'aumenta' | 'padaria' | 'celular' | 'fila';
+type Demo = 'espalha' | 'aumenta' | 'abafa' | 'inverte' | 'padaria' | 'celular' | 'fila';
 export interface Apresentacao {
   demo: Demo;
   titulo: string;
@@ -51,6 +51,23 @@ export const APRESENTACOES: Record<string, Apresentacao> = {
   },
 };
 
+// Fora da campanha (blocos de teste): a cena só aparece no link do bloco. Quando a regra entrar na campanha,
+// a cena passa pra APRESENTACOES (e o chegada.test, que confere as estreias, passa a cobrir ela).
+export const CHEGADAS_DE_TESTE: Record<string, Apresentacao> = {
+  A1: {
+    demo: 'abafa', titulo: 'Fiscal novo!',
+    quem: (f) => f.vizinhos.find((v) => v.abafa),
+    fala: 'Psiu! Aqui ninguém grita.',
+    regra: (v) => `${v.nome} reclama de barulho: quem mora colado nele conta um tamanho menor. E o boato é sobre ele.`,
+  },
+  N1: {
+    demo: 'inverte', titulo: 'Morador novo!',
+    quem: (f) => f.vizinhos.find((v) => v.tipo === 'docontra'),
+    fala: 'Isso aí? Foi o contrário.',
+    regra: (v) => `${v.nome} é do contra: conta tudo ao contrário. A estrela mostra se quer a versão certa ou a ao contrário.`,
+  },
+};
+
 const CHAO = 226;
 const PARADA = 120; // onde o morador para, no meio da calçada
 const SEGUNDO = 212; // na cena da fila, onde a estrela 2 espera (na frente da porta)
@@ -59,7 +76,7 @@ export function Chegada({ fase, apresentacao, aoFechar }: { fase: Fase; apresent
   const v = apresentacao.quem(fase);
   if (!v) return null;
   const segundo = fase.vizinhos.find((x) => x.interesse?.ordem === 2);
-  const expressao: Expressao = apresentacao.demo === 'espalha' || apresentacao.demo === 'fila' ? 'contando' : 'ouvindo';
+  const expressao: Expressao = apresentacao.demo === 'abafa' ? 'bravo' : apresentacao.demo === 'espalha' || apresentacao.demo === 'fila' ? 'contando' : 'ouvindo';
   return (
     <div className="chegada" role="dialog" aria-label={apresentacao.titulo}>
       <p className="chegada-titulo">{apresentacao.titulo}</p>
@@ -77,7 +94,7 @@ export function Chegada({ fase, apresentacao, aoFechar }: { fase: Fase; apresent
         <g className="chegada-quem"><g className="anda">
           {/* 40% maior que no prédio, crescendo a partir dos pés */}
           <g transform={`translate(0 ${CHAO}) scale(1.4) translate(0 ${-CHAO})`}>
-            <Personagem v={v} expressao={expressao} x={0} y={CHAO - 46} />
+            <Personagem v={v} expressao={expressao} x={0} y={CHAO} />
           </g>
         </g></g>
 
@@ -92,6 +109,20 @@ export function Chegada({ fase, apresentacao, aoFechar }: { fase: Fase; apresent
             <g transform={`translate(${PARADA + 70} ${CHAO - 120})`}><g className="sai-balao"><g transform="scale(1.3)"><Boato tamanho={2} /></g></g></g>
           </>
         )}
+        {apresentacao.demo === 'abafa' && (
+          // o avesso do Exagerado: entra uma fofoca, sai um cochicho
+          <>
+            <g transform={`translate(${PARADA - 90} ${CHAO - 110})`}><g className="entra-balao"><g transform="scale(1.3)"><Boato tamanho={2} /></g></g></g>
+            <g transform={`translate(${PARADA + 70} ${CHAO - 120})`}><g className="sai-balao"><Boato tamanho={1} /></g></g>
+          </>
+        )}
+        {apresentacao.demo === 'inverte' && (
+          // entra a versão certa, sai a ao contrário (azul, com as setinhas trocadas)
+          <>
+            <g transform={`translate(${PARADA - 90} ${CHAO - 110})`}><g className="entra-balao"><g transform="scale(1.3)"><Boato tamanho={2} /></g></g></g>
+            <g transform={`translate(${PARADA + 70} ${CHAO - 120})`}><g className="sai-balao"><g transform="scale(1.3)"><Boato tamanho={2} invertida /></g></g></g>
+          </>
+        )}
         {apresentacao.demo === 'padaria' && (
           <g className="placa-aparece"><Padaria x={302} y={150} faltam={3} batendo={false} /></g>
         )}
@@ -102,7 +133,7 @@ export function Chegada({ fase, apresentacao, aoFechar }: { fase: Fase; apresent
           <>
             {/* a 2 já está na porta; quem chega é a 1, e o boato passa por ela antes */}
             <g transform={`translate(0 ${CHAO}) scale(1.4) translate(0 ${-CHAO})`}>
-              <Personagem v={segundo} expressao="ouvindo" x={SEGUNDO / 1.4} y={CHAO - 46} />
+              <Personagem v={segundo} expressao="ouvindo" x={SEGUNDO / 1.4} y={CHAO} />
             </g>
             <g className="placa-aparece">
               <g transform={`translate(${PARADA - 6} ${CHAO - 138})`}><Estrela r={10} /><text className="chegada-vez" x={12} y={5}>1</text></g>

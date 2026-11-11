@@ -172,11 +172,11 @@ As letras dizem de onde a fase veio: **T** = trilho (as 10 primeiras), **H** = b
 ## 8. Menu: o prédio
 
 - Abre direto em `http://localhost:5179/` (sem link).
-- Topo: "Edifício Primavera · **Fofoca!**" e os cartões de advertência com o relógio.
-- Cada **andar é uma fase**: número, nome, estrela quando vencido, **cadeado** e nome escondido quando trancado.
-- O **elevador** fica parado no andar onde você está (luz acesa).
-- Embaixo, a **Portaria**: "Síndico: Seu Zé. Odeia fofoca: se a vítima descobrir, é advertência."
-- Botão **"Jogar · 6º andar"** continua de onde parou. Dentro da fase, a **casinha** no topo volta ao prédio; o cabeçalho mostra o andar.
+- Topo: o letreiro **"Fofoca!"** (Edifício Primavera) e os papéis de advertência com o relógio.
+- **Aviso da administração** com a resposta de um morador colada por cima, um por vez ("PROIBIDO OUVIR ATRÁS DA PORTA." / "Na frente pode?"). Com advertência recebida, o aviso vira a regra ("TRÊS ADVERTÊNCIAS = SUSPENSÃO." / "E quatro?").
+- **Uma janela no prédio em corte:** três andares, cada um com três apartamentos; o **elevador** fica no andar escolhido. Andar feito = visto azul e um morador em cena; o **atual** tem a Neide ouvindo *na frente* da porta; **trancado** = de noite, porta fechada com a plaquinha "Trancado". Acima do último, o telhado; no 1º, a **portaria** do térreo (Seu Zé no balcão, cobogó).
+- Tocar num andar liberado escolhe ele; **"Ver andares"** abre o índice por dezenas e o "Ir ao andar N".
+- Placa esmaltada com o andar e o nome; botão **"Jogar · 9º andar"**. Dentro da fase, a **casinha** volta ao prédio.
 - O progresso fica salvo no aparelho.
 
 ---
@@ -199,18 +199,17 @@ Depois da fala, uma frase explica a regra.
 
 ## 10. Visual
 
-- **Prédio em corte** numa rua: céu, sol, nuvens passando, silhuetas do bairro, calçada, rua com faixa, poste.
-- **Personagens cabeçudos de charge**, cada um com silhueta própria, respirando e piscando cada um no seu tempo.
-  - Comuns: **Cida** (vovó), **Ana** (cabelo black), **Bia** (dona do cachorro), **Rita** e **Lia** (estudante), **Davi** (grandalhão), **Rui** (magrelo), **Edu** (senhor de óculos).
-  - Especiais: **Neide/Lu** (Fofoqueira, de bobes), **Beto/Lúcia** (Exagerado/a), **Seu Zé**, Padre, três Do Contra.
-  - Expressões: neutro, ouvindo, contando, chocado, bravo.
-  - A cada abertura (fora do modo teste), os nomes trocam dentro do mesmo gênero, o prédio pode espelhar, e em ~35% das vezes a vítima é outro morador.
-- **Apartamento vazio** tem cena própria (janela com lua, cama, caixas, placa de "aluga-se").
-- **Rastro de cochicho:** três bolinhas crescendo na direção de quem ouve, com uma pontinha. Ligação de celular: pontilhado com o telefone em quem liga.
-- **Leitura:** origem = etiqueta laranja; vítima = etiqueta vermelha; selecionado = contorno azul; pode ouvir = tracejado azul; ouviu = luz amarela; estrela com "=" e ícone quando exige tamanho; número da vez colado na estrela; placa de pão com número em quem saiu.
-- **No alto da fase:** o boato, "Setas x/K", cartões de advertência, a escadinha "cochicho › fofoca › escândalo" (quando o tamanho importa), a etiqueta NOVO e a faixa de dica/estado.
-- **O desfecho** (vitória/derrota) flutua por cima da rua, sem empurrar o prédio.
-- **Fonte:** Bricolage Grotesque. **Ícones** desenhados, nada de emoji.
+Direção **"Conforme o regulamento"** (Consulta 5): o condomínio leva as suas bobagens administrativamente a sério (aviso, placa, carimbo). Arte **ilustrada** desde 2026-11-11 (gerada por IA a partir de uma prancha do Guilherme); o desenho antigo em SVG fica de reserva e aparece com **`?vetor`**.
+
+- **Personagens em imagem**, uma folha de poses por pessoa: *parado* (quieto, ouvindo, contando), *susto* (acabou de ouvir, estrela na vitória) e *bravo* (vítima pega). A imagem vira pro lado de quem a pessoa conta. Elenco: **Seu Zé** (braço cruzado, chaveiro), **Neide** e **Lu** (fofoqueiras), **Beto** e **Lúcia** (exagerados, Beto de braços abertos), **Cida, Ana, Bia** (com o cachorro), **Rita, Lia, Davi, Rui, Edu**. Quem pode virar vítima tem a pose *bravo*.
+- **Prédio montado com peças:** 4 fundos de apartamento, 4 vazios à noite (aluga-se, mudança, lençol, gato), telhado (telhas, caixa d'água, antena, varal) e bairro ao fundo. Paredes, portas, escadas, setas e plaquinhas continuam em código porque mudam durante o jogo.
+- **Porta** = a parede some, batente e folha aberta; **escada** = um lance do chão de baixo até o buraco na laje.
+- **Leitura:** origem = selo de balão; vítima = octógono com "!"; estrela (com o balão do tamanho que exige e o número da vez); selecionado = 4 cantoneiras; pode ouvir = tracejado; **ouviu = luz amarela forte com moldura**; vítima pega = vermelho, "QUÊ?!" em letras soltas e a seta vermelha de quem contou.
+- **Balão por tamanho:** cochicho achatado e pontilhado, fofoca redonda, escândalo pontudo.
+- **Cores e letras:** tinta marrom e tons quentes; botão mostarda com texto escuro (botão de elevador). **Patua One** (marca e títulos) + **Asap** (interface).
+- **Céu pouco:** o prédio ocupa o palco; nas fases pequenas, sol e nuvens lentas no que sobra.
+- **O desfecho** flutua por cima da rua, sem empurrar o prédio; com advertência, ganha o **carimbo do síndico**; se foi a fofoqueira, ela se defende ("Eu ia te contar por último.").
+- Imagens em `public/arte/` (~900 KB), carregadas na abertura.
 
 ---
 

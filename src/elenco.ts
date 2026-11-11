@@ -37,7 +37,8 @@ export function vestir<F extends Fase>(fase: F, sorte: () => number, chanceVitim
   }
 
   // às vezes a vítima é outra pessoa, que não está no prédio com outro papel
-  const temZe = fase.vizinhos.some((v) => v.tipo === 'assunto');
+  // ⚠️ só a vítima que é o Seu Zé troca de nome: um fiscal (Arnaldo…) é vítima com regra própria e continua ele
+  const temZe = fase.vizinhos.some((v) => v.tipo === 'assunto' && v.nome === SEU_ZE);
   let vitima = SEU_ZE;
   if (temZe && sorte() < chanceVitima) {
     const usados = new Set([...fase.vizinhos.filter((v) => v.tipo !== 'comum').map((v) => v.nome), ...troca.values()]);
@@ -67,6 +68,6 @@ export function vestir<F extends Fase>(fase: F, sorte: () => number, chanceVitim
     boato: texto(fase.boato)!,
     dica: texto(fase.dica),
     vizinhos: fase.vizinhos.map((v) =>
-      v.tipo === 'comum' ? { ...v, nome: troca.get(v.nome) ?? v.nome } : v.tipo === 'assunto' ? { ...v, nome: vitima } : v),
+      v.tipo === 'comum' ? { ...v, nome: troca.get(v.nome) ?? v.nome } : v.tipo === 'assunto' && v.nome === SEU_ZE ? { ...v, nome: vitima } : v),
   };
 }

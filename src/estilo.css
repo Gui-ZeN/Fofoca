@@ -1,21 +1,23 @@
-/* A tela é a rua do prédio: céu em cima, asfalto embaixo, o tabuleiro no meio.
-   Tudo o que não é o jogo some ou vira ficha pequena por cima do céu. */
+/* Direção "Conforme o regulamento" (Consulta 5): o condomínio leva suas bobagens administrativamente a sério.
+   Placas esmaltadas, papel de aviso, botão de elevador. Céu pouco; o prédio em corte é o palco. */
 :root {
-  --ceu: #9fd6ec;
-  --ceu-fundo: #b9e2f1;
-  --bairro: #8cbfd6;
-  --rua: #4b4a55;
-  --tinta: #2b2622;
-  --suave: #6d655e;
-  --linha: #cfc5b8;
-  --parede: #5a4636;
-  --seta: #3b6ea5;
-  --ativa: #e8892b;
-  --perigo: #c8372d;
-  --exagera: #b23d82; /* selo "+1" do Exagerado */
-  --ok: #2f8a4c;
-  --cartao: #fffdf9;
-  --fonte: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  --tinta: #283C36;
+  --reboco: #E8DFC9;
+  --papel: #FBF4E5;
+  --pastilha: #90ABA0;
+  --botao: #E5B74F;
+  --ouviu: #F0D58B;
+  --seta: #245A73;
+  --vitima: #A53D3D;
+  --ceu: #C7DAD5;
+  --bairro: #B5CBC5;
+  --rua: #34473F;
+  --metal: #6F8E83;
+  --madeira: #B98F62;
+  --vazio: #B4AA94;
+  --suave: #3D564D; /* texto secundário: 5,9:1 no céu */
+  --titulo: 'Patua One', Georgia, serif;
+  --fonte: Asap, 'Segoe UI', system-ui, sans-serif;
   font-family: var(--fonte);
   color: var(--tinta);
   -webkit-tap-highlight-color: transparent;
@@ -23,137 +25,148 @@
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; height: 100%; } /* #root também: sem ele o main com height: 100% desaba */
 body { background: var(--ceu); overflow: hidden; } /* a cena transborda pros lados; a rua dela cobre o chão */
-::selection { background: #f4c43066; }
+::selection { background: #E5B74F66; }
 button:focus-visible { outline: 3px solid var(--tinta); outline-offset: 2px; }
 /* 100% (e não 100dvh): cabe dentro do recuo de área segura que a página publicada põe no :root */
 main { max-width: 520px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; }
 
 /* topo: só navegação e o nome da fase */
-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-block: 10px 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: var(--ceu); }
+/* ⚠️ camada acima do palco: o céu da cena (sol, nuvens) sai pra cima do desenho e cobria o título em 360 px */
+header { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-block: 10px 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: var(--ceu); }
 .titulo { text-align: center; min-width: 0; }
-.numero { font-size: 12px; font-weight: 600; color: #2f5d73; letter-spacing: .01em; }
-h1 { font-size: 22px; font-weight: 800; margin: 0; line-height: 1.1; font-variation-settings: 'opsz' 96; text-wrap: balance; }
-.nav { width: 42px; height: 42px; flex: none; border-radius: 21px; border: 2px solid var(--parede); background: var(--cartao); color: var(--tinta); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 0 var(--parede); }
-.nav:disabled { opacity: .35; box-shadow: none; }
-.nav:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+.numero { font-size: 13px; font-weight: 600; color: var(--suave); }
+h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; line-height: 1.1; text-wrap: balance; }
+.nav { width: 44px; height: 44px; flex: none; border-radius: 7px; border: 2.4px solid var(--tinta); background: var(--papel); color: var(--tinta); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 3px 0 var(--tinta); }
+.nav:disabled { background: none; border-color: #7E948C; color: #7E948C; box-shadow: none; }
+.nav:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
 
-/* palco: o céu com a cena, e as fichas por cima */
-.palco { position: relative; flex: 1; min-height: 0; background: var(--ceu); }
-.tabuleiro { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; user-select: none; touch-action: manipulation; }
+/* palco: o prédio embaixo de uma faixa fixa pras fichas (fixa: a dica aparecer e sumir não muda o tamanho do prédio) */
+.palco { --folga: clamp(92px, 15vh, 128px); position: relative; flex: 1; min-height: 0; background: var(--ceu); }
+.tabuleiro { position: absolute; top: var(--folga); left: 0; right: 0; bottom: 0; width: 100%; height: calc(100% - var(--folga)); overflow: visible; user-select: none; touch-action: manipulation; }
 .sobre-o-ceu { position: absolute; top: 8px; left: 14px; right: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
-.boato { margin: 0; padding: 6px 12px 6px 8px; background: var(--cartao); border: 2px solid var(--parede); border-radius: 14px 14px 14px 4px; font-size: 14px; font-weight: 600; font-style: italic; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; }
+.boato { margin: 0; padding: 5px 12px 5px 6px; background: var(--papel); border: 2.4px solid var(--tinta); border-radius: 4px; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; }
 .fichas { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-.ficha { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 4px; border-radius: 99px; font-size: 13px; font-weight: 800; color: #fff; }
+.ficha { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 4px; border-radius: 3px; font-size: 14px; font-weight: 700; color: var(--papel); }
 .ficha.giros { background: var(--seta); }
-.ficha.horario { background: var(--perigo); padding-left: 10px; }
-.ficha.setas { background: var(--seta); padding: 4px 12px; font-size: 14px; }
-.ficha.setas.cheio { background: var(--perigo); animation: treme .2s 3; }
-.dica.status { background: #1f4f87e6; }
-.novidade { margin: 0; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 4px; background: #fff3c4; border: 2px solid var(--parede); border-radius: 99px; font-size: 13px; font-weight: 700; }
-.novidade b { background: var(--tinta); color: #fff; font-size: 11px; letter-spacing: .06em; padding: 2px 8px; border-radius: 99px; }
-.escala { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 6px; background: var(--cartao); border: 2px solid var(--parede); border-radius: 99px; font-size: 12.5px; font-weight: 700; }
+.ficha.horario { background: var(--vitima); padding-left: 10px; }
+.ficha.setas { background: var(--seta); padding: 4px 14px; }
+.ficha.setas.cheio { background: var(--vitima); animation: treme .2s 3; }
+.novidade { margin: 0; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; background: var(--papel); border: 2px solid var(--tinta); border-radius: 3px; font-size: 13.5px; font-weight: 600; }
+.novidade b { background: var(--tinta); color: var(--papel); font-size: 11px; letter-spacing: .08em; padding: 2px 7px; border-radius: 2px; }
+.escala { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px 2px 6px; background: var(--papel); border: 2px solid var(--tinta); border-radius: 3px; font-size: 13px; font-weight: 600; }
 .escala span { display: inline-flex; align-items: center; gap: 3px; }
 .escala b { color: var(--suave); padding: 0 2px; }
-
-/* trilho: quem está selecionado e pra quem ele pode contar */
-.morador.selecionado .toque { stroke: var(--seta); stroke-width: 6; }
-.morador.alvo .toque { stroke: var(--seta); stroke-width: 3; stroke-dasharray: 8 6; fill: #3b6ea514; animation: corre-alvo 1s linear infinite; }
-@keyframes corre-alvo { to { stroke-dashoffset: -14; } }
-.seta.ligacao line { stroke: var(--seta); stroke-width: 3; stroke-dasharray: 2 7; stroke-linecap: round; }
-.seta.ligacao.ativa line { stroke: var(--ativa); stroke-width: 5; animation: corre .6s linear infinite; }
-.etiqueta.contou > rect { fill: var(--ativa); }
-.morador .etiqueta.contou > text { fill: #fff; }
-.etiqueta.vitima > rect { fill: var(--perigo); }
-.morador .etiqueta.vitima > text { fill: #fff; }
-.morador .etiqueta .vez { font-size: 13px; font-weight: 900; fill: var(--seta); }
-.morador .etiqueta .igual { font-size: 14px; font-weight: 900; fill: var(--seta); text-anchor: middle; }
-.tem-celular { pointer-events: none; }
-.dica { margin: 0; max-width: 340px; padding: 7px 12px; background: #2b2622e6; color: #fff; border-radius: 10px; font-size: 13.5px; line-height: 1.35; text-align: center; animation: chega .5s cubic-bezier(.16, 1, .3, 1) both; }
+.dica { margin: 0; max-width: 340px; font-size: 14.5px; font-weight: 600; line-height: 1.35; text-align: center; text-wrap: balance; animation: chega .5s cubic-bezier(.16, 1, .3, 1) both; }
+.dica.status { color: var(--seta); }
 
 /* cena */
-.sol { fill: #ffe27a; }
-.nuvem path { fill: #ffffffd9; }
-.nuvem { animation: vento linear infinite; }
 .bairro { fill: var(--bairro); }
-.calcada { fill: #cfc6b8; }
-.meiofio { fill: #a89d8e; }
+.calcada { fill: #D9CFB8; }
+.meiofio { fill: #B9AD94; }
 .rua { fill: var(--rua); }
-.faixa { stroke: #e9dfc9; stroke-width: 4; stroke-dasharray: 26 22; }
-.poste rect, .poste path { fill: #3d3a44; stroke: #3d3a44; stroke-width: 4; }
-.poste .lampada { fill: #ffe9a6; stroke: none; }
+.poste rect, .poste path { fill: #3A4F48; stroke: #3A4F48; stroke-width: 4; }
+.poste .lampada { fill: #F6E9B8; stroke: none; }
 
 /* prédio em corte */
-/* rastro de cochicho: pra quem cada um conta */
+.estrutura { fill: var(--tinta); }
+.caixa rect { fill: #8FA7B0; stroke: var(--tinta); stroke-width: 2; }
+.comodo { fill: var(--papel); transition: fill .35s ease-out; }
+.comodo.vazio { fill: var(--vazio); } /* luz apagada */
+.comodo.ouviu { fill: var(--ouviu); } /* luz acesa: já ouviu */
+.comodo.culpado { fill: #E8B4AA; }
+.rodape { fill: #00000012; }
+.rodape.apagado { fill: #0000001c; }
+.porta .batente { fill: none; stroke: var(--madeira); stroke-width: 3; transition: stroke .2s; }
+.porta .contorno { fill: none; stroke: var(--tinta); stroke-width: 1.2; }
+.porta .folha { fill: var(--madeira); stroke: var(--tinta); stroke-width: 1.6; stroke-linejoin: round; transition: fill .2s; }
+.porta .macaneta { fill: var(--tinta); }
+.porta.usada .batente { stroke: var(--seta); stroke-width: 3.5; }
+.porta.ativa .folha { fill: var(--botao); }
+.escada .lance { fill: var(--tinta); fill-opacity: .09; stroke: var(--tinta); stroke-opacity: .5; stroke-width: 1.4; stroke-linejoin: round; transition: fill .2s; }
+.escada .corrimao { fill: none; stroke: var(--tinta); stroke-opacity: .55; stroke-width: 1.6; stroke-linecap: round; }
+.escada.usada .lance { stroke: var(--seta); stroke-opacity: 1; stroke-width: 2; }
+.escada.ativa .lance { fill: var(--botao); fill-opacity: .75; }
+.telefone line { stroke: #5C6E66; stroke-width: 3; stroke-dasharray: 7 6; }
+.telefone circle { fill: var(--papel); stroke: #5C6E66; stroke-width: 2; }
+.telefone.ativa line { stroke: var(--botao); stroke-width: 5; animation: corre .6s linear infinite; }
+.telefone.ativa circle { fill: var(--botao); }
+/* pra quem cada um conta: seta grossa com contorno de papel (lê em cima de qualquer cômodo) */
+.seta > line { stroke: var(--seta); stroke-width: 4.5; stroke-linecap: round; }
+.seta > line.fundo, .elo-fatal > line.fundo { stroke: var(--papel); stroke-width: 10; }
+.seta > polygon { fill: var(--seta); stroke: var(--papel); stroke-width: 1.5; stroke-linejoin: round; }
+.seta.girada > line:not(.fundo) { stroke: #173E52; }
+.seta.girada > polygon { fill: #173E52; }
 /* ⚠️ só os filhos diretos: sem o ">", isto pintava por dentro o ícone de telefone da ligação de celular */
-.seta > circle { fill: var(--seta); }
-.seta > path { fill: none; stroke: var(--seta); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
-.seta.girada > circle { fill: #1f4f87; }
-.seta.girada > path { stroke: #1f4f87; }
-.telhado { fill: #8a6a52; }
-.caixa { fill: #5b8fb0; stroke: var(--parede); stroke-width: 3; }
-.comodo { fill: var(--cartao); stroke: var(--parede); stroke-width: 6; transition: fill .35s ease-out; }
-.comodo.vazio { fill: #a89886; } /* luz apagada */
-.comodo.fofoqueira { fill: #fde7d6; }
-.comodo.exagerado { fill: #f8e3f2; }
-.comodo.docontra { fill: #e3eefb; }
-.comodo.tumulo { fill: #e4e0da; }
-.comodo.assunto { fill: #fbe0dc; }
-.comodo.ouviu { fill: #ffe39a; } /* luz acesa: já ouviu */
-.comodo.culpado { fill: #f4a49b; }
-.rodape { fill: #00000014; }
-.rodape.apagado { fill: #0000001f; }
-.fachada { fill: none; stroke: var(--parede); stroke-width: 9; }
-.passagem, .passagem rect { fill: #fffaf0; stroke: var(--parede); stroke-width: 2.5; transition: fill .2s; }
-.passagem path { stroke: var(--parede); stroke-width: 2; fill: none; }
-.passagem.ativa, .passagem.ativa rect { fill: var(--ativa); }
-.passagem.usada, .passagem.usada rect { stroke: var(--seta); stroke-width: 3.5; }
-.passagem.usada path { stroke: var(--seta); }
-.passagem.ativa { animation: pulsa .5s ease-out; transform-box: fill-box; transform-origin: center; }
-.telefone line { stroke: var(--suave); stroke-width: 3; stroke-dasharray: 7 6; }
-.telefone circle { fill: var(--cartao); stroke: var(--suave); stroke-width: 2; }
-.telefone.ativa line { stroke: var(--ativa); stroke-width: 5; animation: corre .6s linear infinite; }
-.telefone.ativa circle { fill: var(--ativa); }
-.padaria .placa { fill: #fffdf6; stroke: var(--parede); stroke-width: 2; }
-.padaria text { text-anchor: middle; dominant-baseline: middle; font-family: var(--fonte); }
-.padaria .faltam { font-size: 24px; font-weight: 900; fill: var(--perigo); }
-.padaria .toc { font-size: 12px; font-weight: 800; fill: var(--parede); font-style: italic; }
+.seta.ligacao > line { stroke: var(--seta); stroke-width: 3; stroke-dasharray: 2 7; }
+.seta.ligacao > path { fill: none; stroke: var(--seta); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
+.seta.ligacao.ativa > line { stroke: var(--botao); stroke-width: 5; animation: corre .6s linear infinite; }
+.padaria .placa { fill: var(--papel); stroke: var(--tinta); stroke-width: 2; }
+.padaria text { text-anchor: middle; dominant-baseline: middle; }
+.padaria .faltam { font-family: var(--titulo); font-size: 24px; fill: var(--vitima); }
+.padaria .toc { font-size: 12px; font-weight: 700; fill: var(--tinta); }
 .padaria { animation: balanca 3s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 0; }
-.zzz { font-size: 15px; font-weight: 800; fill: #f2e6c9; font-style: italic; animation: sobe 2.4s ease-in-out infinite; }
+.zzz { font-size: 15px; font-weight: 700; fill: var(--papel); animation: sobe 2.4s ease-in-out infinite; }
 .zzz.pequeno { font-size: 11px; animation-delay: -1.2s; }
+.aluga { font-size: 8.5px; font-weight: 700; fill: var(--vitima); text-anchor: middle; letter-spacing: .06em; }
 
 /* moradores */
-.morador text { text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
 .morador .toque { fill: transparent; stroke: none; }
 .morador.clicavel { cursor: pointer; }
-.morador.origem .toque { stroke: var(--ativa); stroke-width: 5; animation: brilha 1.4s ease-in-out infinite; }
-/* selecionada, a origem fica azul como qualquer outro: a origem continua dita pela etiqueta laranja */
-.morador.origem.selecionado .toque { stroke: var(--seta); stroke-width: 6; animation: none; }
-.etiqueta .exagera rect { fill: var(--exagera); stroke: none; }
-.morador .etiqueta .exagera text { fill: #fff; font-size: 11px; font-weight: 900; text-anchor: middle; }
-.etiqueta rect { fill: #fffdf6; stroke: var(--parede); stroke-width: 1.8; }
-.morador .etiqueta text { font-family: var(--fonte); font-size: 13px; font-weight: 800; fill: var(--tinta); text-anchor: start; }
+.morador.origem .toque { stroke: var(--botao); stroke-width: 4; animation: brilha 1.4s ease-in-out infinite; }
+.morador.origem.selecionado .toque { stroke: none; animation: none; }
+/* pra quem o selecionado pode contar: tracejado fino */
+.morador.alvo .toque { stroke: var(--seta); stroke-width: 1.8; stroke-dasharray: 6 4; animation: corre-alvo 1s linear infinite; }
+.cantoneiras path { fill: none; stroke: var(--seta); stroke-width: 5; stroke-linecap: square; }
+.etiqueta rect { fill: var(--papel); stroke: var(--tinta); stroke-width: 1.6; }
+.etiqueta text { font-family: var(--fonte); font-size: 13px; font-weight: 700; fill: var(--tinta); pointer-events: none; }
+.etiqueta .vez, .etiqueta .igual { font-size: 13px; fill: var(--seta); }
+.etiqueta .exagera rect { fill: var(--tinta); stroke: none; }
+.etiqueta .exagera text { fill: var(--papel); font-size: 11px; text-anchor: middle; }
+/* "−1" do Arnaldo: o avesso do "+1" (contorno em vez de cheio) */
+.etiqueta .abafa rect { fill: var(--papel); stroke: var(--tinta); stroke-width: 1.6; }
+.etiqueta .abafa text { fill: var(--tinta); font-size: 11px; text-anchor: middle; }
+.tem-celular { pointer-events: none; }
 .morador.culpado { transform-box: fill-box; animation: treme .3s 3; }
 /* vida: respiram e piscam, cada um no seu tempo */
 .vivo { animation: respira 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
 .olho { animation: pisca 4.6s infinite; transform-box: fill-box; transform-origin: center; }
 .balao { animation: estoura .35s cubic-bezier(.2, .9, .3, 1.4) both; transform-box: fill-box; transform-origin: 30% 100%; }
-.balao.grito rect { fill: var(--perigo); stroke: none; }
-.balao.grito text { font-family: var(--fonte); font-size: 15px; font-weight: 800; fill: #fff; text-anchor: middle; dominant-baseline: middle; }
+/* o balão que viaja pela seta a cada batida (posição final no estilo base, ver Predio) */
+.viaja { animation: viaja 600ms cubic-bezier(.45, 0, .25, 1) both; pointer-events: none; }
+@keyframes viaja { from { transform: translate(var(--x1), var(--y1)) scale(.5); opacity: 0; } 18% { opacity: 1; } to { transform: translate(var(--x2), var(--y2)) scale(1); opacity: 1; } }
+/* "QUÊ?!" em letras soltas, com riscos de impacto */
+.grito { animation: estoura .35s cubic-bezier(.2, .9, .3, 1.4) both; transform-box: fill-box; transform-origin: 50% 100%; }
+.grito text { font-family: var(--titulo); font-size: 29px; fill: var(--vitima); stroke: var(--papel); stroke-width: 5; paint-order: stroke; stroke-linejoin: round; }
+.grito .impacto { fill: none; stroke: var(--tinta); stroke-width: 2.4; stroke-linecap: round; }
 .girar { cursor: pointer; pointer-events: all; }
-.girar circle { fill: var(--seta); stroke: #fff; stroke-width: 2; }
+.girar circle { fill: var(--seta); stroke: var(--papel); stroke-width: 2; }
 .girar.esgotado { opacity: .35; }
 
-@keyframes vento { from { transform: translateX(-220px); } to { transform: translateX(620px); } }
-@keyframes respira { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.025); } }
+/* derrota pela vítima: o elo que entregou o boato a ela */
+.elo-fatal > line:not(.fundo) { stroke: var(--vitima); stroke-width: 5; stroke-linecap: round; }
+.elo-fatal > line.fundo { stroke-linecap: round; }
+.elo-fatal > polygon { fill: var(--vitima); stroke: var(--papel); stroke-width: 1.5; stroke-linejoin: round; }
+.elo-fatal { animation: chega .4s both; }
+/* derrota por tamanho/ordem/padaria/estrela sem notícia: plaquinha no pé do apartamento */
+.placa-causa { animation: chega .4s both; }
+.placa-causa rect { fill: var(--papel); stroke: var(--tinta); stroke-width: 2; }
+.placa-causa.culpa rect { stroke: var(--vitima); stroke-width: 3; }
+.placa-causa text { font-size: 12px; font-weight: 700; fill: var(--tinta); dominant-baseline: middle; }
+.placa-causa text.meio { text-anchor: middle; }
+.placa-causa text.curto { font-size: 11px; }
+.placa-causa.culpa text { fill: var(--vitima); }
+
+@keyframes respira { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.02); } }
 @keyframes pisca { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
 @keyframes estoura { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: scale(1); } }
-@keyframes pulsa { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
 @keyframes corre { to { stroke-dashoffset: -13; } }
-@keyframes brilha { 50% { stroke-opacity: .35; } }
+@keyframes corre-alvo { to { stroke-dashoffset: -10; } }
+@keyframes brilha { 50% { stroke-opacity: .3; } }
 @keyframes balanca { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 @keyframes sobe { 0%, 100% { transform: translateY(0); opacity: .9; } 50% { transform: translateY(-5px); opacity: .5; } }
 @keyframes treme { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
 @keyframes chega { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes afunda { from { opacity: 0; transform: rotate(-8deg) scale(1.6); } to { opacity: .92; transform: rotate(-8deg) scale(1); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -162,49 +175,41 @@ h1 { font-size: 22px; font-weight: 800; margin: 0; line-height: 1.1; font-variat
 /* rodapé: a rua continua embaixo do botão */
 .icone { vertical-align: -5px; display: inline-block; flex: none; }
 /* altura fixa (a dos botões): o desfecho sobe por cima da rua sem encolher o palco nem mover o prédio */
-footer { position: relative; z-index: 1; min-height: 74px; background: var(--rua); padding-block: 10px 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); text-align: center; }
+footer { position: relative; z-index: 1; min-height: 76px; background: var(--rua); padding-block: 10px 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); text-align: center; }
 button { font: inherit; cursor: pointer; }
-.principal, .acoes button { min-height: 50px; padding: 0 22px; border-radius: 25px; font-weight: 800; font-size: 18px; }
-.principal { width: 100%; background: var(--ativa); color: #fff; border: 2px solid #2b2622; box-shadow: 0 4px 0 #2b2622; }
-.principal:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #2b2622; }
-.principal:disabled { background: #6b6974; color: #d9d6de; border-color: #3a3942; box-shadow: none; }
+/* botão de elevador: retângulo com bloco de sombra que afunda quando aperta; texto escuro no mostarda (6,3:1) */
+.principal, .acoes button { min-height: 50px; padding: 0 22px; border-radius: 7px; font-weight: 700; font-size: 18px; }
+.principal { width: 100%; background: var(--botao); color: var(--tinta); border: 2.4px solid var(--tinta); box-shadow: 0 5px 0 var(--tinta); }
+.principal:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--tinta); }
+.principal:disabled { background: #5C6E66; color: #DCE3E0; border-color: #22322C; box-shadow: none; }
 .desfecho { position: absolute; bottom: 12px; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); }
-.fim { background: var(--cartao); border-radius: 16px; padding: 12px; border: 2px solid var(--tinta); animation: chega .4s cubic-bezier(.16, 1, .3, 1) both; }
-.fim.vitoria { box-shadow: 0 4px 0 var(--ok); }
-.fim.derrota { box-shadow: 0 4px 0 var(--perigo); }
-.fim p { margin: 2px 0 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; text-align: left; }
+.fim { position: relative; background: var(--papel); border-radius: 8px; padding: 12px; border: 2.4px solid var(--tinta); box-shadow: 0 6px 0 var(--tinta); animation: chega .4s cubic-bezier(.16, 1, .3, 1) both; }
+.fim p { margin: 2px 0 10px; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; text-align: left; }
+.fim .fala { margin: -4px 0 10px; font-size: 14.5px; font-weight: 400; display: block; }
+.fim .fala b { font-weight: 700; }
+/* carimbo do síndico: só quando a advertência é de verdade */
+.carimbo { position: absolute; top: -20px; right: 12px; padding: 3px 10px; border: 4px double var(--vitima); border-radius: 4px; color: var(--vitima); background: #FBF4E5E6; font-size: 12px; font-weight: 700; letter-spacing: .08em; line-height: 1.15; text-align: center; transform: rotate(-8deg); animation: afunda .3s .2s cubic-bezier(.25, 1, .5, 1) both; }
+.carimbo small { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: 0; }
 .acoes { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-.acoes button { background: var(--cartao); color: var(--tinta); border: 2px solid var(--tinta); }
-.acoes .principal { width: auto; flex: 1; background: var(--ativa); color: #fff; }
+.acoes button { background: var(--papel); color: var(--tinta); border: 2.4px solid var(--tinta); }
+.acoes .principal { width: auto; flex: 1; background: var(--botao); }
 .acoes button:disabled { opacity: .45; }
 footer > .acoes { flex-wrap: nowrap; }
 /* pesquisa: linha discreta pro observador, embaixo do Jogar */
-.exportar { margin-top: 8px; background: none; border: none; color: #c9c5d1; font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; }
-.resumo, .zerou { font-size: 13px; color: #d9d6de; margin: 8px 0 0; }
+.exportar { margin-top: 10px; background: none; border: none; color: var(--suave); font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; }
+.resumo, .zerou { font-size: 13px; color: #DCE3E0; margin: 8px 0 0; }
 .fim .zerou { color: var(--suave); width: 100%; margin: 0; }
-
-/* derrota pela vítima: o elo que entregou o boato a ela */
-.elo-fatal line, .elo-fatal path { fill: none; stroke: var(--perigo); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
-.elo-fatal { animation: chega .4s both; }
-/* derrota por tamanho/ordem/padaria/estrela sem notícia: plaquinha no pé do apartamento */
-.placa-causa { animation: chega .4s both; }
-.placa-causa rect { fill: var(--cartao); stroke: var(--parede); stroke-width: 2; }
-.placa-causa.culpa rect { stroke: var(--perigo); stroke-width: 3; }
-.placa-causa text { font-family: var(--fonte); font-size: 12px; font-weight: 800; fill: var(--tinta); dominant-baseline: middle; }
-.placa-causa text.meio { text-anchor: middle; }
-.placa-causa text.curto { font-size: 11px; }
-.placa-causa.culpa text { fill: var(--perigo); }
 
 /* cena de chegada (estreia de morador ou regra): o estado final é o estilo base, a animação só chega nele
    — assim, com movimento reduzido, a cena aparece pronta */
-.chegada { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: var(--ceu); text-align: center; padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.chegada-titulo { margin: 0; font-size: 24px; font-weight: 800; font-variation-settings: 'opsz' 96; animation: chega .4s both; }
+.chegada { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: var(--reboco); text-align: center; padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.chegada-titulo { margin: 0; font-family: var(--titulo); font-size: 28px; animation: chega .4s both; }
 .chegada-cena { width: min(100%, 360px); height: auto; overflow: visible; }
-.chegada-calcada { fill: #cfc6b8; }
-.chegada-fachada { fill: var(--cartao); stroke: var(--parede); stroke-width: 5; }
-.chegada-janela { fill: #ffe39a; stroke: var(--parede); stroke-width: 3; }
-.chegada-porta { fill: #8a6a52; stroke: var(--parede); stroke-width: 3; }
-.chegada-vez { font-family: var(--fonte); font-size: 16px; font-weight: 900; fill: var(--seta); }
+.chegada-calcada { fill: #D9CFB8; }
+.chegada-fachada { fill: var(--papel); stroke: var(--tinta); stroke-width: 5; }
+.chegada-janela { fill: var(--ouviu); stroke: var(--tinta); stroke-width: 3; }
+.chegada-porta { fill: var(--madeira); stroke: var(--tinta); stroke-width: 3; }
+.chegada-vez { font-size: 16px; font-weight: 700; fill: var(--seta); }
 .chegada-quem { transform: translateX(120px); animation: entra-andando 1.2s ease-out both; }
 .chegada-quem .anda { animation: passo .3s ease-in-out 4 alternate; }
 .demo-padaria .chegada-quem { transform: translateX(-90px); animation: sai-pra-padaria 2.6s .3s ease-in both; }
@@ -215,7 +220,7 @@ footer > .acoes { flex-wrap: nowrap; }
 .placa-aparece { animation: chega .5s 1.4s both; }
 .toca { animation: estoura .4s 1.3s cubic-bezier(.2, .9, .3, 1.4) both, treme .15s 1.8s 6; transform-box: fill-box; transform-origin: center; }
 .fila-balao { transform: translateX(92px); animation: fila 2s 1.3s ease-in-out both; }
-.chegada-fala { margin: 0; max-width: 320px; padding: 8px 14px; background: var(--cartao); border: 2px solid var(--parede); border-radius: 16px 16px 16px 4px; font-size: 17px; font-weight: 700; font-style: italic; animation: chega .4s 1.1s both; }
+.chegada-fala { margin: 0; max-width: 320px; padding: 8px 14px; background: var(--papel); border: 2.4px solid var(--tinta); border-radius: 4px; font-size: 17px; font-weight: 600; animation: chega .4s 1.1s both; }
 .chegada-regra { margin: 0; max-width: 320px; font-size: 15px; line-height: 1.4; font-weight: 600; animation: chega .4s 2.2s both; }
 .chegada .principal { width: min(100%, 320px); }
 @keyframes entra-andando { from { transform: translateX(-70px); } }
@@ -225,31 +230,107 @@ footer > .acoes { flex-wrap: nowrap; }
 @keyframes entra-balao { from { transform: translateX(0) scale(1); opacity: 1; } 80% { opacity: 1; } }
 @keyframes fila { from { transform: translateX(0); opacity: 0; } 15% { opacity: 1; transform: translateX(0); } 45% { transform: translateX(0); } }
 
-/* advertências do síndico: cartões amarelos recebidos; contorno = ainda não */
-.cartoes { display: inline-flex; gap: 1px; color: var(--parede); }
-.ficha.advertencias { background: var(--cartao); border: 2px solid var(--parede); padding: 1px 6px; }
+/* advertências do síndico: papéis de aviso recebidos; contorno tracejado = ainda não */
+.cartoes { display: inline-flex; gap: 1px; color: var(--tinta); }
+.ficha.advertencias { background: var(--papel); border: 2px solid var(--tinta); padding: 1px 6px; }
 .fim .aviso { margin: -4px 0 10px; font-size: 13.5px; gap: 6px; }
 
-/* menu = o prédio: cada andar uma fase, elevador no andar atual, portaria do síndico no térreo */
-.menu-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.menu-topo .titulo { text-align: left; }
-.menu-advertencias { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.menu-advertencias .volta, .menu-advertencias .rotulo { font-size: 12px; font-weight: 700; color: #2f5d73; }
-.menu-advertencias .rotulo { letter-spacing: .03em; }
-.mapa { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding-block: 8px 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.telhado-menu { width: min(100%, 380px); height: 14px; flex: none; background: #8a6a52; border-radius: 4px 4px 0 0; }
-.andares { list-style: none; margin: 0; padding: 4px 0; width: min(100%, 360px); display: flex; flex-direction: column; gap: 5px; background: var(--parede); }
-.andar { display: grid; grid-template-columns: 34px 1fr; background: var(--cartao); margin-inline: 6px; }
-.andar .poco { position: relative; background: #cfc3b3; border-right: 3px solid var(--parede); }
-.andar .elevador { position: absolute; inset: 7px 5px; border: 2px solid var(--tinta); border-radius: 3px; background: linear-gradient(90deg, var(--ativa) 47%, var(--tinta) 47% 53%, var(--ativa) 53%); }
-.andar button { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; min-height: 52px; padding: 0 12px; background: none; border: none; color: var(--tinta); font-size: 15px; font-weight: 700; text-align: left; }
-.andar button:disabled { cursor: default; }
-.andar .num { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #ece3d6; font-size: 13px; font-weight: 800; }
-.andar .nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.andar .marca { flex: none; display: inline-flex; }
-.andar.atual { background: #ffe39a; } /* luz acesa: é aqui que você está */
-.andar.atual .num { background: var(--ativa); color: #fff; }
-.andar.trancado { background: #a89886; color: #4d4238; } /* luz apagada */
-.andar.trancado button { color: #4d4238; }
-.andar.trancado .num { background: #8f7f6e; color: #ece3d6; }
-.portaria { width: min(100%, 360px); flex: none; margin-bottom: 12px; padding: 10px 12px; background: #e4d6c3; border: 6px solid var(--parede); border-top-width: 0; font-size: 13px; line-height: 1.35; }
+/* menu = uma janela no prédio (Consulta 5): aviso do síndico com resposta, três andares, placa e botão */
+.menu { background: var(--reboco); }
+.menu-topo { background: none; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-block: 12px 6px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.marca { font-family: var(--titulo); font-size: 36px; font-weight: 400; margin: 0; line-height: 1; }
+.predio-nome { margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: .16em; color: var(--suave); }
+.menu-advertencias { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding-top: 4px; }
+.menu-advertencias .rotulo { font-size: 12px; font-weight: 600; color: var(--suave); }
+.menu-advertencias .volta { font-size: 12px; font-weight: 700; color: var(--vitima); }
+.mural { position: relative; margin: 4px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); padding: 7px; background: var(--metal); border: 2px solid var(--tinta); border-radius: 3px; }
+.papel-aviso { background: var(--papel); border: 1.2px solid var(--tinta); padding: 8px 120px 9px 12px; min-height: 64px; }
+.papel-aviso .de { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; color: var(--vitima); }
+.papel-aviso p { margin: 3px 0 0; font-size: 17px; font-weight: 700; line-height: 1.15; text-wrap: balance; }
+.resposta { position: absolute; right: 14px; top: 20px; width: 104px; margin: 0; padding: 9px 6px; background: var(--ouviu); border: 1.4px solid var(--tinta); font-size: 15px; font-weight: 600; line-height: 1.15; text-align: center; transform: rotate(5deg); }
+.resposta::before { content: ''; position: absolute; top: -7px; left: 34px; width: 34px; height: 11px; background: #FFFFFF8C; }
+.janela { flex: 1; min-height: 0; display: flex; padding-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px)); }
+.janela svg { width: 100%; height: 100%; }
+.andar-janela .corredor { fill: #EFE7D3; }
+.andar-janela.trancado .corredor { fill: #D3C8AC; }
+.andar-janela.escolhivel { cursor: pointer; }
+.janela text { font-family: var(--fonte); font-weight: 700; text-anchor: middle; fill: var(--tinta); }
+.janela .porta-num { font-size: 8px; }
+.janela .reservado { font-size: 9px; letter-spacing: .06em; }
+.janela .trancado-txt { font-size: 11px; }
+.janela .num-andar { font-size: 13px; }
+.janela .visor { font-size: 13px; fill: var(--botao); }
+.janela .longo { font-size: 11px; }
+.placa-linha { display: flex; gap: 10px; padding-block: 10px 2px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+/* placa esmaltada: tinta com filete de pastilha */
+.placa-andar { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 6px 14px 7px; background: var(--tinta); color: var(--papel); border-radius: 4px; box-shadow: inset 0 0 0 3px var(--tinta), inset 0 0 0 4px var(--pastilha); }
+.placa-andar span { font-size: 12px; font-weight: 600; color: #D8D2C2; }
+.placa-andar strong { font-family: var(--titulo); font-size: 20px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ver-andares { flex: none; padding: 0 12px; background: var(--papel); color: var(--tinta); border: 2.2px solid var(--tinta); border-radius: 6px; font-size: 14px; font-weight: 700; }
+.menu footer { background: none; }
+.indice-fundo { position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: #283C3673; }
+.indice { width: min(100%, 520px); display: flex; flex-direction: column; gap: 14px; padding-block: 16px max(16px, env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: var(--papel); border-top: 2.4px solid var(--tinta); border-radius: 12px 12px 0 0; animation: sobe-folha .25s cubic-bezier(.16, 1, .3, 1) both; }
+.indice-topo { display: flex; align-items: center; justify-content: space-between; }
+.indice h2 { font-family: var(--titulo); font-size: 22px; font-weight: 400; margin: 0; }
+.indice .fechar { background: none; border: none; color: var(--seta); font-size: 15px; font-weight: 700; padding: 8px 0 8px 12px; }
+.dezenas { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.dezenas button { flex: none; min-height: 38px; padding: 0 12px; background: var(--papel); color: var(--tinta); border: 1.8px solid var(--tinta); border-radius: 5px; font-size: 13px; font-weight: 700; }
+.dezenas button span { color: var(--seta); }
+.dezenas button.atual { background: var(--tinta); color: var(--papel); }
+.dezenas button.atual span { color: var(--papel); }
+.dezenas button:disabled { opacity: .45; }
+.andares-grade { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.andares-grade button { position: relative; height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: #F3EBD8; color: var(--tinta); border: 1.8px solid var(--tinta); border-radius: 5px; }
+.andares-grade b { font-size: 15px; }
+.andares-grade .portinha { width: 16px; height: 22px; background: #7E9C90; border: 1.4px solid var(--tinta); }
+.andares-grade .visto { position: absolute; right: 6px; bottom: 5px; color: var(--seta); font-weight: 700; }
+.andares-grade .proximo { background: #F7E7BC; }
+.andares-grade .marcado { background: var(--ouviu); box-shadow: 0 0 0 3px var(--seta); }
+.andares-grade .trancado { background: #D3C8AC; color: #5C6E66; cursor: default; }
+.andares-grade .trancado .portinha { background: #8C9A8F; }
+@keyframes sobe-folha { from { transform: translateY(40px); opacity: 0; } }
+
+/* arte ilustrada (padrão; ?vetor desliga): o prédio no traço dos personagens ilustrados (tinta marrom, tons quentes, sombra suave) */
+.arte {
+  --tinta: #2B1E16; --papel: #FFF6E6; --reboco: #EAD6B5; --ceu: #F3E1C0; --bairro: #E5CDA2; --rua: #4A3B33;
+  --suave: #6B4F3A; --madeira: #B98552; --vazio: #B7A58A; --metal: #8B6F55; --pastilha: #C9A77A;
+}
+.arte .estrutura { fill: #5A3E2B; }
+.arte .caixa rect { fill: #C9A77A; }
+.arte .comodo { fill: #F6E7CB; }
+.arte .comodo.parede-1 { fill: #F1DCBC; }
+.arte .comodo.parede-2 { fill: #EEE0C8; }
+.arte .comodo.parede-3 { fill: #F4DDC2; }
+.arte .comodo.vazio { fill: var(--vazio); }
+.arte .comodo.ouviu { fill: #F7D98B; }
+.arte .comodo.culpado { fill: #EDB3A3; }
+.arte .rodape { fill: #B98552; }
+.arte .rodape.apagado { fill: #8F7A60; }
+.arte .rodape-linha { stroke: var(--tinta); stroke-width: 1.4; }
+.arte .movel { opacity: .8; }
+.arte .calcada { fill: #D9C29A; }
+.arte .meiofio { fill: #B9A07A; }
+.arte .poste rect, .arte .poste path { fill: #4A3B33; stroke: #4A3B33; }
+/* fundos ilustrados: a luz de quem ouviu e o vermelho da vítima vêm numa camada por cima */
+/* ⚠️ a luz é a pista principal ("quem já sabe"): fraca demais em cima do fundo colorido (.42 sumia no quarto
+   verde e o vermelho virava roxo no azul). Camada forte + moldura acesa; os moradores ficam por cima, intactos */
+.arte .luz { fill: #FFD45A; fill-opacity: 0; stroke: none; transition: fill-opacity .35s ease-out; }
+.arte .luz.ouviu { fill-opacity: .6; stroke: #FFC12E; stroke-width: 6; }
+.arte .luz.culpado { fill: #E8553E; fill-opacity: .58; stroke: #C83A2A; stroke-width: 6; }
+.arte .sol { fill: #F6C95E; }
+.arte .nuvem path { fill: #FFF8EA; stroke: #E5CDA2; stroke-width: 1.5; }
+.arte .nuvem { animation: vento linear infinite; }
+@keyframes vento { from { transform: translateX(-260px); } to { transform: translateX(660px); } }
+
+/* durante o espalhar: ×2; depois: passo a passo */
+.acoes .rapido { flex: none; min-width: 64px; padding: 0 12px; }
+.acoes .rapido.ligado { background: var(--tinta); color: var(--papel); }
+.passos { align-items: center; flex-wrap: nowrap; }
+.passos > button:not(.principal) { flex: none; width: 52px; padding: 0; font-size: 26px; line-height: 1; }
+.passos .passo-atual { flex: 1; min-width: 0; color: var(--papel); font-weight: 700; font-size: 16px; }
+.passos .principal { flex: none; width: auto; }
+/* ⚠️ o "Espalhando…" desativado dentro das ações herdava o mostarda e a letra sumia */
+.acoes .principal:disabled { background: #5C6E66; color: #F1F4F2; border-color: #22322C; box-shadow: none; opacity: 1; }
+/* desfecho: os botões numa linha só (até três na vitória: Repetir, Rever, Próxima fase) */
+.fim .acoes { flex-wrap: nowrap; }
+.fim .acoes button { min-width: 0; padding: 0 12px; font-size: 16.5px; white-space: nowrap; }
