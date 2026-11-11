@@ -334,3 +334,35 @@ footer > .acoes { flex-wrap: nowrap; }
 /* desfecho: os botões numa linha só (até três na vitória: Repetir, Rever, Próxima fase) */
 .fim .acoes { flex-wrap: nowrap; }
 .fim .acoes button { min-width: 0; padding: 0 12px; font-size: 16.5px; white-space: nowrap; }
+
+/* ajustes (engrenagem no topo do menu) */
+.menu-direita { display: flex; align-items: flex-start; gap: 10px; }
+.engrenagem { width: 44px; height: 44px; flex: none; display: grid; place-items: center; background: var(--papel); color: var(--tinta); border: 2.2px solid var(--tinta); border-radius: 7px; box-shadow: 0 3px 0 var(--tinta); }
+.engrenagem:active { transform: translateY(3px); box-shadow: none; }
+.ajustes .ajuste { display: flex; flex-direction: column; gap: 8px; padding-block: 10px; border-top: 1.5px solid #CDBBA0; }
+.ajustes .ajuste.alternar { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
+.ajustes .ajuste.alternar > span { display: flex; flex-direction: column; gap: 2px; }
+.ajustes input[type=checkbox] { width: 26px; height: 26px; flex: none; accent-color: var(--seta); }
+.rotulo-ajuste { font-size: 16px; font-weight: 700; }
+.nota-ajuste { font-size: 14px; color: var(--suave); }
+.segmentos { display: flex; }
+.segmentos button { flex: 1; min-height: 44px; background: var(--papel); color: var(--tinta); border: 2px solid var(--tinta); font-size: 15px; font-weight: 700; }
+.segmentos button:first-child { border-radius: 6px 0 0 6px; }
+.segmentos button:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+.segmentos button.marcado { background: var(--tinta); color: var(--papel); }
+.ajustes .secundario { align-self: flex-start; min-height: 44px; padding: 0 16px; background: var(--papel); color: var(--vitima); border: 2px solid var(--vitima); border-radius: 6px; font-size: 15px; font-weight: 700; }
+.ajustes .confirmar { display: flex; flex-direction: column; gap: 8px; }
+.ajustes .confirmar .acoes { justify-content: flex-start; }
+.ajustes .confirmar .acoes button { min-height: 44px; font-size: 15px; padding: 0 16px; border-radius: 6px; }
+.ajustes .confirmar .acoes .perigo { background: var(--vitima); color: var(--papel); border-color: var(--vitima); }
+.ajustes .versao { margin: 4px 0 0; font-size: 13px; color: var(--suave); }
+
+/* menos animação (escolhido nos ajustes): o mesmo que o "movimento reduzido" do sistema */
+.reduzir *, .reduzir *::before, .reduzir *::after { animation: none !important; transition: none !important; }
+
+/* proteção contra erro: em vez de tela branca */
+.protecao { justify-content: center; align-items: center; gap: 12px; padding: 24px max(16px, env(safe-area-inset-left, 0px)); text-align: center; background: var(--reboco); }
+.protecao h1 { font-size: 30px; }
+.protecao p { margin: 0; font-size: 16px; max-width: 320px; }
+.protecao .principal { width: min(100%, 320px); }
+.protecao .detalhe { font-size: 13px; color: var(--suave); }

@@ -4,6 +4,9 @@ import { Cartao } from './Icones';
 import { DonaGloria, Personagem, type Expressao } from './Personagem';
 import type { Tipo, Vizinho } from './motor';
 import { ARTE, CENARIO, urlArte } from './arte';
+import { aplicarMovimento, armazemDoNavegador, gravarAjustes, lerAjustes, type Ajustes as ValoresAjustes } from './ajustes';
+
+declare const __VERSAO__: string; // vite.config: commit no GitHub, "local" no computador
 
 export interface Vidas { restam: number; falta?: number; gastar: () => number }
 
@@ -194,14 +197,15 @@ function Andar({ i, n, estado, elevador, aoEscolher }: {
 // trancado = porta fechada com plaquinha. Pra ir longe, "Ver andares" (dezenas).
 // Sem `vidas` (pesquisa com pessoas), nada de advertência no menu.
 // `pesquisa`: pro observador do teste, o código do participante e o botão de baixar o registro das jogadas.
-export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa }: {
-  titulos: string[]; liberada: number; vidas?: Vidas; aoJogar: (andar: number) => void;
+export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar }: {
+  titulos: string[]; liberada: number; vidas?: Vidas; aoJogar: (andar: number) => void; aoApagar?: () => void;
   pesquisa?: { participante: string; aoExportar: () => void };
 }) {
   const zerou = liberada >= titulos.length;
   const atual = zerou ? 0 : liberada;
   const [sel, setSel] = useState(atual);
   const [indice, setIndice] = useState(false);
+  const [ajustes, setAjustes] = useState(false);
   const suspenso = !!vidas && vidas.restam <= 0;
   const [aviso, resposta] = avisoDo(liberada, vidas);
   const estado = (i: number) => (i < 0 || i >= titulos.length ? 'fora' : i === liberada ? 'atual' : i < liberada ? 'feito' : 'trancado');
@@ -214,6 +218,7 @@ export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa }: {
           <h1 className="marca">Fofoca!</h1>
           <div className="predio-nome">EDIFÍCIO PRIMAVERA</div>
         </div>
+        <div className="menu-direita">
         {vidas && (
           <div className="menu-advertencias">
             <CartoesAdvertencia restam={vidas.restam} />
@@ -221,6 +226,13 @@ export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa }: {
             {vidas.falta !== undefined && <span className="volta">{suspenso ? 'suspenso' : '−1'} em {relogio(vidas.falta)}</span>}
           </div>
         )}
+        <button className="engrenagem" onClick={() => setAjustes(true)} aria-label="Ajustes">
+          <svg width={22} height={22} viewBox="-12 -12 24 24" aria-hidden="true">
+            <path d="M-1.6,-10 h3.2 l.6,2.6 2,.9 2.3,-1.4 2.2,2.2 -1.4,2.3 .9,2 2.6,.6 v3.2 l-2.6,.6 -.9,2 1.4,2.3 -2.2,2.2 -2.3,-1.4 -2,.9 -.6,2.6 h-3.2 l-.6,-2.6 -2,-.9 -2.3,1.4 -2.2,-2.2 1.4,-2.3 -.9,-2 -2.6,-.6 v-3.2 l2.6,-.6 .9,-2 -1.4,-2.3 2.2,-2.2 2.3,1.4 2,-.9 Z" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinejoin="round" />
+            <circle r={3.2} fill="none" stroke="currentColor" strokeWidth={1.8} />
+          </svg>
+        </button>
+        </div>
       </header>
 
       <div className="mural" aria-label="Aviso da administração">
@@ -261,6 +273,7 @@ export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa }: {
         )}
       </footer>
 
+      {ajustes && <Ajustes aoFechar={() => setAjustes(false)} aoApagar={aoApagar} />}
       {indice && (
         <Indice total={titulos.length} liberada={liberada} sel={sel}
           aoIr={(i) => { setSel(i); setIndice(false); }} aoFechar={() => setIndice(false)} />
@@ -308,6 +321,59 @@ function Indice({ total, liberada, sel, aoIr, aoFechar }: {
           })}
         </div>
         <button className="principal" onClick={() => aoIr(marcado)}>Ir ao andar {marcado + 1}</button>
+      </div>
+    </div>
+  );
+}
+
+// Ajustes: velocidade do espalhar, menos animação, apagar progresso (com confirmação na própria tela) e versão.
+function Ajustes({ aoFechar, aoApagar }: { aoFechar: () => void; aoApagar?: () => void }) {
+  const [a, setA] = useState<ValoresAjustes>(() => lerAjustes(armazemDoNavegador));
+  const [confirmar, setConfirmar] = useState(false);
+  const mudar = (novo: ValoresAjustes) => { setA(novo); gravarAjustes(armazemDoNavegador, novo); aplicarMovimento(novo.reduzir); };
+  return (
+    <div className="indice-fundo" onClick={aoFechar}>
+      <div className="indice ajustes" role="dialog" aria-label="Ajustes" onClick={(e) => e.stopPropagation()}>
+        <div className="indice-topo">
+          <h2>Ajustes</h2>
+          <button className="fechar" onClick={aoFechar}>Fechar</button>
+        </div>
+
+        <div className="ajuste">
+          <span className="rotulo-ajuste">Velocidade do espalhar</span>
+          <div className="segmentos" role="radiogroup" aria-label="Velocidade do espalhar">
+            <button role="radio" aria-checked={!a.rapido} className={a.rapido ? '' : 'marcado'} onClick={() => mudar({ ...a, rapido: false })}>Normal</button>
+            <button role="radio" aria-checked={a.rapido} className={a.rapido ? 'marcado' : ''} onClick={() => mudar({ ...a, rapido: true })}>Rápida ×2</button>
+          </div>
+        </div>
+
+        <label className="ajuste alternar">
+          <span>
+            <span className="rotulo-ajuste">Menos animação</span>
+            <span className="nota-ajuste">Sem balão voando nem personagens se mexendo.</span>
+          </span>
+          <input type="checkbox" checked={a.reduzir} onChange={(e) => mudar({ ...a, reduzir: e.target.checked })} />
+        </label>
+
+        {aoApagar && (
+          <div className="ajuste">
+            <span className="rotulo-ajuste">Progresso</span>
+            {/* depois de apagar, o menu se remonta já no 1º andar (e esta folha fecha): esse é o retorno */}
+            {confirmar ? (
+              <div className="confirmar">
+                <span className="nota-ajuste">Apagar mesmo? Você volta pro 1º andar. As advertências continuam.</span>
+                <div className="acoes">
+                  <button onClick={() => setConfirmar(false)}>Cancelar</button>
+                  <button className="perigo" onClick={aoApagar}>Apagar</button>
+                </div>
+              </div>
+            ) : (
+              <button className="secundario" onClick={() => setConfirmar(true)}>Apagar progresso</button>
+            )}
+          </div>
+        )}
+
+        <p className="versao">Versão {typeof __VERSAO__ === 'string' ? __VERSAO__ : 'local'}</p>
       </div>
     </div>
   );

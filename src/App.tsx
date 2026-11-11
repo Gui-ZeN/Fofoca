@@ -19,6 +19,7 @@ import { Casa } from './Icones';
 import { APRESENTACOES, CHEGADAS_DE_TESTE, Chegada } from './Chegada';
 import { explicar } from './explicar';
 import { baixarRegistro, registro } from './registro';
+import { apagarProgresso, armazemDoNavegador, gravarAjustes, lerAjustes } from './ajustes';
 
 // Sem link: a campanha (menu-mapa do prédio + 28 andares intercalados + advertências do síndico).
 // Com link: o teste com pessoas — ?grupo=A/B (10 fases do trilho × 4 de giros, mesmos prédios) ou
@@ -104,6 +105,7 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
   const vidas = pesquisa ? undefined : advertencias; // na pesquisa, nada de advertência: nem cobra, nem aparece
   const chave = pesquisa ? 'fofoca.pesquisa' : 'fofoca.campanha';
   const [andar, setAndar] = useState<number>();
+  const [apagou, setApagou] = useState(0); // remonta o menu depois de apagar o progresso
   // Pesquisa: registro das jogadas (sessão, telas, tentativas, resultado visto, app em segundo plano)
   useEffect(() => {
     if (!pesquisa) return;
@@ -118,7 +120,9 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
   useEffect(() => { if (andar === undefined) registro.registrar('view_change', { vista: 'menu', liberada: ler(`${chave}.liberada`, 0) }); }, [andar]);
   if (andar === undefined) {
     return (
-      <Menu titulos={ANDARES.map((a) => a.fase.titulo)} liberada={ler(`${chave}.liberada`, 0)} vidas={vidas} aoJogar={setAndar}
+      // na pesquisa não tem "apagar progresso": entre participantes, quem zera é o observador (&zerar)
+      <Menu key={apagou} titulos={ANDARES.map((a) => a.fase.titulo)} liberada={ler(`${chave}.liberada`, 0)} vidas={vidas} aoJogar={setAndar}
+        aoApagar={pesquisa ? undefined : () => { apagarProgresso(armazemDoNavegador, chave); setApagou(apagou + 1); }}
         pesquisa={pesquisa ? { participante: registro.participante(), aoExportar: baixarRegistro } : undefined} />
     );
   }
@@ -159,7 +163,8 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const acabouDeSelecionar = useRef(false);
   const [resultado, setResultado] = useState<Resultado>();
   const [batida, setBatida] = useState(0);
-  const [rapido, setRapido] = useState(false); // ×2: vale até a pessoa desligar
+  const [rapido, setRapido] = useState(() => lerAjustes(armazemDoNavegador).rapido); // ×2: vale até a pessoa desligar (fica nos ajustes)
+  const alternarRapido = () => { const r = !rapido; setRapido(r); gravarAjustes(armazemDoNavegador, { ...lerAjustes(armazemDoNavegador), rapido: r }); };
   const ritmo = rapido ? PASSO_MS / 2 : PASSO_MS;
   // Passo a passo depois da tentativa: uma batida PRÓPRIA, só pra tela.
   // ⚠️ Não reaproveitar `batida`: voltar ela desfaz o `terminou`, e ao avançar de novo os efeitos do fim rodam outra
@@ -390,7 +395,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
         ) : (
           <div className="acoes">
             <button className="principal" disabled>Espalhando… batida {Math.max(1, batida)}</button>
-            <button className={rapido ? 'rapido ligado' : 'rapido'} onClick={() => setRapido(!rapido)} aria-pressed={rapido}>×2</button>
+            <button className={rapido ? 'rapido ligado' : 'rapido'} onClick={alternarRapido} aria-pressed={rapido}>×2</button>
           </div>
         )}
       </footer>

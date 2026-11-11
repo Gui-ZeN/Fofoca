@@ -7,10 +7,15 @@ import '@fontsource/asap/600.css';
 import '@fontsource/asap/700.css';
 import './estilo.css';
 import { ARTE, carregarArte } from './arte';
+import { Protecao } from './Protecao';
+import { aplicarMovimento, armazemDoNavegador, lerAjustes } from './ajustes';
+
+aplicarMovimento(lerAjustes(armazemDoNavegador).reduzir);
 
 const raiz = createRoot(document.getElementById('root')!);
 // ?prova: prova estática da direção visual nova, carregada à parte (não entra no jogo)
 if (new URLSearchParams(location.search).has('prova')) import('./prova/Prova').then((m) => raiz.render(<m.Prova />));
 // a arte ilustrada é o padrão; ?vetor mostra o desenho antigo em SVG
-else if (ARTE) { document.documentElement.classList.add('arte'); carregarArte().then(() => raiz.render(<App />)); }
-else raiz.render(<App />);
+// a Protecao troca tela branca por "O elevador travou" + voltar ao prédio
+else if (ARTE) { document.documentElement.classList.add('arte'); carregarArte().then(() => raiz.render(<Protecao><App /></Protecao>)); }
+else raiz.render(<Protecao><App /></Protecao>);

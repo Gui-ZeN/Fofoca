@@ -243,6 +243,7 @@ Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio
 - Tocar num andar liberado escolhe ele; **"Ver andares"** abre o índice por dezenas e o "Ir ao andar N".
 - Placa esmaltada com o andar e o nome; botão de elevador **"Jogar · 9º andar"**. Dentro da fase, a **casinha** volta ao prédio.
 - No `?pesquisa`, embaixo: "Participante P-XXXX · exportar registro".
+- **Ajustes** (engrenagem no topo): velocidade do espalhar (normal ou ×2, que o botão ×2 da fase também grava), **menos animação** (vale além do "movimento reduzido" do sistema), **apagar progresso** com confirmação na própria tela (volta ao 1º andar; **não** zera as advertências; não existe no `?pesquisa`) e a versão do jogo. Guardado em `fofoca.ajustes`.
 
 ---
 
@@ -273,6 +274,7 @@ Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** co
 - **Céu pouco:** o prédio ocupa o palco; nas fases pequenas, sol e nuvens lentas no que sobra.
 - **Movimento:** cochicho e susto nas poses, balão viajando pela seta, luz acendendo, padaria balançando, "QUÊ?!" estourando. Tudo some com "movimento reduzido" (o balão aparece direto no destino).
 - **O desfecho** flutua por cima da rua, sem empurrar o prédio.
+- **Se algo quebrar:** em vez de tela branca, "O elevador travou." com o botão **Voltar ao prédio** (no `?pesquisa`, o erro vai pro registro).
 
 ---
 
@@ -305,6 +307,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 | `src/campanha.ts`, `src/andares.json`, `src/fabrica.ts` | a campanha, o estoque gerado e a fábrica de fases |
 | `src/advertencias.ts`, `src/registro.ts`, `src/elenco.ts` | vidas, registro da pesquisa, troca de nomes e vítima |
 | `src/arte.ts` | carrega o manifesto da arte ilustrada (`?vetor` desliga) |
+| `src/ajustes.ts`, `src/Protecao.tsx` | ajustes do jogador (puro, testado) e a tela de erro no lugar da tela branca |
 | `src/App.tsx` | campanha, links de teste, a tela da fase, ×2, Rever, o desfecho |
 | `src/Menu.tsx`, `src/Chegada.tsx` | o prédio-menu e as cenas de chegada |
 | `src/Predio.tsx`, `Cena.tsx`, `Personagem.tsx`, `Vazio.tsx`, `Icones.tsx`, `estilo.css` | o desenho |
@@ -313,7 +316,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas; com uma seta a mais, no máximo 2; o caminho mais curto perde; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente muda a jogada.
 
-**Números de hoje:** **613 testes em 17 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
+**Números de hoje:** **618 testes em 18 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **361 KB** (89 KB comprimido) + arte **2,4 MB**.
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 
