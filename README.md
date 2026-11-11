@@ -13,6 +13,12 @@ npm run build    # gera dist/, que abre em qualquer hospedagem estática
 
 > ⚠️ **Não use `npm run dev -- --host`.** O Vite 5 e o Vitest 2 instalados aqui têm alertas de segurança no **servidor de desenvolvimento** (leitura de arquivos e execução remota quando ele fica exposto na rede). A correção exige subir de versão principal (Vite 8 / Vitest 5), e as versões mais novas saíram há poucos dias. Para jogar no celular, rode `npm run build` e hospede a pasta `dist/`: o build final é estático e não carrega o servidor.
 
+## Publicado
+- Jogo: https://gui-zen.github.io/Fofoca/
+- Teste com participante novo: https://gui-zen.github.io/Fofoca/?pesquisa&zerar
+
+Cada push no `main` roda testes → build → publicação (`.github/workflows/pages.yml`); teste falhando não publica. O site é estático: o progresso fica no aparelho de quem joga. `PRODUCT.md` (metas e estratégia) não vai pro repositório.
+
 ## Mecânica atual: o trilho (protótipo)
 Você contou pra uma pessoa, desenha quem conta pra quem (tocar um apartamento e depois o vizinho, ou arrastar), com setas limitadas, e espalha. Decidido na Consulta 1 com o Sol (vault: `Projetos/Fofoca — Consulta 1 (gpt-6.1-sol) — mecânica do trilho.md`). A mecânica antiga (origem livre + giros) e a trilha gerada continuam no código e nos testes, mas fora da tela, até o gerador do trilho existir.
 
