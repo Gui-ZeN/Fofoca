@@ -41,6 +41,16 @@ describe('motor: o apressado passa reto', () => {
     expect(r.ouviu.b).toMatchObject({ batida: 2, de: 'p' });
   });
 
+  it('com dois recados na mesma batida, ele se atrapalha e guarda (sem desempate escondido)', () => {
+    // c (de cima) e e (da esquerda) contam pra ele juntos, na batida 2
+    const f: Fase = { ...cruz, vizinhos: [...cruz.vizinhos, v('o', 'comum', [0, 0])], amizades: [...cruz.amizades, ['o', 'c'], ['o', 'e']] };
+    const r = espalhar(f, { origem: 'o', setas: { o: 'c', c: 'p' } });
+    expect(r.ouviu.p).toBeDefined();
+    const junto = espalhar({ ...f, vizinhos: f.vizinhos.map((x) => (x.id === 'o' ? { ...x, tipo: 'fofoqueira' as const } : x)) }, { origem: 'o', setas: { c: 'p', e: 'p' } });
+    expect(junto.ouviu.p.batida).toBe(2);
+    expect(junto.batidas.flat().some((m) => m.de === 'p')).toBe(false);
+  });
+
   it('não aceita seta desenhada', () => {
     const r = espalhar(cruz, { origem: 'c', setas: { c: 'p', p: 'e' } });
     expect(r.ouviu.e).toBeUndefined();

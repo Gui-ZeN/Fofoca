@@ -48,7 +48,10 @@ export function moldeDe(peso: Peso, tema: Tema): Molde {
     leve: { andares: 3, n: [6, 7], fof: 1, estrelas: 1, k: [3, 4], zeMeio: false, aprendeu: false },
     media: { andares: 4, n: [8, 10], fof: 1, estrelas: 1, k: [4, 5], zeMeio: false, aprendeu: false },
     pesada: { andares: 5, n: [10, 12], fof: 2, estrelas: 1, k: [5, 6], zeMeio: true, aprendeu: true },
-    chefe: { andares: 6, n: [11, 13], fof: 2, estrelas: 2, k: [6, 7], zeMeio: true, aprendeu: true },
+    // ⚠️ chefão em 5 andares, não 6 (Consulta 7, 20 de 20 designers): o 3×6 rolava na tela — o clímax do capítulo
+    // jogado sem ver origem, estrela e Zé juntos, e com o arrasto vertical virando rolagem. Medido: o 3×6 tinha
+    // a mesma rede que o 3×5 (+1 morador, +1 passagem); a altura só comprava rolagem.
+    chefe: { andares: 5, n: [11, 12], fof: 2, estrelas: 2, k: [6, 7], zeMeio: true, aprendeu: true },
   };
   const m = { ...base[peso], tema };
   if (tema === 'ordem' || tema === 'padaria+ordem') m.estrelas = Math.max(2, m.estrelas);

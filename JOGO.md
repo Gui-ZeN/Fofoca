@@ -130,9 +130,9 @@ Cena de chegada: "**Fiscal novo!**" — *"Psiu! Aqui ninguém grita."* (entra um
 
 Cena de chegada: "**Morador novo!**" — *"Isso aí? Foi o contrário."* Ficou de fora "dois Do Contra se anulam" (só existe um personagem do contra).
 
-**Raquel, a desconfiada** — `?bloco=raquel` (2026-11-12; com o Yorkshire). Só acredita ouvindo de **duas pessoas diferentes**, somando batidas (duas na mesma batida já convencem; vale o recado que convenceu). Escolhida pela crítica do Fable — é a única regra que quebra "solução = um caminho só": como cada um conta pra um só, abrir dois galhos exige a Fofoqueira, e os galhos se juntam nela. Na tela: selo **2×** na plaquinha; em dúvida, o balão da 1ª fonte apagado com um **?** e a cara desconfiada; na derrota, "Raquel só ouviu da Neide e não acreditou." e a plaquinha "ouviu de 1 só".
+**Raquel, a desconfiada** — `?bloco=raquel` (2026-11-12; com o Yorkshire). Só acredita ouvindo de **duas pessoas diferentes**, somando batidas (duas na mesma batida já convencem). Acredita no **maior** dos recados que ouviu (empate: no primeiro) — ⚠️ antes era "o maior" na mesma batida e "o segundo" em batidas diferentes, um desempate que ninguém via (Consulta 7). Escolhida pela crítica do Fable — é a única regra que quebra "solução = um caminho só": como cada um conta pra um só, abrir dois galhos exige a Fofoqueira, e os galhos se juntam nela. Na tela: selo **2×** na plaquinha; em dúvida, o balão da 1ª fonte apagado com um **?** e a cara desconfiada; na derrota, "Raquel só ouviu da Neide e não acreditou." e a plaquinha "ouviu de 1 só".
 
-**Nando, o apressado** — `?bloco=apressado` (2026-11-12). Não aceita seta: conta sozinho pra quem mora do **lado oposto** de quem contou pra ele (ouviu da esquerda, conta pra direita; de baixo, pra cima). Sem passagem do outro lado, ou se recebeu por celular, guarda. Veio do estudo do Fable (Sporos): é a única regra em que o **lado por onde o boato entra** decide pra onde ele sai. Selo **⚡** (pressa) na plaquinha — ⚠️ era **»**, e quem jogou leu "sempre pra direita"; enquanto você monta, com uma seta chegando nele, uma **seta tracejada verde** mostra pra onde ele vai passar (ensina a regra sem tirar o problema: escolher por onde entrar). Se ele entrega pro Zé, a fala é *"Ué, eu só passei reto!"*. O elenco não sorteia outro "Nando" no mesmo prédio.
+**Nando, o apressado** — `?bloco=apressado` (2026-11-12). Não aceita seta: conta sozinho pra quem mora do **lado oposto** de quem contou pra ele (ouviu da esquerda, conta pra direita; de baixo, pra cima). Sem passagem do outro lado, ou se recebeu por celular, guarda. **Com dois recados na mesma batida, ele se atrapalha e guarda** (⚠️ antes saía pro lado de quem ganhava um desempate invisível — Consulta 7; a cena de chegada avisa). Veio do estudo do Fable (Sporos): é a única regra em que o **lado por onde o boato entra** decide pra onde ele sai. Selo **⚡** (pressa) na plaquinha — ⚠️ era **»**, e quem jogou leu "sempre pra direita"; enquanto você monta, com uma seta chegando nele, uma **seta tracejada verde** mostra pra onde ele vai passar (ensina a regra sem tirar o problema: escolher por onde entrar). Se ele entrega pro Zé, a fala é *"Ué, eu só passei reto!"*. O elenco não sorteia outro "Nando" no mesmo prédio.
 
 | Fase | Função | O que acontece |
 |---|---|---|
@@ -224,7 +224,7 @@ Arte **ilustrada** (gerada por IA a partir de uma prancha do Guilherme), uma fol
 | 21 | D1 | Síndico de férias | 10 | 3×4 | 5 | 2 Fofoqueiras, Zé no meio |
 | 22 | O5 | Fila do pão | 8 | 3×3 | 4 | Fofoqueira, padaria, ordem |
 | 23 | D2 | Pombo na janela | 11 | 3×4 | 5 | 2 Fofoqueiras, padaria, tamanho |
-| 24 | O6 | Café da tarde | 8 | 3×3 | 4 | Fofoqueira, padaria, ordem |
+| 24 | O6 | Café da tarde | 8 | 3×3 | 5 | padaria (no meio do caminho), ordem |
 | 25 | D3 | Varanda nova | 11 | 3×4 | 5 | 2 Fofoqueiras, ordem |
 | 26 | D4 | Rifa do condomínio | 11 | 3×4 | 5 | 2 Fofoqueiras, 2 Exagerados, tamanho |
 | 27 | D5 | Sofá novo no 201 | 10 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
@@ -244,7 +244,13 @@ Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio
 | Leve | 3×3 | 6–7 | 3–4 (+1) | 1 Fofoqueira longe do Zé; Zé fora do canto com 2+ portas |
 | Média | 3×4 | 8–10 | 4–5 (+1) | idem |
 | Pesada | 3×5 | 10–12 | 5–6 (+1) | 2 Fofoqueiras (a 1ª longe do Zé), Zé no meio com 3+ portas |
-| Chefão | 3×6 (rola) | 11–13 | 6–7 (+1) | 2 Fofoqueiras, Zé no meio, 2 estrelas |
+| Chefão | 3×5 | 11–12 | 6–7 (+1) | 2 Fofoqueiras, Zé no meio, 2 estrelas |
+
+**Passo 1 da Consulta 7 (equipe de 20 designers, 2026-11-12):**
+- **Chefão em 3×5, sem rolar** (era 3×6 e rolava — 20 de 20 designers contra): a altura extra não comprava quebra-cabeça (o 3×6 tinha a mesma rede que o 3×5) e o clímax do capítulo era jogado sem ver origem, estrela e Zé juntos. **Teto do tabuleiro: 3 colunas × 5 andares, sem rolagem enquanto se monta o plano.** A rolagem só fica nos protótipos (`?bloco=alto`).
+- **Régua de raciocínio** (`src/assinatura.ts`): cada andar ganha uma assinatura — as regras que, tiradas, mudam a solução (a padaria diz de quem: Zé, estrela ou meio do caminho), o papel da Fofoqueira e se a solução é uma corrente ou tem galho. Na fábrica, dentro do capítulo, um andar não repete a assinatura dos 2 anteriores e nenhuma passa de 6 (25%). Calibrada nas versões antigas: reprovava 18, 19 e 20 (o grupo que o Fable achou); nos feitos à mão de hoje sobram 6, 8 (fixação da Fofoqueira, aceito) e o **24 "Café da tarde"**, que repetia a 22 e foi refeito (o Davi, no meio do caminho e colado no Zé, está na padaria; sem Fofoqueira; a fila decide o fim). Um teste trava essa lista.
+- **Teto de leitura** (teste): no máximo a Fofoqueira + 2 regras especiais por andar (padaria, ordem, tamanho, celular, versão, Arnaldo, Raquel, Nando) e no máximo 2 selos numa plaquinha — campanha, estoque e protótipos. É o antídoto do "muita informação" do Rumor Mill.
+- Estoque regerado com isso: Fofoqueira de atalho 73% / armadilha 27%; assinatura mais comum em ~20% dos andares.
 
 **Folga e variedade (2026-11-12, a partir da crítica do Fable jogando):** "Setas" é o mínimo K; o jogador recebe **K + 1** (`FOLGA`), pra contar as setas deixar de entregar o tamanho do caminho. A 1ª Fofoqueira **mora longe do Zé** e precisa mudar a jogada, e o Zé nunca fica no canto do prédio desenhado. **Papel da Fofoqueira:** 2 andares em 3 ela é atalho; 1 em 3 (`fofArmadilha`) é **armadilha** — ninguém dela ouve na solução, e ela pega quem passar por ela com ordem, tamanho ou padaria; onde nenhum tema dá armadilha, o andar fica com o atalho. ⚠️ Só longe do Zé ela vira o atalho em 92% ("é sempre por ela"); armadilha deixada onde cair voltava a ser a colada no Zé (54 de 58). Antes → depois, medido nos 150: setas = caminho 100% → 0%; Fofoqueira colada no Zé 100% → 15%; Fofoqueira de atalho 27% → 75%, de armadilha 73% → 25%; solução que é só uma corrente de setas 73% → 25%; Zé no canto 43% → 0%; Zé com uma porta só 43% → 0%.
 
@@ -367,7 +373,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas (K); com as K + 1 que o jogador recebe, no máximo 2; o caminho mais curto perde, mesmo com a folga; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente (inclusive a Fofoqueira) muda a jogada.
 
-**Números de hoje:** **668 testes em 22 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
+**Números de hoje:** **1056 testes em 23 arquivos** (o teste do teto roda por andar: campanha, estoque e protótipos), todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 

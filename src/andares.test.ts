@@ -15,8 +15,8 @@ describe('estoque de andares gerados', () => {
     expect(fases.filter((a) => a.peso === 'chefe').map((a) => a.pos)).toEqual([24, 49, 74, 99, 124, 149]);
   });
 
-  it('o prédio cresce com o peso: leve 3 andares, média 4, pesada 5, chefão 6', () => {
-    const altura = { leve: 3, media: 4, pesada: 5, chefe: 6 } as Record<string, number>;
+  it('o prédio cresce com o peso: leve 3 andares, média 4, pesada e chefão 5 (sem rolar; Consulta 7)', () => {
+    const altura = { leve: 3, media: 4, pesada: 5, chefe: 5 } as Record<string, number>;
     // `saiu` = o peso que de fato saiu (se a fábrica não achar no prazo, ela desce um peso)
     for (const a of fases as unknown as { pos: number; saiu: string; fase: FaseTrilho }[]) {
       expect(Math.max(...a.fase.vizinhos.map((v) => v.pos[1])) + 1, `andar ${a.pos}`).toBeLessThanOrEqual(altura[a.saiu]);

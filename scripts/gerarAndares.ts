@@ -6,6 +6,8 @@
 import { writeFileSync } from 'node:fs';
 import { aleatorio } from '../src/variar';
 import { batizar, fabricar, moldeDe, pesoDoAndar, type Peso, type Tema } from '../src/fabrica';
+import { assinatura } from '../src/assinatura';
+import type { FaseTrilho } from '../src/trilho';
 
 // Boatos absurdos e carinhosos (PRODUCT.md: nunca aparência, raça, orientação ou doença).
 const BOATOS = [
@@ -39,10 +41,19 @@ const MAIS_LEVE: Record<Peso, Peso | undefined> = { chefe: 'pesada', pesada: 'me
 
 const [inicio, fim, saida] = [Number(process.argv[2]), Number(process.argv[3]), process.argv[4]];
 const estoque = [];
+// Régua de raciocínio (Consulta 7): dentro do capítulo (blocos de 25, que é como os blocos são gerados), um andar não
+// repete a assinatura (src/assinatura.ts) de nenhum dos 2 anteriores, e nenhuma assinatura passa de 25% do capítulo.
+const doCapitulo: string[] = [];
+const MAX_POR_CAPITULO = 6;
+const repete = (a: string) => doCapitulo.slice(-2).includes(a) || doCapitulo.filter((x) => x === a).length >= MAX_POR_CAPITULO;
+// candidatos por tema antes de passar pro próximo. ⚠️ a Fofoqueira-armadilha tem menos assinaturas possíveis e perde mais
+// candidatos pra régua (com o mesmo número, o estoque caiu pra 17% de armadilha; o andares.test pede ≥ 20%)
+const TENTATIVAS = (armadilha: boolean) => (armadilha ? 10 : 4);
 for (let pos = inicio; pos < fim; pos++) {
+  if (pos % 25 === 0) doCapitulo.length = 0;
   const sorte = aleatorio(20261111 + pos * 7919);
   let peso: Peso | undefined = pesoDoAndar(pos);
-  let feito;
+  let feito: (ReturnType<typeof fabricar> & object & { fase: FaseTrilho; a: string }) | undefined;
   while (peso && !feito) {
     const temas = [...TEMAS[peso]].sort(() => sorte() - 0.5); // tenta os temas do peso numa ordem sorteada
     // 1 andar em 3: a Fofoqueira é armadilha, não atalho (fabrica.ts, fofArmadilha). Longe do Zé, ela só pega
@@ -50,7 +61,15 @@ for (let pos = inicio; pos < fim; pos++) {
     const papeis = pos % 3 === 2 ? [true, false] : [false];
     for (const fofArmadilha of papeis) {
       for (const tema of temas) {
-        feito = fabricar({ ...moldeDe(peso, tema), fofArmadilha }, sorte, PRAZO[peso] / temas.length / papeis.length);
+        for (let t = 0; t < TENTATIVAS(fofArmadilha) && !feito; t++) {
+          const achado = fabricar({ ...moldeDe(peso, tema), fofArmadilha }, sorte, PRAZO[peso] / temas.length / papeis.length);
+          // ⚠️ prazo inteiro em CADA tentativa: dividido pelas tentativas, a armadilha (mais rara) não era achada a tempo
+          if (!achado) break; // nada nesse tema no prazo: próximo tema
+          const fase = batizar(achado.f, achado.c, TITULOS[pos % TITULOS.length], BOATOS[(pos * 7) % BOATOS.length]);
+          const a = assinatura(fase);
+          if (repete(a)) { console.log(`  posição ${pos}: "${a}" repete o capítulo, outro`); continue; }
+          feito = { ...achado, fase, a };
+        }
         if (feito) break;
       }
       if (feito) break;
@@ -58,9 +77,10 @@ for (let pos = inicio; pos < fim; pos++) {
     if (!feito) { console.log(`  posição ${pos}: nada em ${peso}, descendo`); peso = MAIS_LEVE[peso]; }
   }
   if (!feito) throw new Error(`posição ${pos}: nenhuma fase`);
-  const fase = batizar(feito.f, feito.c, TITULOS[pos % TITULOS.length], BOATOS[(pos * 7) % BOATOS.length]);
+  const fase = feito.fase;
+  doCapitulo.push(feito.a);
   estoque.push({ pos, peso: pesoDoAndar(pos), saiu: peso, tema: feito.molde.tema, fase });
-  console.log(`posição ${pos}: ${peso} · ${feito.molde.tema} · ${fase.vizinhos.length} moradores · K=${fase.setas}`);
+  console.log(`posição ${pos}: ${peso} · ${feito.molde.tema} · ${fase.vizinhos.length} moradores · K=${fase.setas} · ${feito.a}`);
 }
 writeFileSync(saida, JSON.stringify(estoque));
 console.log(`ok ${estoque.length} → ${saida}`);

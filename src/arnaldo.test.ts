@@ -75,6 +75,20 @@ describe('bloco Arnaldo', () => {
     expect(jogar(f, f.armadilha!).motivo).toBe('tamanho_errado');
   });
 
+  // ⚠️ Consulta 7: com o teto em escândalo, um Exagerado colado no Arnaldo que já recebe escândalo não aumenta e o
+  // Arnaldo ainda tira 1 (escândalo → escândalo → fofoca). Regra certa, mas invisível: nenhuma fase pode depender dela.
+  it.each(rotulos)('%s (%s): nem a solução nem a armadilha passam pelo teto (Exagerado colado no Arnaldo recebendo escândalo)', (_n, _t, f) => {
+    const baixo = abafados(f);
+    for (const plano of [f.solucao, f.armadilha].filter(Boolean)) {
+      const r = jogar(f, plano!);
+      const noTeto = r.batidas.flat().filter((m) => {
+        const v = f.vizinhos.find((x) => x.id === m.de)!;
+        return v.tipo === 'exagerado' && baixo.has(v.id) && r.ouviu[v.id].tamanho === 3;
+      });
+      expect(noTeto).toEqual([]);
+    }
+  });
+
   it('A1: o Beto aumenta, mas sai cochicho (ele mora colado no Arnaldo)', () => {
     const r = jogar(fasesArnaldo[0], fasesArnaldo[0].solucao);
     expect(r.ouviu.a.tamanho).toBe(1);

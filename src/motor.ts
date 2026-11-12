@@ -26,8 +26,9 @@ export interface Vizinho {
   // Vale pro tamanho ENVIADO (Exagerado aumenta antes, ele reduz depois); cochicho continua cochicho.
   abafa?: boolean;
   // Raquel, a desconfiada (2026-11-12): só ACREDITA quando ouviu de duas pessoas diferentes (somando batidas).
-  // Na 1ª ela fica em dúvida: não repassa e, se tiver estrela, ainda não conta como "ficou sabendo". O que ela
-  // acredita (tamanho e versão) é o recado que a convenceu. Duas chegando na mesma batida já convencem.
+  // Na 1ª ela fica em dúvida: não repassa e, se tiver estrela, ainda não conta como "ficou sabendo". Duas chegando
+  // na mesma batida já convencem. ⚠️ Ela acredita no MAIOR dos recados que ouviu (empate: no primeiro) — antes era
+  // "o maior" na mesma batida e "o segundo" em batidas diferentes, um desempate que ninguém via (Consulta 7).
   desconfia?: boolean;
 }
 
@@ -132,6 +133,7 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
   const porId = new Map(fase.vizinhos.map((v) => [v.id, v]));
   const ouviu: Record<string, Ouvido> = { [jogada.origem]: { tamanho: 1, versao: 'normal', batida: 0, de: null } };
   const duvida: Record<string, Ouvido> = {};
+  const atrapalhados = new Set<string>();
   const batidas: Mensagem[][] = [];
   let fronteira = [jogada.origem];
   const baixo = abafados(fase);
@@ -148,7 +150,7 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       if (v.tipo === 'fofoqueira') {
         for (const para of amigosDe(fase, id)) saindo.push({ de: id, para, tamanho: enviado(id, tamanho), versao });
       } else if (v.tipo === 'apressado') {
-        const para = ouviu[id].de ? reto(fase, v, ouviu[id].de!) : undefined;
+        const para = ouviu[id].de && !atrapalhados.has(id) ? reto(fase, v, ouviu[id].de!) : undefined;
         if (para) saindo.push({ de: id, para, tamanho: enviado(id, tamanho), versao });
       } else if (temSeta(v.tipo) && seta) {
         saindo.push({
@@ -162,21 +164,30 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
     }
     const chegou = new Map<string, Mensagem>();
     const fontes = new Map<string, Set<string>>(); // desconfiados: de quem ouviram nesta batida
+    const pressa = new Map<string, Set<string>>(); // apressados: de quem ouviram nesta batida
     for (const m of saindo) {
       if (ouviu[m.para]) continue; // cada um ouve uma vez só
       const quem = porId.get(m.para)!;
       if ((quem.chega ?? 0) > batida) continue; // ninguém em casa: o recado se perde
       if (quem.desconfia) fontes.set(m.para, (fontes.get(m.para) ?? new Set()).add(m.de));
+      if (quem.tipo === 'apressado') pressa.set(m.para, (pressa.get(m.para) ?? new Set()).add(m.de));
       const atual = chegou.get(m.para);
       chegou.set(m.para, atual ? melhor(atual, m) : m);
     }
     // desconfiado com uma fonte só (contando a de antes): fica em dúvida e não entra na fronteira
     for (const [id, de] of fontes) {
-      if ((duvida[id] ? 1 : 0) + de.size >= 2) continue; // acreditou
       const m = chegou.get(id)!;
+      if ((duvida[id] ? 1 : 0) + de.size >= 2) { // acreditou: no maior dos recados (o de antes entra na conta)
+        const antes = duvida[id];
+        if (antes) chegou.set(id, melhor({ de: antes.de!, para: id, tamanho: antes.tamanho, versao: antes.versao }, m));
+        continue;
+      }
       chegou.delete(id);
       duvida[id] = { tamanho: m.tamanho, versao: m.versao, batida, de: m.de };
     }
+    // ⚠️ Nando com dois recados na mesma batida: não tem "um lado" de onde veio — ele se atrapalha e GUARDA.
+    // Antes saía pro lado de quem ganhava o desempate interno (tamanho, versão, ordem da lista): invisível (Consulta 7).
+    for (const [id, de] of pressa) if (de.size >= 2 && chegou.has(id)) atrapalhados.add(id);
     if (saindo.length) batidas.push(saindo);
     for (const m of chegou.values()) ouviu[m.para] = { tamanho: m.tamanho, versao: m.versao, batida, de: m.de };
     fronteira = [...chegou.keys()];

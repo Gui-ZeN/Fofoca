@@ -70,7 +70,7 @@ export const CHEGADAS_DE_TESTE: Record<string, Apresentacao> = {
     demo: 'reto', titulo: 'Morador novo!',
     quem: (f) => f.vizinhos.find((v) => v.tipo === 'apressado'),
     fala: 'Tô com pressa! Conto pro primeiro que aparecer.',
-    regra: (v) => `${v.nome} não espera seta: conta sozinho pra quem mora do outro lado. Ouviu da esquerda, conta pra direita; de baixo, pra cima.`,
+    regra: (v) => `${v.nome} não espera seta: conta sozinho pra quem mora do outro lado. Ouviu da esquerda, conta pra direita; de baixo, pra cima. Se dois contam juntos, ele se atrapalha e guarda.`,
   },
   R1: {
     demo: 'duvida', titulo: 'Moradora nova!',

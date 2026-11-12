@@ -87,17 +87,20 @@ export const fasesOrdem: FaseTrilho[] = [
     armadilha: { r: 'a', a: 'b', b: 'c' }, // a Bia ainda está na padaria
   },
   {
-    // a Cida (1) volta na 4: a Neide tem que falar na hora certa; depois a Cida passa pra Bia (2)
+    // ⚠️ substitui a O6 antiga (2026-11-12): era a O5 de novo (a 1ª da fila na padaria + a Neide espalhando), como a
+    // régua de raciocínio (src/assinatura.ts) e o Fable apontaram. Aqui não tem Fofoqueira: quem está na padaria é o
+    // Davi, no MEIO do caminho e colado no Zé. Direto, a Rita conta pra ele na 1 e perde; dando a volta (Rui, Bia), o
+    // recado chega nele na 3, quando volta. Ele conta pra Lia (1) e ela pra Cida (2) — a Bia direto pra Cida inverte a fila.
     titulo: 'Café da tarde',
     boato: 'O Seu Zé esconde chocolate na caixa de remédio',
-    giros: 0, setas: 4, origens: ['r'],
+    giros: 0, setas: 5, origens: ['r'],
     vizinhos: [
-      v('a', 'Ana', 'comum', [1, 0]), v('r', 'Rita', 'comum', [2, 0]),
-      ze([0, 1]), v('d', 'Davi', 'comum', [1, 1]), v('n', 'Neide', 'fofoqueira', [2, 1]),
-      v('u', 'Rui', 'comum', [0, 2]), v('b', 'Bia', 'comum', [1, 2], vez(2)), v('c', 'Cida', 'comum', [2, 2], vez(1, 4)),
+      v('a', 'Ana', 'comum', [0, 0]), ze([1, 0]),
+      v('e', 'Lia', 'comum', [0, 1], vez(1)), v('d', 'Davi', 'comum', [1, 1], { chega: 3 }), v('r', 'Rita', 'comum', [2, 1]),
+      v('c', 'Cida', 'comum', [0, 2], vez(2)), v('b', 'Bia', 'comum', [1, 2]), v('n', 'Rui', 'comum', [2, 2]),
     ],
-    amizades: [['r', 'a'], ['r', 'n'], ['a', 'd'], ['c', 'b'], ['c', 'n'], ['u', 'z'], ['u', 'b'], ['z', 'd'], ['b', 'd'], ['n', 'd']],
-    solucao: { r: 'a', a: 'd', d: 'n', c: 'b' },
-    armadilha: { r: 'n', c: 'b' }, // a Neide fala cedo: a Cida ainda não voltou
+    amizades: [['z', 'a'], ['z', 'd'], ['r', 'd'], ['r', 'n'], ['a', 'e'], ['b', 'c'], ['b', 'd'], ['b', 'n'], ['c', 'e'], ['d', 'e']],
+    solucao: { r: 'n', n: 'b', b: 'd', d: 'e', e: 'c' },
+    armadilha: { r: 'd', d: 'e', e: 'c' }, // direto pro Davi: ele ainda está na padaria
   },
 ];

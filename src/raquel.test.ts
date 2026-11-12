@@ -38,8 +38,22 @@ describe('motor: a desconfiada', () => {
     const fase = fasesRaquel[0];
     const r = jogar(fase, fase.solucao);
     expect(r.ouviu.q.batida).toBe(4); // a Neide contou na 2, a Bia na 4
-    expect(r.ouviu.q.de).toBe('b');
+    expect(r.ouviu.q.de).toBe('n'); // dois cochichos: empate, vale o primeiro
     expect(r.duvida?.q).toMatchObject({ batida: 2, de: 'n' }); // entre a 2 e a 4, em dúvida (a tela mostra)
+  });
+
+  it('acredita no MAIOR dos dois recados, mesmo vindo em batidas diferentes (sem desempate escondido)', () => {
+    // f conta pro Exagerado b e pra a (batida 1); b conta FOFOCA pra q na 2 (1º recado, o maior);
+    // a conta pra e (2) e e conta COCHICHO pra q na 3 (2º recado). Antes valia o 2º; agora vale o maior.
+    const w = (id: string, tipo: Vizinho['tipo'], pos: [number, number], extra: Partial<Vizinho> = {}): Vizinho => ({ id, nome: id, tipo, pos, ...extra });
+    const f: Fase = {
+      titulo: '', boato: '', giros: 0,
+      vizinhos: [w('f', 'fofoqueira', [0, 0]), w('a', 'comum', [0, 1]), w('b', 'exagerado', [1, 0]), w('e', 'comum', [1, 1]), w('q', 'comum', [2, 1], { desconfia: true })],
+      amizades: [['f', 'a'], ['f', 'b'], ['a', 'e'], ['e', 'q'], ['b', 'q']],
+    };
+    const r = espalhar(f, { origem: 'f', setas: { a: 'e', e: 'q', b: 'q' } });
+    expect(r.duvida?.q).toMatchObject({ batida: 2, tamanho: 2, de: 'b' });
+    expect(r.ouviu.q).toMatchObject({ batida: 3, tamanho: 2, de: 'b' }); // convenceu na 3, mas vale a fofoca do Beto
   });
 
   it('quem não desconfia continua acreditando de primeira', () => {
