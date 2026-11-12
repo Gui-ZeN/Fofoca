@@ -215,12 +215,14 @@ Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio
 
 | Peso | Prédio | Moradores | Setas | Extra |
 |---|---|---|---|---|
-| Leve | 3×3 | 6–7 | 3–4 | 1 Fofoqueira |
-| Média | 3×4 | 8–10 | 4–5 | 1 Fofoqueira |
-| Pesada | 3×5 (rola) | 10–12 | 5–6 | 2 Fofoqueiras, Zé no meio com 3+ portas |
-| Chefão | 3×6 (rola) | 11–13 | 6–7 | 2 Fofoqueiras, Zé no meio, 2 estrelas |
+| Leve | 3×3 | 6–7 | 3–4 (+1) | 1 Fofoqueira longe do Zé; Zé fora do canto com 2+ portas |
+| Média | 3×4 | 8–10 | 4–5 (+1) | idem |
+| Pesada | 3×5 | 10–12 | 5–6 (+1) | 2 Fofoqueiras (a 1ª longe do Zé), Zé no meio com 3+ portas |
+| Chefão | 3×6 (rola) | 11–13 | 6–7 (+1) | 2 Fofoqueiras, Zé no meio, 2 estrelas |
 
-Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (antes havia Gil, Tião e Juca, sem desenho, e um teto de 7 moradores comuns). Hoje: 59 leves de 3 andares, 54 médias de 4, 28 pesadas de 5 (2 saíram com 4), 6 chefões de 6. Os 150 saem em ~20 s com 10 processos em paralelo.
+**Folga e variedade (2026-11-12, a partir da crítica do Fable jogando):** "Setas" é o mínimo K; o jogador recebe **K + 1** (`FOLGA`), pra contar as setas deixar de entregar o tamanho do caminho. A 1ª Fofoqueira **mora longe do Zé** e precisa mudar a jogada, e o Zé nunca fica no canto do prédio desenhado. **Papel da Fofoqueira:** 2 andares em 3 ela é atalho; 1 em 3 (`fofArmadilha`) é **armadilha** — ninguém dela ouve na solução, e ela pega quem passar por ela com ordem, tamanho ou padaria; onde nenhum tema dá armadilha, o andar fica com o atalho. ⚠️ Só longe do Zé ela vira o atalho em 92% ("é sempre por ela"); armadilha deixada onde cair voltava a ser a colada no Zé (54 de 58). Antes → depois, medido nos 150: setas = caminho 100% → 0%; Fofoqueira colada no Zé 100% → 15%; Fofoqueira de atalho 27% → 75%, de armadilha 73% → 25%; solução que é só uma corrente de setas 73% → 25%; Zé no canto 43% → 0%; Zé com uma porta só 43% → 0%.
+
+Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (antes havia Gil, Tião e Juca, sem desenho, e um teto de 7 moradores comuns). Regerado de novo em 2026-11-12 (folga e variedade, abaixo): 60 leves de 3 andares, 54 médias de 4, 30 pesadas de 5, 6 chefões de 6 — nenhum precisou descer de peso. Os 150 saem em ~3 min com 6 processos em paralelo.
 
 - Temas sorteados: corrente de Fofoqueiras, padaria, ordem, tamanho, padaria+ordem.
 - Acabou o estoque, **recomeça** — espelhado numa volta sim, outra não. O prédio vai até o andar **3.028**.
@@ -229,7 +231,7 @@ Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (
 
 - **Capítulos** (`src/capitulos.ts`): os 28 feitos à mão viram 4 — *Primeiros boatos* (1–5), *Vizinhos novos* (6–14), *Fila da fofoca* (15–20), *Reunião de condomínio* (21–28); depois, **um a cada 25 andares**, sempre terminando num chefão de 6 andares, com temas de condomínio que se repetem (*A encomenda misteriosa*, *A festa surpresa*, *O bolo desaparecido*, *A obra no 302*, *O apagão*…).
 - **Abertura:** no 1º andar do capítulo (uma vez por aparelho, antes da cena de chegada), "Capítulo 5 · A encomenda misteriosa", o Seu Zé e o aviso da administração do tema. **Fechamento:** no último andar, o desfecho diz "Capítulo 5 concluído · ★ 18 de 25" e o botão vira **Próximo capítulo**.
-- **Desafio opcional = ★ de primeira:** o andar vencido na primeira tentativa ganha ★ ("★ De primeira!" no desfecho; ★ no índice). ⚠️ Não é "menos setas": toda fase tem solução única e mínima, então nunca aconteceria.
+- **Desafio opcional = ★ de primeira:** o andar vencido na primeira tentativa **e sem seta além do mínimo** ganha ★ ("★ De primeira!" no desfecho; ★ no índice). Venceu de primeira gastando a folga: "Sem ★: dava com 4 setas." (`ganhaEstrela`, capitulos.ts). O "sem seta além" entrou com a folga dos andares gerados (2026-11-12): sem ele, a folga barateava a ★.
 - **Fofoca do dia:** botão no menu (fora do `?pesquisa`). Um andar leve ou médio do estoque, **o mesmo pra todo mundo no dia** (escolhido pela data do aparelho, elenco fixo pela data), sem advertência. Vencendo, **Compartilhar** manda o dia e o resultado ("espalhei de primeira ★ sem a vítima descobrir"), nunca a solução. O menu mostra "feita" (e "de primeira ★").
 
 ---
@@ -328,9 +330,9 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 | `src/prova/` | a prova estática da direção visual |
 | `src/comparacao.ts`, `gerador.ts`, `trilha.ts`, `variar.ts`, `fases.ts` | mecânica antiga (giros), só no diagnóstico e nos testes |
 
-**Certificado da fábrica:** uma única solução no menor número de setas; com uma seta a mais, no máximo 2; o caminho mais curto perde; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente muda a jogada.
+**Certificado da fábrica:** uma única solução no menor número de setas (K); com as K + 1 que o jogador recebe, no máximo 2; o caminho mais curto perde, mesmo com a folga; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente (inclusive a Fofoqueira) muda a jogada.
 
-**Números de hoje:** **633 testes em 20 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
+**Números de hoje:** **635 testes em 20 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 

@@ -45,8 +45,14 @@ for (let pos = inicio; pos < fim; pos++) {
   let feito;
   while (peso && !feito) {
     const temas = [...TEMAS[peso]].sort(() => sorte() - 0.5); // tenta os temas do peso numa ordem sorteada
-    for (const tema of temas) {
-      feito = fabricar(moldeDe(peso, tema), sorte, PRAZO[peso] / temas.length);
+    // 1 andar em 3: a Fofoqueira é armadilha, não atalho (fabrica.ts, fofArmadilha). Longe do Zé, ela só pega
+    // alguém com ordem, tamanho ou padaria; se nenhum tema der, o andar fica com ela de atalho (não desce de peso).
+    const papeis = pos % 3 === 2 ? [true, false] : [false];
+    for (const fofArmadilha of papeis) {
+      for (const tema of temas) {
+        feito = fabricar({ ...moldeDe(peso, tema), fofArmadilha }, sorte, PRAZO[peso] / temas.length / papeis.length);
+        if (feito) break;
+      }
       if (feito) break;
     }
     if (!feito) { console.log(`  posição ${pos}: nada em ${peso}, descendo`); peso = MAIS_LEVE[peso]; }

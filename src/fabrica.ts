@@ -5,13 +5,23 @@
 //
 // Certificado de uma fase:
 //  - uma única solução sem seta sobrando, no menor número de setas K (dentro da faixa do molde);
-//  - com uma seta a mais, no máximo 2 soluções (o K não é folga disfarçada);
-//  - o caminho mais curto até as estrelas (ignorando vítima, horário, ordem e tamanho) PERDE;
+//  - o jogador recebe K + FOLGA setas, e com elas há no máximo 2 soluções (a folga não abre a porteira);
+//  - o caminho mais curto até as estrelas (ignorando vítima, horário, ordem e tamanho) PERDE, mesmo com a folga;
 //  - nas pesadas, quem só aprendeu "não cutucar o Zé nem a Fofoqueira colada nele" também perde;
-//  - cada regra presente (padaria, ordem, tamanho) muda a jogada — senão ela é enfeite.
+//  - cada regra presente (padaria, ordem, tamanho, Fofoqueira) muda a jogada — senão ela é enfeite.
+//
+// ⚠️ Padrões que o Fable achou jogando (2026-11-11) e que a fábrica agora barra — não "simplifique" de volta:
+//  - setas = K exato: contar as setas entregava o tamanho do caminho. Agora sobra FOLGA, e a ★ fica pra quem usa só K;
+//  - a 1ª Fofoqueira sempre colada no Zé virava placa de "não toque" (em 73% ela nem ouvia). Agora ela mora
+//    longe dele e precisa mudar a jogada — atalho que o jogador tem que descobrir. Mas sempre atalho também
+//    vira padrão: 1 andar em 3 (`fofArmadilha`) ela é armadilha — ninguém dela ouve na solução;
+//  - Zé no canto com uma porta só (43%): bastava não ir pra lá. Agora ele nunca fica no canto e tem 2+ portas.
 
 import { alvosDe, amigosDe, controlavel, type Fase, type Tamanho, type Vizinho } from './motor';
 import { jogar, resolverTrilho, type FaseTrilho, type Plano } from './trilho';
+
+// setas além do mínimo (K): o contador deixa de entregar o tamanho do caminho
+export const FOLGA = 1;
 
 export type Tema = 'cadeia' | 'padaria' | 'ordem' | 'tamanho' | 'padaria+ordem';
 export type Peso = 'leve' | 'media' | 'pesada' | 'chefe';
@@ -19,12 +29,16 @@ export type Peso = 'leve' | 'media' | 'pesada' | 'chefe';
 export interface Molde {
   andares: number; // altura do prédio (3 colunas sempre; de 5 andares pra cima o palco rola na vertical)
   n: [number, number]; // moradores
-  fof: number; // Fofoqueiras (a 1ª fica colada no Zé)
+  fof: number; // Fofoqueiras (a 1ª mora longe do Zé; a 2ª, onde cair)
   estrelas: number;
   k: [number, number]; // faixa de setas da solução
   tema: Tema;
   zeMeio: boolean; // Zé numa célula do meio, com 3+ portas
   aprendeu: boolean; // exigir que o jogador "que aprendeu a T4" também perca
+  // a Fofoqueira é armadilha (ninguém dela ouve na solução) em vez de atalho. ⚠️ Sem isso, longe do Zé ela
+  // virou o atalho em 92% dos andares — "a saída é sempre por ela" (2026-11-12). A armadilha TAMBÉM mora longe
+  // do Zé: deixada onde cair, ela caía colada nele em 54 de 58 e voltava a ser a placa de "não toque".
+  fofArmadilha?: boolean;
 }
 
 export function moldeDe(peso: Peso, tema: Tema): Molde {
@@ -53,9 +67,14 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   const cel: [number, number][] = [];
   for (let r = 0; r < m.andares; r++) for (let c = 0; c < 3; c++) cel.push([c, r]);
   const meio = cel.filter(([c, r]) => c === 1 && r > 0 && r < m.andares - 1);
-  const vitPos = m.zeMeio ? pick(meio, sorte) : pick(cel, sorte);
+  const canto = ([c, r]: [number, number]) => (c === 0 || c === 2) && (r === 0 || r === m.andares - 1);
+  const vitPos = m.zeMeio ? pick(meio, sorte) : pick(cel.filter((x) => !canto(x)), sorte);
   const n = m.n[0] + Math.floor(sorte() * (m.n[1] - m.n[0] + 1));
   const usados = [vitPos, ...embaralha(cel.filter(([c, r]) => !(c === vitPos[0] && r === vitPos[1])), sorte).slice(0, n - 1)];
+  // ⚠️ canto de VERDADE é o do prédio desenhado: com a última coluna ou o último andar vazios, o prédio encolhe
+  // (Predio.medidas) e o Zé "do meio da borda" vira canto (3 de 150 na 1ª geração)
+  const W = Math.max(...usados.map(([c]) => c)), H = Math.max(...usados.map(([, r]) => r));
+  if ((vitPos[0] === 0 || vitPos[0] === W) && (vitPos[1] === 0 || vitPos[1] === H)) return null;
   const ids = 'zabcdefghijklmnop'.slice(0, n).split('');
   const am: [string, string][] = [];
   for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
@@ -69,7 +88,7 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
     return d;
   };
   if (Object.keys(dist('z')).length < n) return null;
-  if (m.zeMeio && adj('z').length < 3) return null;
+  if (adj('z').length < (m.zeMeio ? 3 : 2)) return null;
   const resto = embaralha(ids.slice(1), sorte);
   const origem = resto[0];
   const dO = dist(origem);
@@ -78,9 +97,9 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   if (longe.length < m.estrelas) return null;
   const est = embaralha(longe, sorte).slice(0, m.estrelas);
   const livres = resto.filter((x) => x !== origem && !est.includes(x));
-  const coladas = livres.filter((x) => adj('z').includes(x));
-  if (!coladas.length || livres.length < m.fof) return null;
-  const f1 = pick(coladas, sorte);
+  const longeDoZe = livres.filter((x) => dist('z')[x] >= 2);
+  if (!longeDoZe.length || livres.length < m.fof) return null;
+  const f1 = pick(longeDoZe, sorte);
   const fofs = [f1, ...embaralha(livres.filter((x) => x !== f1), sorte).slice(0, m.fof - 1)];
   const temTamanho = m.tema === 'tamanho';
   const exag = temTamanho ? embaralha(livres.filter((x) => !fofs.includes(x)), sorte).slice(0, 2) : [];
@@ -139,17 +158,22 @@ export function certificar(f: Fase, m: Molde): Certificado | undefined {
   let K = 0, sol: Plano[] = [];
   for (K = 2; K <= m.k[1]; K++) { sol = resolverTrilho(f, K); if (sol.length) break; }
   if (sol.length !== 1 || K < m.k[0]) return;
-  if (resolverTrilho(f, K + 1).length > 2) return;
   const p = sol[0];
-  const ingenuos = obvios(f, K, []);
+  const fofs = f.vizinhos.filter((v) => v.tipo === 'fofoqueira');
+  if (m.fofArmadilha && fofs.some((v) => jogar(f, p).ouviu[v.id])) return;
+  const S = K + FOLGA; // o que o jogador recebe
+  if (resolverTrilho(f, S).length > 2) return;
+  const ingenuos = obvios(f, S, []);
   if (!ingenuos.length || ingenuos.some((q) => jogar(f, q).vitoria)) return;
   if (m.aprendeu) {
     const coladas = f.vizinhos.filter((v) => v.tipo === 'fofoqueira' && amigosDe(f, v.id).includes('z')).map((v) => v.id);
-    if (obvios(f, K, ['z', ...coladas]).some((q) => jogar(f, q).vitoria)) return;
+    if (obvios(f, S, ['z', ...coladas]).some((q) => jogar(f, q).vitoria)) return;
   }
   if (f.vizinhos.some((v) => v.chega) && mesma(resolverTrilho(sem(f, 'chega'), K), p)) return;
   if (f.vizinhos.some((v) => v.interesse?.ordem) && mesma(resolverTrilho(sem(f, 'ordem'), K), p)) return;
   if (f.vizinhos.some((v) => v.interesse?.tamanho) && mesma(resolverTrilho(sem(f, 'tamanho'), K), p)) return;
+  const comum: Fase = { ...f, vizinhos: f.vizinhos.map((v) => (v.tipo === 'fofoqueira' ? { ...v, tipo: 'comum' } : v)) };
+  if (fofs.length && mesma(resolverTrilho(comum, K), p)) return;
   return { K, solucao: p, armadilha: ingenuos[0] };
 }
 
@@ -175,7 +199,7 @@ export function batizar(f: Fase, c: Certificado, titulo: string, boato: string):
   const novo = (id: string) => ID[nome[id]];
   const plano = (p: Plano) => Object.fromEntries(Object.entries(p).map(([a, b]) => [novo(a), novo(b)]));
   return {
-    titulo, boato, giros: 0, setas: c.K, origens: [novo(f.origens![0])],
+    titulo, boato, giros: 0, setas: c.K + FOLGA, origens: [novo(f.origens![0])],
     vizinhos: f.vizinhos.map((v) => ({ ...v, id: novo(v.id), nome: nome[v.id] })),
     amizades: f.amizades.map(([a, b]) => [novo(a), novo(b)] as [string, string]),
     solucao: plano(c.solucao),

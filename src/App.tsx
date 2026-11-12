@@ -14,7 +14,7 @@ import { fasesAlto } from './alto';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
 import { ESTOQUE, ESTOQUE_PESOS, PREDIO, TUTORIAL } from './campanha';
-import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, textoDoDia, type Capitulo } from './capitulos';
+import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, ganhaEstrela, textoDoDia, type Capitulo } from './capitulos';
 import { AberturaCapitulo } from './Capitulo';
 import { MAX, atualizar, cheias, falta, gastar, relogio, type Advertencias } from './advertencias';
 import { CartoesAdvertencia, Menu, type Vidas } from './Menu';
@@ -204,9 +204,13 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const terminou = resultado !== undefined && batida > resultado.batidas.length;
   const montando = resultado === undefined;
 
-  // ★ de primeira: o desafio opcional (andar vencido na primeira tentativa)
+  // ★ de primeira: o desafio opcional (andar vencido na primeira tentativa, sem gastar seta além do mínimo).
+  // ⚠️ Os andares gerados dão uma seta de folga (fabrica.ts, FOLGA): sem a exigência do mínimo, a folga
+  // deixaria a ★ mais fácil justo quando o contador parou de entregar o tamanho do caminho.
   const [primeira, setPrimeira] = useState<string[]>(() => ler(`${CHAVE}.primeira`, []));
-  const dePrimeira = tentativas[item.rotulo] === 1;
+  const minimo = girando ? undefined : custo((fase as FaseTrilho).solucao);
+  const venceuDePrimeira = tentativas[item.rotulo] === 1;
+  const dePrimeira = ganhaEstrela(tentativas[item.rotulo] ?? 0, custo(plano), minimo);
   useEffect(() => {
     if (!terminou || !resultado?.vitoria) return;
     if (dePrimeira && !primeira.includes(item.rotulo)) { const p = [...primeira, item.rotulo]; setPrimeira(p); gravar(`${CHAVE}.primeira`, p); }
@@ -439,6 +443,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
               aoRever={() => setRevendo(1)}
               aoAvancar={() => setIdx(idx + 1)}
               dePrimeira={!!CAPS && dePrimeira} fechou={fechou}
+              dava={CAPS && venceuDePrimeira && !dePrimeira ? minimo : undefined}
               compartilhar={dia ? { acao: compartilhar, rotulo: copiado ? 'Copiado!' : 'Compartilhar' } : undefined}
             />
             {/* resumo pro observador do teste antigo (não na Fofoca do dia, que tem uma fase só) */}
@@ -460,6 +465,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
 function Fim(props: {
   fase: Fase; resultado: Resultado; ultima: boolean; aviso?: number; falta?: number; aoRepetir: () => void; aoAvancar: () => void; aoRever: () => void;
   dePrimeira?: boolean; fechou?: { numero: number; titulo: string; total: number; estrelas: number };
+  dava?: number; // venceu de primeira, mas com seta a mais: com quantas dava
   compartilhar?: { acao: () => void; rotulo: string };
 }) {
   const { fase, resultado, ultima } = props;
@@ -515,6 +521,7 @@ function Fim(props: {
         <p className="fechou">Capítulo {props.fechou.numero} concluído: <b>{props.fechou.titulo}</b> · ★ {props.fechou.estrelas} de {props.fechou.total}</p>
       )}
       {resultado.vitoria && !props.fechou && props.dePrimeira && <p className="fechou">★ De primeira!</p>}
+      {resultado.vitoria && !props.fechou && props.dava !== undefined && <p className="fechou">Sem ★: dava com {props.dava} setas.</p>}
       {props.aviso !== undefined && (
         <p className="aviso">
           <CartoesAdvertencia restam={props.aviso} />

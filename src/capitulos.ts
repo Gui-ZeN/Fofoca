@@ -55,6 +55,11 @@ export function capitulos(total: number): Capitulo[] {
 
 export const capituloDe = (lista: Capitulo[], indice: number) => lista.find((c) => indice >= c.inicio && indice < c.fim);
 
+// ★ de um andar: vencido na 1ª tentativa e sem seta além do mínimo (`minimo` indefinido = modo sem setas).
+// ⚠️ O "sem seta além" veio com a folga dos andares gerados (fabrica.ts): sem ele, a folga barateava a ★.
+export const ganhaEstrela = (tentativa: number, usadas: number, minimo?: number) =>
+  tentativa === 1 && (minimo === undefined || usadas <= minimo);
+
 // ★ do capítulo: quantos andares dele foram vencidos de primeira
 export const estrelas = (c: Capitulo, rotulos: string[], primeira: Set<string>) =>
   rotulos.slice(c.inicio, c.fim).filter((r) => primeira.has(r)).length;

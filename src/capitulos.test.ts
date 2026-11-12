@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, FEITOS_A_MAO, POR_BLOCO, textoDoDia } from './capitulos';
+import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, FEITOS_A_MAO, ganhaEstrela, POR_BLOCO, textoDoDia } from './capitulos';
 import { CAMPANHA, PREDIO } from './campanha';
 import estoque from './andares.json';
 
@@ -29,6 +29,14 @@ describe('capítulos', () => {
       expect(c.fim - c.inicio).toBe(POR_BLOCO);
       expect(pesos[(c.fim - 1 - FEITOS_A_MAO) % pesos.length], `capítulo ${c.numero}`).toBe('chefe');
     }
+  });
+
+  it('★ do andar: de primeira e sem seta além do mínimo', () => {
+    expect(ganhaEstrela(1, 4, 4)).toBe(true);
+    expect(ganhaEstrela(1, 3, 4)).toBe(true);
+    expect(ganhaEstrela(1, 5, 4)).toBe(false); // usou a folga
+    expect(ganhaEstrela(2, 4, 4)).toBe(false); // não foi de primeira
+    expect(ganhaEstrela(1, 9)).toBe(true); // modo de giros: sem mínimo de setas
   });
 
   it('★ conta só os andares do capítulo vencidos de primeira', () => {
