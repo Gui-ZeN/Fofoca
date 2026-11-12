@@ -88,14 +88,14 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .rodape { fill: #00000012; }
 .rodape.apagado { fill: #0000001c; }
 .porta .batente { fill: none; stroke: var(--madeira); stroke-width: 3; transition: stroke .2s; }
-.porta .contorno { fill: none; stroke: var(--tinta); stroke-width: 1.2; }
-.porta .folha { fill: var(--madeira); stroke: var(--tinta); stroke-width: 1.6; stroke-linejoin: round; transition: fill .2s; }
-.porta .macaneta { fill: var(--tinta); }
+.porta .contorno { fill: none; stroke: #5A3E2B; stroke-width: 1.2; }
+.porta .folha { fill: #C9A06C; stroke: #5A3E2B; stroke-width: 1.5; stroke-linejoin: round; transition: fill .2s; }
+.porta .macaneta { fill: #5A3E2B; }
 .porta.usada .batente { stroke: var(--seta); stroke-width: 3.5; }
 .porta.ativa .folha { fill: var(--botao); }
 /* ⚠️ escada de madeira, como a porta: em traço fraco ela sumia no desenho do cômodo e ninguém via a passagem (Fable) */
-.escada .lance { fill: var(--madeira); stroke: var(--tinta); stroke-width: 1.6; stroke-linejoin: round; transition: fill .2s; }
-.escada .corrimao { fill: none; stroke: var(--tinta); stroke-width: 2; stroke-linecap: round; }
+.escada .lance { fill: #C9A06C; stroke: #5A3E2B; stroke-width: 1.5; stroke-linejoin: round; transition: fill .2s; }
+.escada .corrimao { fill: none; stroke: #5A3E2B; stroke-width: 1.8; stroke-linecap: round; }
 .escada.usada .lance { stroke: var(--seta); stroke-opacity: 1; stroke-width: 2; }
 .escada.ativa .lance { fill: var(--botao); fill-opacity: .75; }
 .telefone line { stroke: #5C6E66; stroke-width: 3; stroke-dasharray: 7 6; }
@@ -114,7 +114,7 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .seta.ligacao > line { stroke: var(--seta); stroke-width: 3; stroke-dasharray: 2 7; }
 .seta.ligacao > path { fill: none; stroke: var(--seta); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
 .seta.ligacao.ativa > line { stroke: var(--botao); stroke-width: 5; animation: corre .6s linear infinite; }
-.padaria .placa { fill: var(--papel); stroke: var(--tinta); stroke-width: 2; }
+.padaria .placa { fill: #EBD3A6; stroke: #5A3E2B; stroke-width: 2; }
 .padaria text { text-anchor: middle; dominant-baseline: middle; }
 .padaria .faltam { font-family: var(--titulo); font-size: 24px; fill: var(--vitima); }
 .padaria .toc { font-size: 12px; font-weight: 700; fill: var(--tinta); }
@@ -129,9 +129,18 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .morador.origem .toque { stroke: var(--botao); stroke-width: 4; animation: brilha 1.4s ease-in-out infinite; }
 .morador.origem.selecionado .toque { stroke: none; animation: none; }
 /* pra quem o selecionado pode contar: tracejado fino */
-.morador.alvo .toque { stroke: var(--seta); stroke-width: 1.8; stroke-dasharray: 6 4; animation: corre-alvo 1s linear infinite; }
-.cantoneiras path { fill: none; stroke: var(--seta); stroke-width: 5; stroke-linecap: square; }
+/* ⚠️ seleção e destinos bem visíveis (2026-11-12, o dono achou o azul "muito discreto" em cima da arte ilustrada):
+   azul mais vivo, traço grosso, véu claro no cômodo e um contorno branco por trás pra descolar do cenário */
+.morador.alvo .toque { stroke: #1E86C8; stroke-width: 4; stroke-dasharray: 10 6; fill: rgba(72, 170, 235, .20); animation: corre-alvo .8s linear infinite; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff); }
+.morador.selecionado .toque { stroke: #1E86C8; stroke-width: 3; fill: rgba(72, 170, 235, .12); }
+.cantoneiras path { fill: none; stroke: #0F5E94; stroke-width: 7; stroke-linecap: square; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff); }
+.cantoneiras { animation: pulsa-sel 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes pulsa-sel { 50% { transform: scale(1.035); } }
 .etiqueta rect { fill: var(--papel); stroke: var(--tinta); stroke-width: 1.6; }
+/* ⚠️ plaquinha na paleta do prédio (madeira clara, contorno da estrutura): o papel branco com contorno preto destoava
+   da arte ilustrada (observação do dono, 2026-11-12). Vale também pra placa da padaria. */
+.etiqueta > rect { fill: #EBD3A6; stroke: #5A3E2B; stroke-width: 1.8; }
+.etiqueta > text { fill: #3D2A1E; }
 .etiqueta text { font-family: var(--fonte); font-size: 13px; font-weight: 700; fill: var(--tinta); pointer-events: none; }
 .etiqueta .vez, .etiqueta .igual { font-size: 13px; fill: var(--seta); }
 .etiqueta .exagera rect { fill: var(--tinta); stroke: none; }
@@ -163,8 +172,17 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .olho { animation: pisca 4.6s infinite; transform-box: fill-box; transform-origin: center; }
 .balao { animation: estoura .35s cubic-bezier(.2, .9, .3, 1.4) both; transform-box: fill-box; transform-origin: 30% 100%; }
 /* o balão que viaja pela seta a cada batida (posição final no estilo base, ver Predio) */
-.viaja { animation: viaja 600ms cubic-bezier(.45, 0, .25, 1) both; pointer-events: none; }
-@keyframes viaja { from { transform: translate(var(--x1), var(--y1)) scale(.5); opacity: 0; } 18% { opacity: 1; } to { transform: translate(var(--x2), var(--y2)) scale(1); opacity: 1; } }
+/* ⚠️ o balão vai num pulinho (passa pelo meio levantado), pousa com um aperto e some: antes deslizava em linha reta e
+   ficava parado na ponta da seta até a batida seguinte, dobrado com o balão que nasce na cabeça de quem ouviu */
+.viaja { animation: viaja 680ms linear both; pointer-events: none; opacity: 0; }
+@keyframes viaja {
+  0% { transform: translate(var(--x1), var(--y1)) scale(.4); opacity: 0; animation-timing-function: cubic-bezier(.3, .6, .5, 1); }
+  14% { opacity: 1; }
+  48% { transform: translate(var(--xm), var(--ym)) scale(1.08) rotate(-5deg); opacity: 1; animation-timing-function: cubic-bezier(.5, 0, .8, .5); }
+  82% { transform: translate(var(--x2), var(--y2)) scale(1.12, .86); opacity: 1; }
+  90% { transform: translate(var(--x2), var(--y2)) scale(1.25); opacity: 1; }
+  100% { transform: translate(var(--x2), var(--y2)) scale(1.5); opacity: 0; }
+}
 /* "QUÊ?!" em letras soltas, com riscos de impacto */
 .grito { animation: estoura .35s cubic-bezier(.2, .9, .3, 1.4) both; transform-box: fill-box; transform-origin: 50% 100%; }
 .grito text { font-family: var(--titulo); font-size: 29px; fill: var(--vitima); stroke: var(--papel); stroke-width: 5; paint-order: stroke; stroke-linejoin: round; }
@@ -179,19 +197,13 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .elo-fatal > polygon { fill: var(--vitima); stroke: var(--papel); stroke-width: 1.5; stroke-linejoin: round; }
 .elo-fatal { animation: chega .4s both; }
 /* derrota por tamanho/ordem/padaria/estrela sem notícia: plaquinha no pé do apartamento */
-.placa-causa { animation: chega .4s both; }
-.placa-causa rect { fill: var(--papel); stroke: var(--tinta); stroke-width: 2; }
-.placa-causa.culpa rect { stroke: var(--vitima); stroke-width: 3; }
-.placa-causa text { font-size: 12px; font-weight: 700; fill: var(--tinta); dominant-baseline: middle; }
-.placa-causa text.meio { text-anchor: middle; }
-.placa-causa text.curto { font-size: 11px; }
-.placa-causa.culpa text { fill: var(--vitima); }
+.citado { fill: none; stroke: var(--vitima); stroke-width: 3.5; stroke-dasharray: 9 5; animation: chega .4s both; }
 
 @keyframes respira { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.02); } }
 @keyframes pisca { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
 @keyframes estoura { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: scale(1); } }
 @keyframes corre { to { stroke-dashoffset: -13; } }
-@keyframes corre-alvo { to { stroke-dashoffset: -10; } }
+@keyframes corre-alvo { to { stroke-dashoffset: -16; } }
 @keyframes brilha { 50% { stroke-opacity: .3; } }
 @keyframes balanca { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 @keyframes sobe { 0%, 100% { transform: translateY(0); opacity: .9; } 50% { transform: translateY(-5px); opacity: .5; } }
@@ -394,6 +406,9 @@ footer > .acoes { flex-wrap: nowrap; }
 
 /* menos animação (escolhido nos ajustes): o mesmo que o "movimento reduzido" do sistema */
 .reduzir *, .reduzir *::before, .reduzir *::after { animation: none !important; transition: none !important; }
+/* sem animação, o balão que viaja aparece direto no destino (o estilo base dele é invisível, pra sumir depois do pulo) */
+.reduzir .viaja { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .viaja { opacity: 1; } }
 
 /* proteção contra erro: em vez de tela branca */
 .protecao { justify-content: center; align-items: center; gap: 12px; padding: 24px max(16px, env(safe-area-inset-left, 0px)); text-align: center; background: var(--reboco); }

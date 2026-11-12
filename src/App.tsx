@@ -468,7 +468,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
           <div className="acoes fim-acoes">
             <button onClick={() => {
               if (resultado!.vitoria) { setEspelho(!espelho); setElenco(novoElenco()); } // repetir: outro prédio e outro elenco (no teste, a mesma fase de novo)
-              else { setResultado(undefined); setBatida(0); setSelecionado(girando ? undefined : origem); } // tentar de novo: o plano fica; a origem volta selecionada
+              else { setResultado(undefined); setBatida(0); setPlano({}); setHistorico([]); setSelecionado(girando ? undefined : origem); } // ⚠️ tentar de novo ZERA as setas (pedido do dono, 2026-11-12; antes o plano ficava) e a origem volta selecionada
             }}>{resultado!.vitoria ? 'Repetir' : 'Tentar de novo'}</button>
             {/* reassistir uma batida por vez: ver onde o plano saiu do esperado */}
             {/* ⚠️ rótulo curto: "Passo a passo" quebrava os botões em duas linhas */}
@@ -526,7 +526,7 @@ function Fim(props: {
     // (o motor culpa a 1ª da lista, que pode não ser ela; ver explicar.test).
     const e = explicar(fase, resultado);
     texto = e?.tipo === 'padaria'
-      ? `${nome(e.id)} ainda estava na padaria quando o recado chegou.`
+      ? `O recado chegou na batida ${e.chegou}, mas ${o(nome(e.id))} ${nome(e.id)} só voltava da padaria na ${e.volta}.`
       : e?.tipo === 'duvida'
         ? `${nome(e.id)} só ouviu ${o(nome(e.de)) === 'a' ? 'da' : 'do'} ${nome(e.de)} e não acreditou.`
         : e?.tipo === 'reto'

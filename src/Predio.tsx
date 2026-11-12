@@ -15,11 +15,16 @@ const L = 120; // largura de um apartamento
 // celular de verdade, com a barra do navegador (390×720), o prédio de 5 andares rolava. O cômodo perdeu altura
 // (136 → 112) e o morador encolheu junto (×0,8); largura, plaquinha e texto ficaram do mesmo tamanho. Medido: o chefão
 // 3×5 passou a caber (personagem 96 → 77 px na tela). `?alto` mostra o formato antigo, pra comparar.
+// ⚠️ SEM NOMES é o padrão desde 2026-11-12 (ideia do dono, aprovada depois de comparar): na tela ficam só os símbolos
+// de papel e de regra; o nome aparece em quem está selecionado e, no fim, em todo mundo (o texto do desfecho cita
+// nomes). Nome só em quem tem regra viraria dica ("quem tem plaquinha é o caminho"), por isso é ninguém. `?nomes`
+// mostra os nomes o tempo todo, como era.
+export const SEM_NOMES = typeof location !== 'undefined' && !new URLSearchParams(location.search).has('nomes');
 export const ALTO = typeof location !== 'undefined' && new URLSearchParams(location.search).has('alto');
 export const A = ALTO ? 136 : 112;
 const D = A - 136; // o que fica no meio do cômodo (cabeça, porta) sobe junto com o chão
-// ⚠️ balão e placa da derrota sobem MENOS que o chão: subindo tudo, o balão caía em cima do nome e a placa, do rosto
-const DB = D / 2, DP = 0; // a placa fica onde estava (na altura da cintura do morador menor) // altura (mais alto que largo: o corpo dos moradores novos tem ~2,5 cabeças)
+// ⚠️ o balão sobe MENOS que o chão: subindo tudo, caía em cima do nome
+const DB = D / 2; // altura (mais alto que largo: o corpo dos moradores novos tem ~2,5 cabeças)
 const ESCALA = ALTO ? 1.08 : 0.86; // cabeça ≈ 37 no desenho
 const RAIO = 28; // de onde a ligação de celular sai, a partir da cabeça
 
@@ -28,25 +33,14 @@ const RAIO = 28; // de onde a ligação de celular sai, a partir da cabeça
 export const TAMANHO: Record<Tamanho, string> = { 1: 'um cochicho', 2: 'uma fofoca', 3: 'um escândalo' };
 export const NOME_TAMANHO: Record<Tamanho, string> = { 1: 'cochicho', 2: 'fofoca', 3: 'escândalo' };
 
-// O que vai em cada plaquinha da derrota (a vítima tem a seta vermelha, não plaquinha).
-type Placa = { id: string; culpa: boolean; texto?: string; icones?: [Tamanho, Tamanho]; versoes?: [boolean, boolean] };
-function placasDa(e: Explicacao): Placa[] {
-  if (e.tipo === 'tamanho') return [{ id: e.id, culpa: true, icones: [e.queria, e.veio] }];
-  // versão: os mesmos "queria / veio", com o balão certo ou o ao contrário (invertido = azul com as setinhas trocadas)
-  if (e.tipo === 'versao') return [{ id: e.id, culpa: true, icones: [1, 1], versoes: [e.queria === 'invertida', e.veio === 'invertida'] }];
-  if (e.tipo === 'ordem') {
-    return [
-      { id: e.antes, culpa: false, texto: `ouviu na ${e.batidaAntes}` },
-      { id: e.depois, culpa: true, texto: e.batidaDepois === e.batidaAntes ? `junto, na ${e.batidaDepois}` : `ouviu na ${e.batidaDepois}` },
-    ];
-  }
-  if (e.tipo === 'padaria') return [{ id: e.id, culpa: true, texto: `veio na ${e.chegou} · volta na ${e.volta}` }]; // ⚠️ "recado na 2 · volta na 3" não cabia no cômodo
-  if (e.tipo === 'sem_noticia') return [{ id: e.id, culpa: true, texto: 'não ouviu' }];
-  if (e.tipo === 'duvida') return [{ id: e.id, culpa: true, texto: 'ouviu de 1 só' }];
-  if (e.tipo === 'reto') return [{ id: e.id, culpa: true, texto: e.motivo === 'atrapalhou' ? 'se atrapalhou' : 'guardou' }];
-  if (e.tipo === 'toque') return [{ id: e.id, culpa: true, texto: `calou · passou da ${e.hora}` }];
-  if (e.tipo === 'demais') return [{ id: e.id, culpa: true, texto: `${e.souberam} sabem · máx ${e.teto}` }];
-  return [];
+// Quem a explicação da derrota cita (além do culpado, que o cômodo vermelho já mostra): ganha uma moldura.
+// ⚠️ Até 2026-11-12 cada um ganhava uma PLAQUINHA com texto em cima do personagem ("veio na 3 · volta na 4", "ouviu de
+// 1 só"…). O dono pediu pra tirar: tapava o personagem, o texto curto virava enigma e era poluição visual. A
+// explicação por extenso fica só no quadro do desfecho, embaixo do título.
+function citados(e: Explicacao): string[] {
+  if (e.tipo === 'ordem') return [e.antes, e.depois];
+  if (e.tipo === 'vitima') return [];
+  return [e.id];
 }
 
 // Altura da cabeça (de onde sai a ligação, pra onde o olhar aponta); o corpo pisa em y0 + A - 8.
@@ -131,7 +125,7 @@ function useLargura(texto: string, chute: number) {
 
 // Plaquinha com o nome (e o que a pessoa exige para acreditar), no canto de cima.
 // No trilho o tamanho é exato e aparece com "=" ("quer exatamente um boato"); na mecânica antiga é mínimo.
-function Etiqueta({ v, x0, y0, contou, menos, perto }: { v: Vizinho; x0: number; y0: number; contou?: boolean; menos?: boolean; perto?: string }) {
+function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizinho; x0: number; y0: number; contou?: boolean; menos?: boolean; perto?: string; comNome?: boolean }) {
   const exato = v.interesse?.tamanho;
   const versao = v.interesse?.versao; // quer a versão certa ou a ao contrário: o balão mostra qual
   const req = exato ?? v.interesse?.minTamanho ?? (versao ? 1 : undefined);
@@ -141,7 +135,8 @@ function Etiqueta({ v, x0, y0, contou, menos, perto }: { v: Vizinho; x0: number;
   const vitima = v.tipo === 'assunto';
   const fofoqueira = v.tipo === 'fofoqueira';
   const selo = contou || vitima || v.interesse || fofoqueira ? 21 : 0;
-  const [ref, nome] = useLargura(v.nome, v.nome.length * 7.4);
+  const [ref, larguraDoNome] = useLargura(v.nome, v.nome.length * 7.4);
+  const nome = comNome ? larguraDoNome : -6; // sem nome, a plaquinha fica só com os símbolos
   const tx = x0 + 14 + selo + (vez ? 9 : 0);
   const fimNome = tx + nome + 6;
   const duas = v.desconfia; // selo "2×": a Raquel só acredita ouvindo de duas pessoas
@@ -157,6 +152,7 @@ function Etiqueta({ v, x0, y0, contou, menos, perto }: { v: Vizinho; x0: number;
   // "−1": mora colado no Arnaldo e fala um tamanho menor (o efeito no tabuleiro, não só no personagem)
   const xMenos = fim + (mais ? 26 : 0);
   const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (perto ? 34 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 27 : 0);
+  if (!comNome && w < 10 && !fiscal) return null; // morador comum sem papel nem regra: nada
   return (
     // ⚠️ plaquinha mais larga que o cômodo (estrela + nome comprido + "=" + tamanho, ou +1/−1/⇄) invadia o vizinho:
     // encolhe inteira, a partir da ponta esquerda, até caber (L − 10)
@@ -169,7 +165,7 @@ function Etiqueta({ v, x0, y0, contou, menos, perto }: { v: Vizinho; x0: number;
       {!contou && !vitima && v.interesse && <g transform={`translate(${x0 + 20} ${y0 + 19.5})`}><Estrela r={8.5} /></g>}
       {!contou && !vitima && !v.interesse && fofoqueira && <g transform={`translate(${x0 + 20} ${y0 + 19})`} aria-label="fofoqueira: conta pra todo mundo em volta"><SeloFofoqueira /></g>}
       {vez && <text x={x0 + 32} y={y0 + 24} className="vez">{vez}</text>}
-      <text ref={ref} x={tx} y={y0 + 24}>{v.nome}</text>
+      {comNome && <text ref={ref} x={tx} y={y0 + 24}>{v.nome}</text>}
       {duas && (
         <g className="duas" aria-label="só acredita ouvindo de duas pessoas">
           <rect x={fimNome} y={y0 + 12} width={22} height={14} rx={3} />
@@ -459,10 +455,10 @@ export function Predio(props: {
             <g key={a + b} className={'passagem porta' + cls}>
               <rect x={wx - 5} y={gy} width={5} height={gb - gy} className={comodo(c, r)} style={corDe(c, r)} />
               <rect x={wx} y={gy} width={5} height={gb - gy} className={comodo(c + 1, r)} style={corDe(c + 1, r)} />
-              <path d={`M${wx - 6},${gb} V${gy - 1} H${wx + 6} V${gb}`} className="batente" />
-              <path d={`M${wx - 7.5},${gb} V${gy - 2.5} H${wx + 7.5} V${gb}`} className="contorno" />
-              <polygon points={`${wx + 6},${gy + 1} ${wx + 18},${gy + 6} ${wx + 18},${gb - 4} ${wx + 6},${gb}`} className="folha" />
-              <circle cx={wx + 15} cy={(gy + gb) / 2 + 6} r={1.6} className="macaneta" />
+              <path d={`M${wx - 6},${gb} V${gy + 4} q0,-5 5,-5 h2 q5,0 5,5 V${gb}`} className="batente" />
+              <path d={`M${wx - 7.5},${gb} V${gy + 4} q0,-6.5 6.5,-6.5 h2 q6.5,0 6.5,6.5 V${gb}`} className="contorno" />
+              <polygon points={`${wx + 6},${gy + 3} ${wx + 14},${gy + 8} ${wx + 14},${gb - 3} ${wx + 6},${gb}`} className="folha" />
+              <circle cx={wx + 11.5} cy={(gy + gb) / 2 + 6} r={1.4} className="macaneta" />
             </g>
           );
         }
@@ -471,14 +467,17 @@ export function Predio(props: {
           const baixo = Math.max(va.pos[1], vb.pos[1]), c = va.pos[0];
           const dir = c * L + L - 4, chao = baixo * A + A - 4, topo = baixo * A - 4;
           const n = 11, degrau = (chao - topo) / n, passo = 6, x0 = dir - n * passo;
+          // ⚠️ só o lance: os degraus por cima e a viga inclinada por baixo. Cheio até o chão (como era), cada escada
+          // virava um bloco de madeira que tomava um terço do cômodo — poluição que o dono apontou (2026-11-12)
+          const viga = 13;
           let d = `M${x0},${chao}`;
           for (let i = 0; i < n; i++) d += ` v${-degrau} h${passo}`;
-          d += ` V${chao} Z`;
+          d += ` v${viga} L${x0 + passo * 2.2},${chao} Z`;
           return (
             <g key={a + b} className={'passagem escada' + cls}>
               <rect x={dir - 3 * passo - 2} y={topo} width={3 * passo + 2} height={8} className={comodo(c, baixo)} style={corDe(c, baixo)} />
               <path d={d} className="lance" />
-              <path d={`M${x0 + 2},${chao - 24} L${dir - 2},${topo - 22} M${dir - 3 * passo - 2},${topo} v-16 M${dir - 2},${topo} v-22`} className="corrimao" />
+              <path d={`M${x0 + 2},${chao - 20} L${dir - 2},${topo - 18}`} className="corrimao" />
             </g>
           );
         }
@@ -508,14 +507,7 @@ export function Predio(props: {
             onClick={trilho ? undefined : () => props.aoTocar(v)}
             onPointerDown={trilho && montando ? (e) => { setArrasto({ de: v.id, x: e.clientX, y: e.clientY }); trilho.aoApertar(v); } : undefined}>
             <rect x={x0 + 9} y={y0 + 9} width={L - 18} height={A - 18} className="toque" />
-            {fora(v)
-              ? <Padaria x={pe.x} y={y0 + 84 + D} faltam={montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
-              : <Personagem v={v} expressao={expressao(v)} x={pe.x} y={pe.y} olha={olharPara(v)} escala={ESCALA} />}
-            {/* ⚠️ a plaquinha sobe 11 e fica meio em cima da laje: no lugar de antes (y0+8…30) ela tapava a testa
-                e às vezes o olho — a cabeça do desenho começa em ~y0+9. Assim ela encosta só no alto do cabelo. */}
-            <Etiqueta v={v} x0={x0} y0={y0 - 11} contou={!!fase.origens && origem === v.id} menos={baixo.has(v.id) && v.tipo !== 'assunto'}
-              perto={v.tipo === 'assunto' ? undefined : daVera.has(v.id) ? 'psiu' : daNorma.get(v.id)} />
-            {v.celular && <g transform={`translate(${x0 + 22} ${y0 + A - 28}) scale(0.9)`} className="tem-celular"><Telefone /></g>}
+            {/* ⚠️ as cantoneiras vêm ANTES do morador e da plaquinha: por cima, a de cima cortava o nome */}
             {selecionado && (
               // seleção = 4 cantoneiras grossas (forma, não só cor)
               <g className="cantoneiras">
@@ -524,6 +516,15 @@ export function Predio(props: {
                 ))}
               </g>
             )}
+            {fora(v)
+              ? <Padaria x={pe.x} y={y0 + 84 + D} faltam={montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
+              : <Personagem v={v} expressao={expressao(v)} x={pe.x} y={pe.y} olha={olharPara(v)} escala={ESCALA} />}
+            {/* ⚠️ a plaquinha sobe 11 e fica meio em cima da laje: no lugar de antes (y0+8…30) ela tapava a testa
+                e às vezes o olho — a cabeça do desenho começa em ~y0+9. Assim ela encosta só no alto do cabelo. */}
+            <Etiqueta v={v} x0={x0} y0={y0 - 11} contou={!!fase.origens && origem === v.id} menos={baixo.has(v.id) && v.tipo !== 'assunto'}
+              perto={v.tipo === 'assunto' ? undefined : daVera.has(v.id) ? 'psiu' : daNorma.get(v.id)}
+              comNome={!SEM_NOMES || selecionado || fim} />
+            {v.celular && <g transform={`translate(${x0 + 22} ${y0 + A - 28}) scale(0.9)`} className="tem-celular"><Telefone /></g>}
           </g>
         );
       })}
@@ -582,9 +583,12 @@ export function Predio(props: {
           com movimento reduzido a animação some e o balão aparece direto no destino, não no canto do prédio. */}
       {falando.map((m) => {
         const [x1, y1, x2, y2] = trajeto(porId[m.de], porId[m.para]);
+        // o meio do caminho, levantado: de lado o balão dá um pulinho; pela escada, abre uma barriguinha pro lado
+        const deLado = Math.abs(x2 - x1) > Math.abs(y2 - y1);
+        const xm = (x1 + x2) / 2 + (deLado ? 0 : -12), ym = (y1 + y2) / 2 - 16 - (deLado ? 16 : 0);
         const estilo = {
-          '--x1': `${x1}px`, '--y1': `${y1 - 16}px`, '--x2': `${x2}px`, '--y2': `${y2 - 16}px`,
-          transform: `translate(${x2}px, ${y2 - 16}px)`, animationDuration: `${Math.round(ritmo * 0.72)}ms`,
+          '--x1': `${x1}px`, '--y1': `${y1 - 16}px`, '--xm': `${xm}px`, '--ym': `${ym}px`, '--x2': `${x2}px`, '--y2': `${y2 - 16}px`,
+          transform: `translate(${x2}px, ${y2 - 16}px)`, animationDuration: `${Math.round(ritmo * 0.8)}ms`,
         } as CSSProperties;
         return (
           <g key={`viaja${batida}-${m.de}-${m.para}`} className="viaja" style={estilo} aria-hidden="true">
@@ -606,26 +610,10 @@ export function Predio(props: {
         );
       })}
 
-      {/* derrota por tamanho, ordem, padaria ou estrela sem notícia: plaquinha no meio do apartamento de quem importa
-          (⚠️ no pé, o quadro da derrota a cobria no térreo) */}
-      {fim && explicacao && placasDa(explicacao).map((p) => {
-        const v = porId[p.id];
-        const x0 = v.pos[0] * L, y0 = v.pos[1] * A;
-        return (
-          <g key={'placa' + p.id} className={p.culpa ? 'placa-causa culpa' : 'placa-causa'} aria-hidden="true">
-            <rect x={x0 + 6} y={y0 + 60 + DP} width={L - 12} height={24} rx={3} />
-            {p.icones ? (
-              <>
-                <text x={x0 + 10} y={y0 + 73 + DP} className="curto">queria</text>
-                <g transform={`translate(${x0 + 56} ${y0 + 72 + DP}) scale(0.5)`}><Boato tamanho={p.icones[0]} invertida={p.versoes?.[0]} /></g>
-                <text x={x0 + 67} y={y0 + 73 + DP} className="curto">veio</text>
-                <g transform={`translate(${x0 + 101} ${y0 + 72 + DP}) scale(0.5)`}><Boato tamanho={p.icones[1]} invertida={p.versoes?.[1]} /></g>
-              </>
-            ) : (
-              <text x={x0 + L / 2} y={y0 + 73 + DP} className="meio">{p.texto}</text>
-            )}
-          </g>
-        );
+      {/* derrota: só uma moldura em volta do apartamento de quem a explicação cita (o texto está no desfecho) */}
+      {fim && explicacao && citados(explicacao).map((id) => {
+        const v = porId[id];
+        return <rect key={'cita' + id} x={v.pos[0] * L + 5} y={v.pos[1] * A + 5} width={L - 10} height={A - 10} rx={3} className="citado" aria-hidden="true" />;
       })}
 
       {/* balões e botões de girar, sempre na camada de cima */}
