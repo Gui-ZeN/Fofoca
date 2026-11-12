@@ -138,6 +138,12 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .etiqueta .exagera text { fill: var(--papel); font-size: 11px; text-anchor: middle; }
 .etiqueta .duas rect { fill: #6B4E8E; stroke: none; }
 .etiqueta .duas text { fill: var(--papel); font-size: 11px; text-anchor: middle; }
+.etiqueta .fiscal rect { fill: var(--vitima); stroke: none; }
+.etiqueta .fiscal text { fill: var(--papel); font-size: 12px; text-anchor: middle; }
+.etiqueta .perto rect { fill: var(--papel); stroke: var(--vitima); stroke-width: 1.4; }
+.etiqueta .perto text { fill: var(--vitima); font-size: 10.5px; text-anchor: middle; }
+.ficha.lotacao { background: var(--vitima); }
+.ficha.lotacao.ok { background: var(--tinta); }
 .etiqueta .passa rect { fill: #2F6E5A; stroke: none; }
 .etiqueta .passa path { fill: var(--papel); stroke: none; }
 /* pra onde o Nando vai passar (só montando): tracejada, na cor do selo dele */

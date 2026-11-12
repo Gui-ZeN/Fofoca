@@ -154,9 +154,10 @@ Cena de chegada: "**Moradora nova!**" — *"Hum… quem mais te contou?"* (um ba
 
 ### 5.3 Ideias discutidas, ainda não construídas
 
-- **Vera, a vigia:** ouve quando um vizinho de passagem **conta** algo (não quando só recebe); orelha em cada cômodo afetado. A estrela colada nela pode receber e guardar.
-- **Dona Norma:** "**fecha após a batida N**" uma passagem (prazo). "Tranca até N" não funciona: ninguém espera porta abrir.
-- **Dr. Álvaro:** teto de pessoas sabendo só morde em fases **novas** (Fofoqueira barata que espalha demais) — nas atuais a solução já é o mínimo de ouvintes. Alternativa: **procedência** (a estrela só acredita vindo de quem tem o mesmo carimbo).
+- **Vera, a vigia** — `?bloco=vera` (protótipo, 2026-11-12). **Escuta quando um vizinho dela conta algo** pra outra pessoa; receber e guardar do lado dela pode. Selo "ouve". Derrota: "Vera escutou o Rui contando do lado!". Fala de chegada: *"Eu não durmo. Eu escuto."*
+- **Dona Norma** — `?bloco=norma` (protótipo). Toque de recolher: **depois da batida N, quem mora colado nela não conta mais nada**. Selo "até N". Fala: *"Passou da hora, acabou a conversa."* (O rascunho era "fecha uma passagem após a batida N"; virou a vizinhança inteira, que se lê melhor. Alternativa não feita: tolerar ouvir uma vez.)
+- **Dr. Álvaro** — `?bloco=alvaro` (protótipo). Lotação: **no máximo N pessoas sabendo**, contando a origem. Selo "máx N"; derrota "Ficaram 5 sabendo, e o Dr. Álvaro só tolera 4." Só morde com Fofoqueira no prédio (ela espalha demais), e todas as fases dele têm. Fala: *"Isso é assunto reservado."*
+- Os três têm **3 fases cada** (`src/fiscais.ts`), achadas com buscador: solução única; sem a regra a armadilha vence, com ela perde. ⚠️ Não seguem o roteiro reconhecer → desviar → usar de propósito dos outros protótipos; rever antes de entrarem na campanha. Não marcam na tela os vizinhos afetados (o Arnaldo marca com −1). Testes por mutação: com as três regras desligadas, 21 de 28 falham.
 - **Celular como recurso:** ligação de qualquer um pra qualquer um **quebra** fases (no andar 4 a Rita ligaria direto pra Cida). Se entrar como **ajuda**: uma por fase, aceitando várias soluções quando usada; nunca "ganhar por vencer de primeira". Em aberto.
 - **Padre:** só valeria com regra nova ("Padre ouviu: assunto encerrado" — o boato para naquela batida).
 - Mecânicas de tempo (padaria, porta com horário, "enrolado") são da mesma família: testar uma de cada vez.
@@ -245,6 +246,8 @@ Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio
 | Média | 3×4 | 8–10 | 4–5 (+1) | idem |
 | Pesada | 3×5 | 10–12 | 5–6 (+1) | 2 Fofoqueiras (a 1ª longe do Zé), Zé no meio com 3+ portas |
 | Chefão | 3×5 | 11–12 | 6–7 (+1) | 2 Fofoqueiras, Zé no meio, 2 estrelas |
+
+**O "quaseee" e a Consulta 8 (Astra, 2026-11-12):** a fábrica exige que cada andar tenha ≥ 3 **quases de verdade** (`src/quase.ts`): resultados diferentes em que o plano erra por UM detalhe — tamanho, ordem, vítima ouvindo só no fim, gente demais, ou a estrela barrada por uma regra (padaria, dúvida da Raquel, toque de recolher), conferido por contrafactual (tira a regra, joga o mesmo plano: se a estrela ouve, foi a regra). "Estrela sem notícia" pura não conta. A armadilha (caminho óbvio) também tem que ser um quase. O Astra achou e foram corrigidos: falso positivo do "chegou cedo", planos redundantes contando em dobro, a exigência de 2 tipos (retirada), o empate da Raquel (vale o primeiro recado), a derrota que não dizia onde o boato parou, a seta do Nando só por seta direta, e o elenco que ensinava errado (Nando como comum; fiscais como vítima sem regra — os dois saíram do sorteio). ⚠️ É filtro auxiliar: quase medido não prova diversão; só o teste com pessoas diz. Pendente dele: 3×5 ainda rola em navegador com barra (saída sugerida: achatar a altura do apartamento); folga fixa de 1 vira "contador menos um". 2 andares em 5 tentam a Fofoqueira-armadilha.
 
 **Passo 1 da Consulta 7 (equipe de 20 designers, 2026-11-12):**
 - **Chefão em 3×5, sem rolar** (era 3×6 e rolava — 20 de 20 designers contra): a altura extra não comprava quebra-cabeça (o 3×6 tinha a mesma rede que o 3×5) e o clímax do capítulo era jogado sem ver origem, estrela e Zé juntos. **Teto do tabuleiro: 3 colunas × 5 andares, sem rolagem enquanto se monta o plano.** A rolagem só fica nos protótipos (`?bloco=alto`).
@@ -373,7 +376,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas (K); com as K + 1 que o jogador recebe, no máximo 2; o caminho mais curto perde, mesmo com a folga; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente (inclusive a Fofoqueira) muda a jogada.
 
-**Números de hoje:** **1056 testes em 23 arquivos** (o teste do teto roda por andar: campanha, estoque e protótipos), todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
+**Números de hoje:** **1112 testes em 25 arquivos** (o teste do teto roda por andar: campanha, estoque e protótipos), todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 

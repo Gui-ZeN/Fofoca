@@ -7,6 +7,7 @@ import { writeFileSync } from 'node:fs';
 import { aleatorio } from '../src/variar';
 import { batizar, fabricar, moldeDe, pesoDoAndar, type Peso, type Tema } from '../src/fabrica';
 import { assinatura } from '../src/assinatura';
+import { medirQuase, quaseBasta } from '../src/quase';
 import type { FaseTrilho } from '../src/trilho';
 
 // Boatos absurdos e carinhosos (PRODUCT.md: nunca aparência, raça, orientação ou doença).
@@ -46,9 +47,9 @@ const estoque = [];
 const doCapitulo: string[] = [];
 const MAX_POR_CAPITULO = 6;
 const repete = (a: string) => doCapitulo.slice(-2).includes(a) || doCapitulo.filter((x) => x === a).length >= MAX_POR_CAPITULO;
-// candidatos por tema antes de passar pro próximo. ⚠️ a Fofoqueira-armadilha tem menos assinaturas possíveis e perde mais
-// candidatos pra régua (com o mesmo número, o estoque caiu pra 17% de armadilha; o andares.test pede ≥ 20%)
-const TENTATIVAS = (armadilha: boolean) => (armadilha ? 10 : 4);
+// O "quaseee" (src/quase.ts, pedido do dono): ≥ 3 planos que erram por um detalhe, de 2 tipos das médias pra cima, e o
+// caminho óbvio (a armadilha) também quase acerta. A régua e o "quase" entram DENTRO da busca (fabricar, `aceita`):
+// fora dela, com poucas tentativas por tema, a fábrica desistia e descia de peso (só 13% das médias passavam).
 for (let pos = inicio; pos < fim; pos++) {
   if (pos % 25 === 0) doCapitulo.length = 0;
   const sorte = aleatorio(20261111 + pos * 7919);
@@ -58,18 +59,25 @@ for (let pos = inicio; pos < fim; pos++) {
     const temas = [...TEMAS[peso]].sort(() => sorte() - 0.5); // tenta os temas do peso numa ordem sorteada
     // 1 andar em 3: a Fofoqueira é armadilha, não atalho (fabrica.ts, fofArmadilha). Longe do Zé, ela só pega
     // alguém com ordem, tamanho ou padaria; se nenhum tema der, o andar fica com ela de atalho (não desce de peso).
-    const papeis = pos % 3 === 2 ? [true, false] : [false];
+    // ⚠️ 2 andares em 5 tentam a armadilha (era 1 em 3): com o "quase", só ~58% das tentativas dão certo, e com 1 em 3 o
+    // estoque ficava com 80,7% de atalho (o andares.test pede < 80%)
+    const papeis = pos % 5 === 2 || pos % 5 === 4 ? [true, false] : [false];
     for (const fofArmadilha of papeis) {
       for (const tema of temas) {
-        for (let t = 0; t < TENTATIVAS(fofArmadilha) && !feito; t++) {
-          const achado = fabricar({ ...moldeDe(peso, tema), fofArmadilha }, sorte, PRAZO[peso] / temas.length / papeis.length);
-          // ⚠️ prazo inteiro em CADA tentativa: dividido pelas tentativas, a armadilha (mais rara) não era achada a tempo
-          if (!achado) break; // nada nesse tema no prazo: próximo tema
-          const fase = batizar(achado.f, achado.c, TITULOS[pos % TITULOS.length], BOATOS[(pos * 7) % BOATOS.length]);
+        let ultimo: { fase: FaseTrilho; a: string } | undefined;
+        const pesoAqui = peso;
+        const aceita = (f: Parameters<typeof batizar>[0], c: Parameters<typeof batizar>[1]) => {
+          const fase = batizar(f, c, TITULOS[pos % TITULOS.length], BOATOS[(pos * 7) % BOATOS.length]);
           const a = assinatura(fase);
-          if (repete(a)) { console.log(`  posição ${pos}: "${a}" repete o capítulo, outro`); continue; }
-          feito = { ...achado, fase, a };
-        }
+          if (repete(a) || !quaseBasta(medirQuase(fase), pesoAqui)) return false;
+          ultimo = { fase, a };
+          return true;
+        };
+        // ⚠️ a Fofoqueira-armadilha que também tem "quase" é rara: com o prazo dividido igual, só 11 de 50 saíram (o
+        // estoque ficou com 89% de atalho; o andares.test pede ≤ 80%). Ela ganha 3× o prazo; o atalho de reserva, o resto.
+        const prazo = (PRAZO[peso] / temas.length) * (papeis.length === 1 ? 1 : fofArmadilha ? 1.5 : 0.5);
+        const achado = fabricar({ ...moldeDe(peso, tema), fofArmadilha }, sorte, prazo, aceita);
+        if (achado && ultimo) feito = { ...achado, ...ultimo };
         if (feito) break;
       }
       if (feito) break;

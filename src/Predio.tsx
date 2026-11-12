@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { abafados, girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, reto, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
+import { abafados, amigosDe, colados, espalhar, girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
 import { Personagem, type Expressao } from './Personagem';
 import { Boato, Estrela, Girar, Telefone } from './Icones';
 import { Vazio } from './Vazio';
@@ -32,9 +32,12 @@ function placasDa(e: Explicacao): Placa[] {
       { id: e.depois, culpa: true, texto: e.batidaDepois === e.batidaAntes ? `junto, na ${e.batidaDepois}` : `ouviu na ${e.batidaDepois}` },
     ];
   }
-  if (e.tipo === 'padaria') return [{ id: e.id, culpa: true, texto: `recado na ${e.chegou} · volta na ${e.volta}` }];
+  if (e.tipo === 'padaria') return [{ id: e.id, culpa: true, texto: `veio na ${e.chegou} · volta na ${e.volta}` }]; // ⚠️ "recado na 2 · volta na 3" não cabia no cômodo
   if (e.tipo === 'sem_noticia') return [{ id: e.id, culpa: true, texto: 'não ouviu' }];
   if (e.tipo === 'duvida') return [{ id: e.id, culpa: true, texto: 'ouviu de 1 só' }];
+  if (e.tipo === 'reto') return [{ id: e.id, culpa: true, texto: e.motivo === 'atrapalhou' ? 'se atrapalhou' : 'guardou' }];
+  if (e.tipo === 'toque') return [{ id: e.id, culpa: true, texto: `calou · passou da ${e.hora}` }];
+  if (e.tipo === 'demais') return [{ id: e.id, culpa: true, texto: `${e.souberam} sabem · máx ${e.teto}` }];
   return [];
 }
 
@@ -120,7 +123,7 @@ function useLargura(texto: string, chute: number) {
 
 // Plaquinha com o nome (e o que a pessoa exige para acreditar), no canto de cima.
 // No trilho o tamanho é exato e aparece com "=" ("quer exatamente um boato"); na mecânica antiga é mínimo.
-function Etiqueta({ v, x0, y0, contou, menos }: { v: Vizinho; x0: number; y0: number; contou?: boolean; menos?: boolean }) {
+function Etiqueta({ v, x0, y0, contou, menos, perto }: { v: Vizinho; x0: number; y0: number; contou?: boolean; menos?: boolean; perto?: string }) {
   const exato = v.interesse?.tamanho;
   const versao = v.interesse?.versao; // quer a versão certa ou a ao contrário: o balão mostra qual
   const req = exato ?? v.interesse?.minTamanho ?? (versao ? 1 : undefined);
@@ -137,10 +140,15 @@ function Etiqueta({ v, x0, y0, contou, menos }: { v: Vizinho; x0: number; y0: nu
   // selo ⚡ (pressa): o Nando passa reto, sozinho. ⚠️ Era "»", e quem jogou leu "sempre pra direita" — a regra é
   // "pro lado oposto de onde veio"; o caminho de verdade aparece na seta tracejada que sai dele (abaixo)
   const passa = v.tipo === 'apressado';
+  // fiscais: a regra dele(a) em duas palavras, na própria plaquinha (Vera "ouve", Dona Norma "até 2", Dr. Álvaro "máx 4")
+  const fiscal = v.vigia ? 'ouve' : v.recolhe ? `até ${v.recolhe}` : v.teto ? `máx ${v.teto}` : undefined;
+  // ⚠️ o selo do fiscal fica numa etiqueta própria, EMBAIXO do nome: do lado, "Dona Norma" + "até 3" passava do cômodo
+  // e a plaquinha inteira encolhia até não dar pra ler — justo onde está a regra do vilão (achado jogando, 2026-11-12)
   const fim = fimNome + (duas ? 26 : 0) + (passa ? 26 : 0);
+  const xPerto = fim + (mais ? 26 : 0) + (menos ? 26 : 0);
   // "−1": mora colado no Arnaldo e fala um tamanho menor (o efeito no tabuleiro, não só no personagem)
   const xMenos = fim + (mais ? 26 : 0);
-  const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 27 : 0);
+  const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (perto ? 34 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 27 : 0);
   return (
     // ⚠️ plaquinha mais larga que o cômodo (estrela + nome comprido + "=" + tamanho, ou +1/−1/⇄) invadia o vizinho:
     // encolhe inteira, a partir da ponta esquerda, até caber (L − 10)
@@ -158,6 +166,19 @@ function Etiqueta({ v, x0, y0, contou, menos }: { v: Vizinho; x0: number; y0: nu
         <g className="duas" aria-label="só acredita ouvindo de duas pessoas">
           <rect x={fimNome} y={y0 + 12} width={22} height={14} rx={3} />
           <text x={fimNome + 11} y={y0 + 23}>2×</text>
+        </g>
+      )}
+      {fiscal && (
+        <g className="fiscal" aria-label={v.vigia ? 'escuta quando um vizinho dela conta algo' : v.recolhe ? `depois da batida ${v.recolhe}, quem mora colado nela não conta mais nada` : `no máximo ${v.teto} pessoas podem ficar sabendo`}>
+          <rect x={x0 + 8} y={y0 + 31} width={46} height={16} rx={3} />
+          <text x={x0 + 31} y={y0 + 43}>{fiscal}</text>
+        </g>
+      )}
+      {perto && (
+        // mora colado (por porta ou escada) na Vera ("psiu": não pode contar) ou na Dona Norma ("até N")
+        <g className="perto" aria-label={perto === 'psiu' ? 'mora colado na Vera: se contar, ela escuta' : `mora colado na Dona Norma: só conta ${perto}`}>
+          <rect x={xPerto} y={y0 + 12} width={30} height={14} rx={3} />
+          <text x={xPerto + 15} y={y0 + 23}>{perto}</text>
         </g>
       )}
       {passa && (
@@ -305,6 +326,9 @@ export function Predio(props: {
   }); // re-registra a cada render pra enxergar o trilho atual
   const porId = Object.fromEntries(fase.vizinhos.map((v) => [v.id, v]));
   const baixo = abafados(fase);
+  // vizinhos de passagem da Vera e da Dona Norma: marcados na plaquinha, como o −1 do Arnaldo
+  const daVera = colados(fase, 'vigia');
+  const daNorma = new Map(fase.vizinhos.filter((w) => w.recolhe).flatMap((w) => amigosDe(fase, w.id).map((id) => [id, `até ${w.recolhe}`] as [string, string])));
   const colunas = Math.max(...fase.vizinhos.map((v) => v.pos[0])) + 1;
   const andares = Math.max(...fase.vizinhos.map((v) => v.pos[1])) + 1;
   const largura = colunas * L, altura = andares * A;
@@ -481,7 +505,8 @@ export function Predio(props: {
               : <Personagem v={v} expressao={expressao(v)} x={pe.x} y={pe.y} olha={olharPara(v)} escala={ESCALA} />}
             {/* ⚠️ a plaquinha sobe 11 e fica meio em cima da laje: no lugar de antes (y0+8…30) ela tapava a testa
                 e às vezes o olho — a cabeça do desenho começa em ~y0+9. Assim ela encosta só no alto do cabelo. */}
-            <Etiqueta v={v} x0={x0} y0={y0 - 11} contou={!!fase.origens && origem === v.id} menos={baixo.has(v.id) && v.tipo !== 'assunto'} />
+            <Etiqueta v={v} x0={x0} y0={y0 - 11} contou={!!fase.origens && origem === v.id} menos={baixo.has(v.id) && v.tipo !== 'assunto'}
+              perto={v.tipo === 'assunto' ? undefined : daVera.has(v.id) ? 'psiu' : daNorma.get(v.id)} />
             {v.celular && <g transform={`translate(${x0 + 22} ${y0 + A - 28}) scale(0.9)`} className="tem-celular"><Telefone /></g>}
             {selecionado && (
               // seleção = 4 cantoneiras grossas (forma, não só cor)
@@ -498,9 +523,10 @@ export function Predio(props: {
       {/* Nando (apressado), montando: com UMA seta chegando nele, a seta tracejada mostra pra onde ele vai passar reto.
           Ensina a regra na hora, sem tirar o problema (escolher por onde entrar). Com duas chegando, depende de quem
           chega primeiro: não mostra. */}
-      {montando && trilho && fase.vizinhos.filter((p) => p.tipo === 'apressado').map((p) => {
-        const vem = Object.keys(setas).filter((de) => setas[de] === p.id);
-        const para = vem.length === 1 ? reto(fase, p, vem[0]) : undefined;
+      {montando && trilho && origem && fase.vizinhos.filter((p) => p.tipo === 'apressado').map((p) => {
+        // ⚠️ pela SIMULAÇÃO do plano inteiro, não só por seta desenhada direto pra ele: assim vale também quando quem
+        // conta pra ele é a Fofoqueira ou outro Nando (Consulta 8, Astra)
+        const para = espalhar(fase, { origem, setas }).batidas.flat().find((m) => m.de === p.id)?.para;
         if (!para) return null;
         const [x1, y1, x2, y2] = trajeto(p, porId[para]);
         return (

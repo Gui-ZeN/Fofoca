@@ -30,6 +30,13 @@ export interface Vizinho {
   // na mesma batida já convencem. ⚠️ Ela acredita no MAIOR dos recados que ouviu (empate: no primeiro) — antes era
   // "o maior" na mesma batida e "o segundo" em batidas diferentes, um desempate que ninguém via (Consulta 7).
   desconfia?: boolean;
+  // Os outros três fiscais (2026-11-12; rascunhos da Consulta 6). Os três são vítimas (`assunto`) com regra própria:
+  // Vera, a vigia: ESCUTA quando um vizinho de passagem CONTA algo pra outra pessoa (receber e guardar pode).
+  vigia?: boolean;
+  // Dona Norma, o toque de recolher: depois da batida N, quem mora colado nela não conta mais nada (o recado se perde).
+  recolhe?: number;
+  // Dr. Álvaro, a lotação: no máximo N pessoas podem ficar sabendo (contando quem você contou). Passou, perde.
+  teto?: number;
 }
 
 export interface Fase {
@@ -56,6 +63,7 @@ export interface Mensagem {
   para: string;
   tamanho: Tamanho;
   versao: Versao;
+  escuta?: boolean; // a Vera ouvindo o vizinho contar pra outra pessoa (não foi contado pra ela)
 }
 
 export interface Ouvido {
@@ -67,7 +75,7 @@ export interface Ouvido {
   de: string | null;
 }
 
-export type Motivo = 'assunto_ouviu' | 'interessado_nao_ouviu' | 'tamanho_errado' | 'versao_errada' | 'ordem_errada';
+export type Motivo = 'assunto_ouviu' | 'interessado_nao_ouviu' | 'tamanho_errado' | 'versao_errada' | 'ordem_errada' | 'gente_demais';
 
 export interface Resultado {
   batidas: Mensagem[][]; // batida 1, 2, ... (a origem ouve na batida 0)
@@ -79,10 +87,15 @@ export interface Resultado {
   // desconfiados: a 1ª fonte, que não bastou. Fica mesmo se ela acreditar depois (a tela mostra a dúvida entre
   // uma e outra); "não acreditou até o fim" = está aqui e NÃO está em `ouviu`.
   duvida?: Record<string, Ouvido>;
+  calados?: { id: string; batida: number; norma: string }[]; // quem ia contar e foi calado pelo toque de recolher da Dona Norma
 }
 
 export const amigosDe = (fase: Fase, id: string): string[] =>
   fase.amizades.flatMap(([a, b]) => (a === id ? [b] : b === id ? [a] : []));
+
+// Quem mora colado na Dona Norma (toque de recolher) ou na Vera (vigia): pra tela marcar os cômodos afetados.
+export const colados = (fase: Fase, regra: 'recolhe' | 'vigia'): Set<string> =>
+  new Set(fase.vizinhos.filter((w) => w[regra]).flatMap((w) => amigosDe(fase, w.id)));
 
 // Quem está colado em alguém que abafa (Arnaldo): conta um tamanho menor.
 export const abafados = (fase: Fase): Set<string> =>
@@ -134,6 +147,7 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
   const ouviu: Record<string, Ouvido> = { [jogada.origem]: { tamanho: 1, versao: 'normal', batida: 0, de: null } };
   const duvida: Record<string, Ouvido> = {};
   const atrapalhados = new Set<string>();
+  const calados: { id: string; batida: number; norma: string }[] = [];
   const batidas: Mensagem[][] = [];
   let fronteira = [jogada.origem];
   const baixo = abafados(fase);
@@ -141,8 +155,11 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
   // nem sempre se anulam (escândalo → escândalo → fofoca).
   const enviado = (id: string, t: Tamanho) => (baixo.has(id) ? (Math.max(1, t - 1) as Tamanho) : t);
 
+  const vigias = fase.vizinhos.filter((w) => w.vigia);
+  const normas = fase.vizinhos.filter((w) => w.recolhe);
+
   for (let batida = 1; fronteira.length > 0; batida++) {
-    const saindo: Mensagem[] = [];
+    let saindo: Mensagem[] = [];
     for (const id of fronteira) {
       const v = porId.get(id)!;
       const { tamanho, versao } = ouviu[id];
@@ -162,6 +179,19 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       }
       // túmulo e assunto não contam pra ninguém
     }
+    // Dona Norma: passou da hora, quem mora colado nela não conta mais nada
+    for (const w of normas) if (batida > w.recolhe!) {
+      const mudos = amigosDe(fase, w.id);
+      for (const m of saindo) if (mudos.includes(m.de) && !calados.some((c) => c.id === m.de)) calados.push({ id: m.de, batida, norma: w.id });
+      saindo = saindo.filter((m) => !mudos.includes(m.de));
+    }
+    // Vera: escuta o primeiro vizinho que contar algo pra outra pessoa
+    for (const w of vigias) {
+      if (ouviu[w.id]) continue;
+      const perto = amigosDe(fase, w.id);
+      const m = saindo.find((x) => perto.includes(x.de) && x.para !== w.id);
+      if (m) saindo.push({ ...m, para: w.id, escuta: true });
+    }
     const chegou = new Map<string, Mensagem>();
     const fontes = new Map<string, Set<string>>(); // desconfiados: de quem ouviram nesta batida
     const pressa = new Map<string, Set<string>>(); // apressados: de quem ouviram nesta batida
@@ -179,7 +209,9 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       const m = chegou.get(id)!;
       if ((duvida[id] ? 1 : 0) + de.size >= 2) { // acreditou: no maior dos recados (o de antes entra na conta)
         const antes = duvida[id];
-        if (antes) chegou.set(id, melhor({ de: antes.de!, para: id, tamanho: antes.tamanho, versao: antes.versao }, m));
+        // ⚠️ só troca se o novo for MAIOR: empate fica com o primeiro, seja qual for a versão. Com `melhor`, no
+        // empate a versão normal ganhava mesmo chegando depois — outro desempate escondido (Consulta 8, Astra)
+        if (antes && m.tamanho <= antes.tamanho) chegou.set(id, { de: antes.de!, para: id, tamanho: antes.tamanho, versao: antes.versao });
         continue;
       }
       chegou.delete(id);
@@ -193,7 +225,7 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
     fronteira = [...chegou.keys()];
   }
 
-  return { batidas, ouviu, ...(Object.keys(duvida).length ? { duvida } : {}), ...avaliar(fase, ouviu) };
+  return { batidas, ouviu, ...(Object.keys(duvida).length ? { duvida } : {}), ...(calados.length ? { calados } : {}), ...avaliar(fase, ouviu) };
 }
 
 function avaliar(fase: Fase, ouviu: Record<string, Ouvido>): Pick<Resultado, 'vitoria' | 'motivo' | 'culpado' | 'antes'> {
@@ -217,6 +249,8 @@ function avaliar(fase: Fase, ouviu: Record<string, Ouvido>): Pick<Resultado, 'vi
   for (let i = 1; i < fila.length; i++)
     if (ouviu[fila[i].id].batida <= ouviu[fila[i - 1].id].batida)
       return { vitoria: false, motivo: 'ordem_errada', culpado: fila[i].id, antes: fila[i - 1].id };
+  // Dr. Álvaro por último: é o "quase" — tudo certo, mas gente demais ficou sabendo
+  for (const v of fase.vizinhos) if (v.teto && Object.keys(ouviu).length > v.teto) return { vitoria: false, motivo: 'gente_demais', culpado: v.id };
   return { vitoria: true };
 }
 

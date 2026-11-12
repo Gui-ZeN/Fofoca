@@ -8,7 +8,9 @@ import type { Fase } from './motor';
 // Trocas só dentro do mesmo gênero, pra "a Cida" / "o Davi" continuarem certos nas dicas.
 // Os 8 moradores novos (2026-11-11) entram aqui: todos têm arte ilustrada com as 4 poses.
 const FEMININAS = ['Rita', 'Ana', 'Bia', 'Cida', 'Marlene', 'Jandira', 'Celina', 'Solange'];
-const MASCULINOS = ['Davi', 'Rui', 'Edu', 'Caio', 'Otávio', 'Nando', 'Ivo'];
+// ⚠️ sem o Nando: ele é o apressado (apressado.ts). Sorteado como morador comum, ensinava que "Nando" não tem regra
+// (Consulta 8, Astra; 4 designers da Consulta 7 disseram o mesmo dos fiscais).
+const MASCULINOS = ['Davi', 'Rui', 'Edu', 'Caio', 'Otávio', 'Ivo'];
 // Fiscais que podem ser a vítima no lugar do Seu Zé, SEM regra própria (pedido do Guilherme: "sem mudar as mecânicas").
 // ⚠️ O Arnaldo fica de fora: ele tem regra (abafa), e aparecer como vítima comum ensinaria errado.
 const FISCAIS = ['Vera', 'Dona Norma', 'Dr. Álvaro'];
@@ -49,7 +51,9 @@ export function vestir<F extends Fase>(fase: F, sorte: () => number, chanceVitim
   if (temZe && sorte() < chanceVitima) {
     const usados = new Set([...fase.vizinhos.filter((v) => v.tipo !== 'comum').map((v) => v.nome), ...troca.values()]);
     // metade das vezes um fiscal do condomínio, metade um morador que não está no prédio
-    const livres = sorte() < 0.5 ? FISCAIS : [...FEMININAS, ...MASCULINOS].filter((n) => !usados.has(n));
+    // ⚠️ fiscal NÃO entra mais como vítima sorteada: Vera, Dona Norma e Dr. Álvaro têm regra própria (fiscais.ts), e
+    // aparecer no lugar do Zé sem ela ensinava errado. Só voltam quando estrearem na campanha com a regra.
+    const livres = [...FEMININAS, ...MASCULINOS].filter((n) => !usados.has(n) && !FISCAIS.includes(n));
     if (livres.length) vitima = livres[Math.floor(sorte() * livres.length)];
   }
 

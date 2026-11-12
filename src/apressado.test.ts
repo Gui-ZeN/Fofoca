@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { espalhar, reto, type Fase, type Vizinho } from './motor';
 import { vestir } from './elenco';
+import { explicar } from './explicar';
 import { aleatorio } from './variar';
 import { fasesApressado } from './apressado';
 import { jogar, resolverTrilho } from './trilho';
@@ -49,6 +50,11 @@ describe('motor: o apressado passa reto', () => {
     const junto = espalhar({ ...f, vizinhos: f.vizinhos.map((x) => (x.id === 'o' ? { ...x, tipo: 'fofoqueira' as const } : x)) }, { origem: 'o', setas: { c: 'p', e: 'p' } });
     expect(junto.ouviu.p.batida).toBe(2);
     expect(junto.batidas.flat().some((m) => m.de === 'p')).toBe(false);
+  });
+
+  it('a derrota explica quando ele guarda: sem ninguém do outro lado, ou atrapalhado', () => {
+    const p1 = fasesApressado[0];
+    expect(explicar(p1, jogar(p1, p1.armadilha!))).toEqual({ tipo: 'reto', id: 'p', motivo: 'sem saida' });
   });
 
   it('não aceita seta desenhada', () => {

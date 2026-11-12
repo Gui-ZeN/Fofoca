@@ -69,24 +69,28 @@ describe('sorteio do elenco', () => {
     }
   });
 
-  it('a vítima pode ser um fiscal (nunca o Arnaldo) ou morador novo, com o artigo certo', () => {
+  // ⚠️ até 2026-11-12 metade das vítimas sorteadas era um fiscal sem regra; saiu porque ensinava errado (Consulta 8)
+  it('a vítima sorteada é um morador (nunca um fiscal, nem o Nando), com o artigo certo', () => {
     const f = { ...comZe[0], boato: 'O Seu Zé pinta o bigode', dica: 'Ninguém conta pro Seu Zé.' };
     const vistos = new Set<string>();
     for (let s = 1; s < 400; s++) {
       const v = vestir(f, aleatorio(s), 1);
       const vitima = v.vizinhos.find((x) => x.tipo === 'assunto')!.nome;
       vistos.add(vitima);
-      expect(vitima).not.toBe('Arnaldo');
+      expect(['Arnaldo', 'Vera', 'Dona Norma', 'Dr. Álvaro', 'Nando']).not.toContain(vitima);
       expect(v.dica).toBe(`Ninguém conta ${ELAS.has(vitima) ? 'pra' : 'pro'} ${vitima}.`);
     }
-    for (const fiscal of ['Vera', 'Dona Norma', 'Dr. Álvaro']) expect(vistos.has(fiscal), fiscal).toBe(true);
     expect([...vistos].some((n) => ['Marlene', 'Caio', 'Jandira', 'Otávio', 'Celina', 'Nando', 'Solange', 'Ivo'].includes(n))).toBe(true);
+  });
+
+  it('o Nando (apressado) não é sorteado como morador comum', () => {
+    for (const base of fasesTrilho) for (const s of SEMENTES) expect(vestir(base, aleatorio(s)).vizinhos.map((x) => x.nome)).not.toContain('Nando');
   });
 
   it('os moradores novos entram na troca de nomes', () => {
     const nomes = new Set<string>();
     for (const base of fasesTrilho) for (const s of SEMENTES) for (const x of vestir(base, aleatorio(s)).vizinhos) nomes.add(x.nome);
-    for (const n of ['Marlene', 'Jandira', 'Celina', 'Solange', 'Caio', 'Otávio', 'Nando', 'Ivo']) expect(nomes.has(n), n).toBe(true);
+    for (const n of ['Marlene', 'Jandira', 'Celina', 'Solange', 'Caio', 'Otávio', 'Ivo']) expect(nomes.has(n), n).toBe(true);
   });
 
   it('título que fala só "Zé" acompanha a vítima sorteada', () => {

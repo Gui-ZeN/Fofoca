@@ -9,7 +9,7 @@ import { o } from './elenco';
 // pra algo novo". Uma vez só por estreia; "Bora!" pula a qualquer momento. A etiqueta NOVO continua na fase.
 // Quem aparece é o morador da própria fase (já com o nome sorteado), achado pelo papel.
 
-type Demo = 'espalha' | 'aumenta' | 'abafa' | 'inverte' | 'padaria' | 'celular' | 'fila' | 'duvida' | 'reto';
+type Demo = 'espalha' | 'aumenta' | 'abafa' | 'inverte' | 'padaria' | 'celular' | 'fila' | 'duvida' | 'reto' | 'fiscal';
 export interface Apresentacao {
   demo: Demo;
   titulo: string;
@@ -66,6 +66,24 @@ export const CHEGADAS_DE_TESTE: Record<string, Apresentacao> = {
     fala: 'Isso aí? Foi o contrário.',
     regra: (v) => `${v.nome} é do contra: conta tudo ao contrário. A estrela mostra se quer a versão certa ou a ao contrário.`,
   },
+  V1: {
+    demo: 'fiscal', titulo: 'Fiscal nova!',
+    quem: (f) => f.vizinhos.find((v) => v.vigia),
+    fala: 'Eu não durmo. Eu escuto.',
+    regra: (v) => `${v.nome} escuta quando um vizinho dela conta algo. Ouvir e guardar do lado dela pode; contar, não. E o boato é sobre ela.`,
+  },
+  M1: {
+    demo: 'fiscal', titulo: 'Fiscal nova!',
+    quem: (f) => f.vizinhos.find((v) => v.recolhe),
+    fala: 'Passou da hora, acabou a conversa.',
+    regra: (v) => `Depois da batida ${v.recolhe}, quem mora colado na ${v.nome} não conta mais nada. E o boato é sobre ela.`,
+  },
+  L1: {
+    demo: 'fiscal', titulo: 'Fiscal novo!',
+    quem: (f) => f.vizinhos.find((v) => v.teto),
+    fala: 'Isso é assunto reservado.',
+    regra: (v) => `${v.nome} só tolera ${v.teto} pessoas sabendo (contando quem você contou). Passou disso, ele descobre. E o boato é sobre ele.`,
+  },
   P1: {
     demo: 'reto', titulo: 'Morador novo!',
     quem: (f) => f.vizinhos.find((v) => v.tipo === 'apressado'),
@@ -88,7 +106,7 @@ export function Chegada({ fase, apresentacao, aoFechar }: { fase: Fase; apresent
   const v = apresentacao.quem(fase);
   if (!v) return null;
   const segundo = fase.vizinhos.find((x) => x.interesse?.ordem === 2);
-  const expressao: Expressao = apresentacao.demo === 'abafa' || apresentacao.demo === 'duvida' ? 'bravo' : apresentacao.demo === 'espalha' || apresentacao.demo === 'fila' || apresentacao.demo === 'reto' ? 'contando' : 'ouvindo';
+  const expressao: Expressao = apresentacao.demo === 'abafa' || apresentacao.demo === 'duvida' || apresentacao.demo === 'fiscal' ? 'bravo' : apresentacao.demo === 'espalha' || apresentacao.demo === 'fila' || apresentacao.demo === 'reto' ? 'contando' : 'ouvindo';
   return (
     <div className="chegada" role="dialog" aria-label={apresentacao.titulo}>
       <p className="chegada-titulo">{apresentacao.titulo}</p>

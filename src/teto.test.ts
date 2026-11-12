@@ -5,6 +5,7 @@ import { fasesArnaldo } from './arnaldo';
 import { fasesNonato } from './nonato';
 import { fasesRaquel } from './raquel';
 import { fasesApressado } from './apressado';
+import { fasesAlvaro, fasesNorma, fasesVera } from './fiscais';
 import { assinatura, repetidos } from './assinatura';
 
 // Teto de leitura (Consulta 7, 17 de 20 designers): no máximo a Fofoqueira + 2 regras especiais por andar, e no máximo
@@ -20,6 +21,9 @@ const regras = (f: Fase) => {
     if (v.abafa) r.add('arnaldo');
     if (v.desconfia) r.add('raquel');
     if (v.tipo === 'apressado') r.add('nando');
+    if (v.vigia) r.add('vera');
+    if (v.recolhe) r.add('norma');
+    if (v.teto) r.add('álvaro');
   }
   return [...r];
 };
@@ -33,7 +37,7 @@ const selos = (f: Fase) => {
 const todas: [string, Fase][] = [
   ...CAMPANHA.map((a, i) => [`andar ${i + 1} (${a.rotulo})`, a.fase] as [string, Fase]),
   ...ESTOQUE.map((f, i) => [`estoque ${i}`, f] as [string, Fase]),
-  ...[fasesArnaldo, fasesNonato, fasesRaquel, fasesApressado].flat().map((f) => [`protótipo "${f.titulo}"`, f] as [string, Fase]),
+  ...[fasesArnaldo, fasesNonato, fasesRaquel, fasesApressado, fasesVera, fasesNorma, fasesAlvaro].flat().map((f) => [`protótipo "${f.titulo}"`, f] as [string, Fase]),
 ];
 
 describe('teto de leitura por andar', () => {

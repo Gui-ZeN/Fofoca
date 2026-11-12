@@ -184,7 +184,8 @@ export function certificar(f: Fase, m: Molde): Certificado | undefined {
 // Fofoqueiras Neide/Lu, Exagerados Beto/Lúcia, o resto em ordem. Os ids viram a inicial.
 // Só nomes com arte ilustrada (⚠️ antes havia Gil, Tião e Juca, sem desenho). A ordem alterna gênero; na tela
 // o elenco ainda troca dentro do mesmo gênero (elenco.ts). Os ids viram uma letra fixa por nome.
-const COMUNS = ['Ana', 'Davi', 'Bia', 'Rui', 'Lia', 'Edu', 'Marlene', 'Caio', 'Jandira', 'Otávio', 'Celina', 'Nando', 'Solange', 'Ivo'];
+// ⚠️ sem o Nando (é o apressado; ver elenco.ts)
+const COMUNS = ['Ana', 'Davi', 'Bia', 'Rui', 'Lia', 'Edu', 'Marlene', 'Caio', 'Jandira', 'Otávio', 'Celina', 'Solange', 'Ivo'];
 const ID: Record<string, string> = {
   Rita: 'r', Bia: 'b', Cida: 'c', Ana: 'a', Neide: 'n', Lu: 'l', Beto: 'o', 'Lúcia': 'u',
   Davi: 'd', Rui: 'y', Edu: 'e', Lia: 'i', 'Seu Zé': 'z',
@@ -211,13 +212,14 @@ export function batizar(f: Fase, c: Certificado, titulo: string, boato: string):
 }
 
 // Fabrica uma fase do molde dentro de um prazo; se não achar, tenta um molde mais leve.
-export function fabricar(m: Molde, sorte: () => number, prazoMs: number): { f: Fase; c: Certificado; molde: Molde } | undefined {
+// `aceita`: filtro extra de quem chama (a régua de raciocínio e o "quase" do gerador) — a busca continua até o prazo.
+export function fabricar(m: Molde, sorte: () => number, prazoMs: number, aceita?: (f: Fase, c: Certificado) => boolean): { f: Fase; c: Certificado; molde: Molde } | undefined {
   const fim = Date.now() + prazoMs;
   while (Date.now() < fim) {
     const f = montar(m, sorte);
     if (!f) continue;
     const c = certificar(f, m);
-    if (c) return { f, c, molde: m };
+    if (c && (!aceita || aceita(f, c))) return { f, c, molde: m };
   }
 }
 

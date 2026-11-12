@@ -12,6 +12,7 @@ import { fasesArnaldo } from './arnaldo';
 import { fasesNonato } from './nonato';
 import { fasesRaquel } from './raquel';
 import { fasesApressado } from './apressado';
+import { fasesAlvaro, fasesNorma, fasesVera } from './fiscais';
 import { fasesAlto } from './alto';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
@@ -55,10 +56,13 @@ const BLOCOS = {
   nonato: { nome: 'Nonato', letra: 'N', fases: fasesNonato }, // o Do Contra (Consulta 6)
   raquel: { nome: 'Raquel', letra: 'R', fases: fasesRaquel }, // a desconfiada (2026-11-12)
   apressado: { nome: 'Nando', letra: 'P', fases: fasesApressado }, // o apressado, passa reto (2026-11-12)
+  vera: { nome: 'Vera', letra: 'V', fases: fasesVera }, // a vigia: escuta o vizinho contando
+  norma: { nome: 'Dona Norma', letra: 'M', fases: fasesNorma }, // toque de recolher
+  alvaro: { nome: 'Dr. Álvaro', letra: 'L', fases: fasesAlvaro }, // lotação
   alto: { nome: 'Prédio alto', letra: 'P', fases: fasesAlto }, // 5 e 6 andares: a rolagem vertical
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|alto/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|alto/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas
@@ -85,7 +89,7 @@ const CAPITULOS = capitulos(ANDARES.length);
 const CANDIDATOS_DIA = ESTOQUE_PESOS.flatMap((p, i) => (p === 'leve' || p === 'media' ? [i] : []));
 
 export function App() {
-  if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={['arnaldo', 'nonato', 'raquel', 'apressado'].includes(pedido)} />;
+  if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={['arnaldo', 'nonato', 'raquel', 'apressado', 'vera', 'norma', 'alvaro'].includes(pedido)} />;
   return <Campanha pesquisa={PESQUISA} />;
 }
 
@@ -281,6 +285,8 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const plano_ = valido ? plano : {};
   const alvos = selecionado && porId[selecionado] ? alvosDe(fase, porId[selecionado]) : [];
   const usadas = girando ? girosUsados(fase, plano) : custo(plano);
+  const lotacao = fase.vizinhos.find((v) => v.teto)?.teto;
+  const sabendo = lotacao && montando ? Object.keys(jogar(fase, plano_).ouviu).length : lotacao ? Object.keys(resultado!.ouviu).length : 0;
 
   // Comparação: gira a seta pronta pro próximo amigo (sem giro sobrando, volta pra original).
   const girar = (v: Vizinho) => {
@@ -386,6 +392,8 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
               cena de chegada do Beto, que ensina os tamanhos. */}
           <div className="fichas">
             <span className={cheio ? 'ficha setas cheio' : 'ficha setas'}>{girando ? 'Giros' : 'Setas'} {usadas}/{limite}</span>
+            {/* Dr. Álvaro: quantos vão ficar sabendo com o plano de agora (sem isso era conta de cabeça a cada tentativa) */}
+            {lotacao && <span className={sabendo > lotacao ? 'ficha lotacao' : 'ficha lotacao ok'}>Sabendo {sabendo}/{lotacao}</span>}
             {cobra && <span className="ficha advertencias"><CartoesAdvertencia restam={vidas!.restam} /></span>}
             {fase.vizinhos.some((v) => v.tipo === 'exagerado' || v.interesse?.tamanho) && (
               <span className="escala" aria-label={`Tamanhos do boato: ${NOME_TAMANHO[1]}, ${NOME_TAMANHO[2]}, ${NOME_TAMANHO[3]}`}>
@@ -504,7 +512,11 @@ function Fim(props: {
     if (apressado && ids.length === 1) fala = [apressado.nome, 'Ué, eu só passei reto!'];
     const quem = ids.map(nome);
     const lista = quem.length > 1 ? `${quem.slice(0, -1).join(', ')} e ${quem[quem.length - 1]}` : quem[0];
-    texto = `${lista} ${quem.length > 1 ? 'contaram' : 'contou'} ${pro(vitima!)} ${vitima}!`;
+    // Vera: ninguém contou pra ela — ela ESCUTOU o vizinho contando pra outra pessoa
+    const escutou = resultado.batidas.flat().some((m) => m.escuta && m.para === resultado.culpado);
+    texto = escutou
+      ? `${vitima} escutou ${quem.map((n) => `${o(n)} ${n}`).join(' e ')} contando do lado!`
+      : `${lista} ${quem.length > 1 ? 'contaram' : 'contou'} ${pro(vitima!)} ${vitima}!`;
     // com a linha da advertência embaixo, a 2ª frase sai: 3 linhas cobriam o térreo
     if (props.aviso === undefined) texto += ` Agora ${ele(vitima!)} sabe que estão falando ${dele(vitima!)}.`;
   } else if (resultado.motivo === 'interessado_nao_ouviu') {
@@ -515,7 +527,13 @@ function Fim(props: {
       ? `${nome(e.id)} ainda estava na padaria quando o recado chegou.`
       : e?.tipo === 'duvida'
         ? `${nome(e.id)} só ouviu ${o(nome(e.de)) === 'a' ? 'da' : 'do'} ${nome(e.de)} e não acreditou.`
+        : e?.tipo === 'reto'
+        ? (e.motivo === 'atrapalhou' ? `Dois contaram juntos pro ${nome(e.id)}: ele se atrapalhou e guardou.` : `${nome(e.id)} ouviu, mas não tinha ninguém do outro lado pra passar.`)
+        : e?.tipo === 'toque'
+        ? `${nome(e.id)} ia contar na batida ${e.batida}, mas ${nome(e.norma)} só deixa até a ${e.hora}.`
         : `${culpado?.nome} não ficou sabendo de nada.`;
+  } else if (resultado.motivo === 'gente_demais') {
+    texto = `Ficaram ${Object.keys(resultado.ouviu).length} sabendo, e ${o(culpado!.nome)} ${culpado!.nome} só tolera ${culpado?.teto}.`;
   } else if (resultado.motivo === 'tamanho_errado') {
     const queria = culpado!.interesse!.tamanho ?? culpado!.interesse!.minTamanho!;
     texto = `${culpado?.nome} queria ${TAMANHO[queria]} e recebeu ${TAMANHO[resultado.ouviu[culpado!.id].tamanho]}.`;

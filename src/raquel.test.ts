@@ -56,6 +56,20 @@ describe('motor: a desconfiada', () => {
     expect(r.ouviu.q).toMatchObject({ batida: 3, tamanho: 2, de: 'b' }); // convenceu na 3, mas vale a fofoca do Beto
   });
 
+  it('empate de tamanho: vale o PRIMEIRO recado, mesmo que o segundo seja a versão normal', () => {
+    // 1º recado ao contrário (via Do Contra), 2º normal, os dois cochicho
+    const w = (id: string, tipo: Vizinho['tipo'], pos: [number, number], extra: Partial<Vizinho> = {}): Vizinho => ({ id, nome: id, tipo, pos, ...extra });
+    const f: Fase = {
+      titulo: '', boato: '', giros: 0,
+      vizinhos: [w('f', 'fofoqueira', [0, 0]), w('n', 'docontra', [1, 0]), w('a', 'comum', [0, 1]), w('e', 'comum', [1, 1]), w('q', 'comum', [2, 0], { desconfia: true })],
+      amizades: [['f', 'n'], ['f', 'a'], ['n', 'q'], ['a', 'e'], ['e', 'q']],
+    };
+    const r = espalhar(f, { origem: 'f', setas: { n: 'q', a: 'e' } });
+    expect(r.duvida?.q).toMatchObject({ versao: 'invertida', batida: 2 });
+    const r2 = espalhar({ ...f, amizades: [...f.amizades] }, { origem: 'f', setas: { n: 'q', a: 'e', e: 'q' } });
+    expect(r2.ouviu.q).toMatchObject({ batida: 3, versao: 'invertida', de: 'n' });
+  });
+
   it('quem não desconfia continua acreditando de primeira', () => {
     const r = espalhar(semDuvida(losango), { origem: 'f', setas: { a: 'q', q: 'c' } });
     expect(r.ouviu.q).toBeDefined();
@@ -83,9 +97,9 @@ describe('bloco Raquel', () => {
   it('a derrota explica: estrela desconfiada que ouviu de um só "não acreditou"', () => {
     const f = fasesRaquel[0];
     expect(explicar(f, jogar(f, f.armadilha!))).toEqual({ tipo: 'duvida', id: 'q', de: 'n' });
-    // quando a estrela é outra, ela simplesmente não ouviu (a Raquel aparece em dúvida no prédio)
+    // quando a estrela é outra, a explicação aponta ONDE parou: a Raquel, no meio do caminho, ficou em dúvida
     const g = fasesRaquel[2];
-    expect(explicar(g, jogar(g, g.armadilha!))).toEqual({ tipo: 'sem_noticia', id: 'c' });
+    expect(explicar(g, jogar(g, g.armadilha!))).toEqual({ tipo: 'duvida', id: 'q', de: 'a' });
   });
 
   it('só a Raquel desconfia, e ela usa a arte dela', () => {
