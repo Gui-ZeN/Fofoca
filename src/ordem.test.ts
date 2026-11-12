@@ -33,8 +33,12 @@ describe('bloco Ordem', () => {
     expect(r).toMatchObject({ motivo: 'ordem_errada', culpado: 'c', antes: 'b' });
   });
 
-  it('O3: o atalho chega na Cida antes da Bia', () => {
-    expect(jogar(fasesOrdem[2], fasesOrdem[2].armadilha!).motivo).toBe('ordem_errada');
+  it('O3: o atalho entrega cochicho à Bia, que queria fofoca; pelo Beto chega no tamanho e na ordem', () => {
+    const f = fasesOrdem[2];
+    expect(jogar(f, f.armadilha!)).toMatchObject({ motivo: 'tamanho_errado', culpado: 'b' });
+    expect(jogar(f, f.solucao).ouviu.b).toMatchObject({ tamanho: 2, de: 'e' });
+    const semTamanho = { ...f, vizinhos: f.vizinhos.map((v) => (v.interesse ? { ...v, interesse: { ...v.interesse, tamanho: undefined } } : v)) };
+    expect(mesma(resolverTrilho(semTamanho), f.solucao)).toBe(false);
   });
 
   it.each(rotulos.slice(4))('%s (%s): a padaria também importa', (_n, _t, f) => {

@@ -18,7 +18,7 @@ const v = (id: string, nome: string, tipo: Vizinho['tipo'], pos: [number, number
 export const fasesDificil: FaseTrilho[] = [
   {
     // Zé no meio com 4 portas; as duas Fofoqueiras de baixo vazam uma pra outra até ele: a volta é por cima
-    titulo: 'Corredor de cima',
+    titulo: 'Síndico de férias',
     boato: 'O Seu Zé torce contra o próprio time',
     giros: 0, setas: 5, origens: ['r'],
     vizinhos: [
@@ -38,29 +38,32 @@ export const fasesDificil: FaseTrilho[] = [
     armadilha: { r: 'y', y: 'n', i: 'c' }, // assunto_ouviu
   },
   {
-    // a Fofoqueira colada no Zé abre a corrente enquanto ele está fora (volta na 3); o resto dá a volta longa
-    titulo: 'Antes do Zé voltar',
+    // ⚠️ substitui a D2 antiga (2026-11-12): era "Zé fora, a Fofoqueira colada nele fala" de novo. Aqui o Zé fica em
+    // casa. A Cida quer uma FOFOCA e só volta na 4: a Neide conta pra ela na 2 (perde) e pro Davi; a volta pelo Beto
+    // (Exagerado), Ana e Edu chega na 6, no tamanho certo. A Lu, colada no Zé, não pode ouvir.
+    titulo: 'Pombo na janela',
     boato: 'O Seu Zé chora no final do jogo',
     giros: 0, setas: 5, origens: ['r'],
     vizinhos: [
-      v('z', 'Seu Zé', 'assunto', [1, 1], { chega: 3 }),
-      v('a', 'Ana', 'comum', [1, 0]),
-      v('d', 'Davi', 'comum', [0, 2]),
-      v('y', 'Rui', 'comum', [2, 1]),
-      v('n', 'Neide', 'fofoqueira', [0, 1]),
-      v('c', 'Cida', 'comum', [0, 0], { interesse: {} }),
-      v('e', 'Edu', 'comum', [2, 0]),
-      v('l', 'Lu', 'fofoqueira', [1, 2]),
-      v('r', 'Rita', 'comum', [1, 3]),
-      v('i', 'Lia', 'comum', [2, 2]),
+      v('z', 'Seu Zé', 'assunto', [1, 2]),
+      v('r', 'Rita', 'comum', [2, 2]),
+      v('c', 'Cida', 'comum', [2, 0], { interesse: { tamanho: 2 }, chega: 4 }),
+      v('b', 'Bia', 'comum', [0, 2]),
+      v('d', 'Davi', 'comum', [1, 1]),
+      v('o', 'Beto', 'exagerado', [0, 1]),
+      v('e', 'Edu', 'comum', [1, 0]),
+      v('l', 'Lu', 'fofoqueira', [1, 3]),
+      v('n', 'Neide', 'fofoqueira', [2, 1]),
+      v('i', 'Lia', 'comum', [2, 3]),
+      v('a', 'Ana', 'comum', [0, 0]),
     ],
-    amizades: [['z','a'], ['z','y'], ['z','n'], ['z','l'], ['a','c'], ['a','e'], ['d','n'], ['d','l'], ['y','e'], ['y','i'], ['n','c'], ['l','r'], ['l','i']],
-    solucao: { r: 'l', i: 'y', y: 'e', e: 'a', a: 'c' },
-    armadilha: { r: 'l', d: 'n' }, // a Neide fala depois que o Zé voltou
+    amizades: [['z','r'], ['z','b'], ['z','d'], ['z','l'], ['r','n'], ['r','i'], ['c','e'], ['c','n'], ['b','o'], ['d','o'], ['d','e'], ['d','n'], ['o','a'], ['e','a']],
+    solucao: { r: 'n', d: 'o', o: 'a', a: 'e', e: 'c' },
+    armadilha: { r: 'n' }, // a Neide conta pra Cida na 2, e ela ainda está fora
   },
   {
     // a estrela 2 fica no caminho da 1: passar direto entrega fora de ordem; dá a volta por baixo
-    titulo: 'A 2 está do lado',
+    titulo: 'Varanda nova',
     boato: 'O Seu Zé apelidou o carro de Tetê',
     giros: 0, setas: 5, origens: ['r'],
     vizinhos: [
@@ -81,30 +84,33 @@ export const fasesDificil: FaseTrilho[] = [
     armadilha: { r: 'l', e: 'y', y: 'c', c: 'b' }, // ordem_errada
   },
   {
-    // quem quer saber pede fofoca (2): só um Exagerado no caminho; a Fofoqueira de baixo entrega no fim, e a de cima fala com o Zé fora
-    titulo: 'Fofoca, não escândalo',
-    boato: 'O Seu Zé canta ópera pro gato',
+    // ⚠️ substitui a D4 antiga "Fofoca, não escândalo" (2026-11-12): era "Zé fora, a Fofoqueira colada nele fala" de
+    // novo. Aqui o Zé fica em casa. A Cida quer FOFOCA: pela direita (Davi, Edu) chega cochicho. A Neide espalha, o
+    // Davi e o Edu levam até a Bia — colada no Zé, sem contar pra ele — e a Lúcia (Exagerado) entrega no tamanho.
+    // A Lu, colada no Zé, é a outra armadilha (pela Ana). O título mudou: o caminho óbvio chega pequeno, não grande.
+    titulo: 'Rifa do condomínio',
+    boato: 'O Seu Zé guarda as moedas de 1 real num pote',
     giros: 0, setas: 5, origens: ['r'],
     vizinhos: [
-      v('z', 'Seu Zé', 'assunto', [1, 1], { chega: 4 }),
-      v('o', 'Beto', 'exagerado', [1, 0]),
+      v('z', 'Seu Zé', 'assunto', [1, 1]),
+      v('r', 'Rita', 'comum', [1, 0]),
+      v('c', 'Cida', 'comum', [2, 3], { interesse: { tamanho: 2 } }),
+      v('b', 'Bia', 'comum', [1, 2]),
+      v('d', 'Davi', 'comum', [2, 1]),
+      v('e', 'Edu', 'comum', [2, 2]),
+      v('o', 'Beto', 'exagerado', [0, 3]),
+      v('l', 'Lu', 'fofoqueira', [0, 1]),
+      v('u', 'Lúcia', 'exagerado', [1, 3]),
+      v('n', 'Neide', 'fofoqueira', [2, 0]),
       v('a', 'Ana', 'comum', [0, 0]),
-      v('d', 'Davi', 'comum', [1, 3]),
-      v('r', 'Rita', 'comum', [2, 0]),
-      v('y', 'Rui', 'comum', [2, 2]),
-      v('c', 'Cida', 'comum', [0, 1], { interesse: {tamanho:2} }),
-      v('u', 'Lúcia', 'exagerado', [0, 3]),
-      v('n', 'Neide', 'fofoqueira', [2, 1]),
-      v('e', 'Edu', 'comum', [1, 2]),
-      v('l', 'Lu', 'fofoqueira', [0, 2]),
     ],
-    amizades: [['z','o'], ['z','c'], ['z','n'], ['o','a'], ['a','c'], ['d','u'], ['d','e'], ['r','n'], ['y','n'], ['y','e'], ['c','l'], ['u','l'], ['e','l']],
-    solucao: { r: 'n', y: 'e', e: 'd', d: 'u', u: 'l' },
-    armadilha: { r: 'n', y: 'e', e: 'l' }, // sem o Exagerado: chega cochicho, não fofoca
+    amizades: [['z','r'], ['z','b'], ['z','l'], ['r','n'], ['r','a'], ['c','e'], ['c','u'], ['b','e'], ['b','u'], ['d','e'], ['d','n'], ['o','u'], ['l','a']],
+    solucao: { r: 'n', d: 'e', e: 'b', b: 'u', u: 'c' },
+    armadilha: { r: 'n', d: 'e', e: 'c' }, // pela direita: a Cida recebe cochicho e queria fofoca
   },
   {
     // a estrela 1 só volta na 4 e a 2 é vizinha dela: corrente de 6 setas contornando o Zé
-    titulo: 'Volta comprida',
+    titulo: 'Sofá novo no 201',
     boato: 'O Seu Zé dá boa noite pra lua',
     giros: 0, setas: 6, origens: ['r'],
     vizinhos: [
@@ -124,25 +130,27 @@ export const fasesDificil: FaseTrilho[] = [
     armadilha: { r: 'e', e: 'y', y: 'b', b: 'c' }, // interessado_nao_ouviu
   },
   {
-    // tudo junto: Fofoqueira colada no Zé fala antes dele voltar (3), a estrela 1 só volta na 4, e a 2 tem que vir depois
+    // ⚠️ substitui a D6 antiga (2026-11-12): era "Zé fora, a Fofoqueira colada nele fala" pela 5ª vez. Final do
+    // capítulo, com tudo junto e o Zé em CASA: a Cida (1) só volta na 4, então o boato dá a volta pelo Beto e pela
+    // Lia; a Neide espalha no MEIO do caminho (não fecha a fila); o Rui entrega pra Cida e o Edu, pra Bia (2).
     titulo: 'Reunião de condomínio',
     boato: 'O Seu Zé ensaia o discurso da reunião no banho',
     giros: 0, setas: 6, origens: ['r'],
     vizinhos: [
-      v('z', 'Seu Zé', 'assunto', [1, 1], { chega: 3 }),
-      v('r', 'Rita', 'comum', [2, 0]),
-      v('n', 'Neide', 'fofoqueira', [2, 1]),
-      v('a', 'Ana', 'comum', [2, 2]),
-      v('l', 'Lu', 'fofoqueira', [1, 0]),
-      v('d', 'Davi', 'comum', [0, 2]),
-      v('y', 'Rui', 'comum', [1, 3]),
-      v('e', 'Edu', 'comum', [2, 3]),
-      v('c', 'Cida', 'comum', [1, 2], { interesse: {ordem:2} }),
-      v('i', 'Lia', 'comum', [0, 0]),
-      v('b', 'Bia', 'comum', [0, 3], { interesse: {ordem:1}, chega: 4 }),
+      v('z', 'Seu Zé', 'assunto', [1, 2]),
+      v('r', 'Rita', 'comum', [2, 3]),
+      v('a', 'Ana', 'comum', [0, 2]),
+      v('n', 'Neide', 'fofoqueira', [2, 0]),
+      v('o', 'Beto', 'exagerado', [2, 2]),
+      v('b', 'Bia', 'comum', [0, 0], { interesse: { ordem: 2 } }),
+      v('e', 'Edu', 'comum', [0, 1]),
+      v('c', 'Cida', 'comum', [1, 1], { interesse: { ordem: 1 }, chega: 4 }),
+      v('l', 'Lu', 'fofoqueira', [1, 3]),
+      v('y', 'Rui', 'comum', [1, 0]),
+      v('i', 'Lia', 'comum', [2, 1]),
     ],
-    amizades: [['z','n'], ['z','l'], ['z','c'], ['r','n'], ['r','l'], ['n','a'], ['a','e'], ['a','c'], ['l','i'], ['d','c'], ['d','b'], ['y','e'], ['y','c'], ['y','b']],
-    solucao: { r: 'n', a: 'e', e: 'y', y: 'b', b: 'd', d: 'c' },
-    armadilha: { r: 'n', a: 'c', c: 'd', d: 'b' }, // a Cida (2) sabe antes da Bia (1)
+    amizades: [['z','a'], ['z','o'], ['z','c'], ['z','l'], ['r','o'], ['r','l'], ['a','e'], ['n','y'], ['n','i'], ['o','i'], ['b','e'], ['b','y'], ['e','c'], ['c','y'], ['c','i']],
+    solucao: { r: 'o', o: 'i', i: 'n', y: 'c', c: 'e', e: 'b' },
+    armadilha: { r: 'o', o: 'i', i: 'c', c: 'e', e: 'b' }, // pela Lia direto: a Cida ainda está na padaria
   },
 ];

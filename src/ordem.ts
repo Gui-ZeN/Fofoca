@@ -43,18 +43,21 @@ export const fasesOrdem: FaseTrilho[] = [
     armadilha: { r: 'n' }, // a Neide conta pras duas ao mesmo tempo
   },
   {
-    // fase do Astra (Consulta 3): atender a Bia antes de liberar a Neide; a Neide fecha a fila
-    titulo: 'A Neide por último',
-    boato: 'O Seu Zé pede música no rádio',
+    // ⚠️ substitui "A Neide por último" (2026-11-12): a O2, a O3 e a O6 terminavam todas com a Neide fechando a fila
+    // (Fable). Aqui a fila encontra o tamanho: a Bia é a 1 e quer uma FOFOCA. Pelo Edu ela recebe cochicho; tem que
+    // passar pelo Beto (Exagerado), que a Neide alcança, e voltar pelo Edu — que mora colado no Zé e não pode contar
+    // pra ele. A Cida (2) só depois.
+    titulo: 'Festa na laje',
+    boato: 'O Seu Zé dança sozinho na cozinha',
     giros: 0, setas: 4, origens: ['r'],
     vizinhos: [
-      v('r', 'Rita', 'comum', [0, 0]), v('a', 'Ana', 'comum', [1, 0]), v('b', 'Bia', 'comum', [2, 0], vez(1)),
-      v('d', 'Davi', 'comum', [0, 1]), v('n', 'Neide', 'fofoqueira', [1, 1]), v('e', 'Edu', 'comum', [2, 1]),
-      ze([0, 2]), v('c', 'Cida', 'comum', [1, 2], vez(2)), v('u', 'Rui', 'comum', [2, 2]),
+      v('n', 'Neide', 'fofoqueira', [0, 0]), v('o', 'Beto', 'exagerado', [1, 0]), v('c', 'Cida', 'comum', [2, 0], vez(2)),
+      v('r', 'Rita', 'comum', [0, 1]), v('e', 'Edu', 'comum', [1, 1]), v('b', 'Bia', 'comum', [2, 1], { interesse: { ordem: 1, tamanho: 2 } }),
+      ze([1, 2]), v('a', 'Ana', 'comum', [2, 2]),
     ],
-    amizades: [['r', 'a'], ['a', 'b'], ['d', 'n'], ['n', 'e'], ['z', 'c'], ['c', 'u'], ['r', 'd'], ['d', 'z'], ['a', 'n'], ['n', 'c'], ['b', 'e'], ['e', 'u']],
-    solucao: { r: 'a', a: 'b', b: 'e', e: 'n' },
-    armadilha: { r: 'a', a: 'n', e: 'b' }, // mais curta, mas a Cida sabe antes da Bia
+    amizades: [['z', 'a'], ['z', 'e'], ['r', 'n'], ['r', 'e'], ['o', 'n'], ['o', 'c'], ['o', 'e'], ['c', 'b'], ['e', 'b']],
+    solucao: { r: 'n', o: 'e', e: 'b', b: 'c' },
+    armadilha: { r: 'e', e: 'b', b: 'c' }, // o atalho: a Bia recebe cochicho e queria fofoca
   },
   {
     // três na fila; aqui a Neide abre: ela entrega a 1 e o resto segue em corrente
@@ -85,7 +88,7 @@ export const fasesOrdem: FaseTrilho[] = [
   },
   {
     // a Cida (1) volta na 4: a Neide tem que falar na hora certa; depois a Cida passa pra Bia (2)
-    titulo: 'Na volta, por ordem',
+    titulo: 'Café da tarde',
     boato: 'O Seu Zé esconde chocolate na caixa de remédio',
     giros: 0, setas: 4, origens: ['r'],
     vizinhos: [

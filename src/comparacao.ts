@@ -39,5 +39,5 @@ export const fasesGiros: FaseGiros[] = [
   doTrilho('A fofoqueira', { r: 'n', d: 'r', a: 'c' }, 2, { r: 'd', d: 'a' },
     'A Neide é fofoqueira: conta pra todo mundo em volta, sem você mandar.'),
   doTrilho('Só três setas', { r: 'z', d: 'c', u: 'n' }, 2, { r: 'n', u: 'b' }),
-  doTrilho('Atalho que vaza', { r: 'n', d: 'r', a: 'b', b: 'a' }, 3, { r: 'd', d: 'a', b: 'c' }),
+  doTrilho('Recado na portaria', { r: 'n', d: 'r', a: 'b', b: 'a' }, 3, { r: 'd', d: 'a', b: 'c' }),
 ];

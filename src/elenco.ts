@@ -35,9 +35,11 @@ const embaralhar = <T,>(xs: T[], sorte: () => number) => {
 export function vestir<F extends Fase>(fase: F, sorte: () => number, chanceVitima = 0.35): F {
   const comuns = fase.vizinhos.filter((v) => v.tipo === 'comum').map((v) => v.nome);
   const troca = new Map<string, string>();
+  // ⚠️ nome de quem tem papel (o Nando apressado) não vai pra um comum: dava dois Nandos no prédio
+  const fixos = new Set(fase.vizinhos.filter((v) => v.tipo !== 'comum').map((v) => v.nome));
   for (const grupo of [FEMININAS, MASCULINOS]) {
     const daqui = comuns.filter((n) => grupo.includes(n));
-    embaralhar(grupo, sorte).slice(0, daqui.length).forEach((novo, i) => troca.set(daqui[i], novo));
+    embaralhar(grupo.filter((n) => !fixos.has(n)), sorte).slice(0, daqui.length).forEach((novo, i) => troca.set(daqui[i], novo));
   }
 
   // às vezes a vítima é outra pessoa, que não está no prédio com outro papel

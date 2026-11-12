@@ -130,7 +130,7 @@ export const fasesTrilho: FaseTrilho[] = [
     armadilha: { r: 'c', c: 'd', d: 'n', u: 'b' }, // atender a Cida primeiro custa 4
   },
   {
-    titulo: 'Atalho que vaza',
+    titulo: 'Recado na portaria',
     boato: 'O Seu Zé ganhou na rifa e não contou',
     giros: 0, setas: 4, origens: ['r'],
     vizinhos: [

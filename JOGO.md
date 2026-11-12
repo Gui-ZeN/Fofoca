@@ -1,6 +1,6 @@
 # Fofoca! — o jogo inteiro
 
-> Retrato do jogo em **11/11/2026** (commit `fdcb7bf`), tirado do código (`Fofoca/src`). Publicado em **https://gui-zen.github.io/Fofoca/**. Ninguém de fora jogou ainda.
+> Retrato do jogo em **12/11/2026**, tirado do código (`Fofoca/src`). Publicado em **https://gui-zen.github.io/Fofoca/**. Ninguém de fora jogou ainda.
 > Plano de negócio e cronograma: `../reports/Fofoca plano de protótipo.md`. Consultas com outros modelos: vault, `Projetos/Fofoca — Consulta 1` a `6`.
 
 ---
@@ -68,6 +68,7 @@ O motor é determinístico (`src/motor.ts`, função `espalhar`): a mesma jogada
 | **Fofoqueira** (Neide, Lu) | conta pra **todos** os vizinhos de passagem, sozinha, na mesma batida | não | — |
 | **Exagerado** (Beto, Lúcia) | conta **um tamanho maior** (máx. escândalo) | sim | **+1** |
 | **Do Contra** (Nonato) | conta a **versão ao contrário** | sim | **⇄** |
+| **Nando** (apressado) | **não aceita seta**: conta sozinho pra quem mora do **lado oposto** de quem contou pra ele (sem passagem do outro lado, guarda) | não | **⚡** + seta tracejada do caminho |
 | **Raquel** (desconfiada) | só **acredita ouvindo de duas pessoas diferentes**; com uma, fica em dúvida e não repassa (nem conta como estrela) | sim | **2×** |
 | **Arnaldo** (fiscal) | vítima; **quem mora colado nele conta um tamanho menor** (mín. cochicho) | não | **−1** em cada vizinho afetado |
 | **Padre** | ouve e não conta (só no motor; fora do trilho — não muda nenhuma jogada) | não | — |
@@ -131,6 +132,16 @@ Cena de chegada: "**Morador novo!**" — *"Isso aí? Foi o contrário."* Ficou d
 
 **Raquel, a desconfiada** — `?bloco=raquel` (2026-11-12; com o Yorkshire). Só acredita ouvindo de **duas pessoas diferentes**, somando batidas (duas na mesma batida já convencem; vale o recado que convenceu). Escolhida pela crítica do Fable — é a única regra que quebra "solução = um caminho só": como cada um conta pra um só, abrir dois galhos exige a Fofoqueira, e os galhos se juntam nela. Na tela: selo **2×** na plaquinha; em dúvida, o balão da 1ª fonte apagado com um **?** e a cara desconfiada; na derrota, "Raquel só ouviu da Neide e não acreditou." e a plaquinha "ouviu de 1 só".
 
+**Nando, o apressado** — `?bloco=apressado` (2026-11-12). Não aceita seta: conta sozinho pra quem mora do **lado oposto** de quem contou pra ele (ouviu da esquerda, conta pra direita; de baixo, pra cima). Sem passagem do outro lado, ou se recebeu por celular, guarda. Veio do estudo do Fable (Sporos): é a única regra em que o **lado por onde o boato entra** decide pra onde ele sai. Selo **⚡** (pressa) na plaquinha — ⚠️ era **»**, e quem jogou leu "sempre pra direita"; enquanto você monta, com uma seta chegando nele, uma **seta tracejada verde** mostra pra onde ele vai passar (ensina a regra sem tirar o problema: escolher por onde entrar). Se ele entrega pro Zé, a fala é *"Ué, eu só passei reto!"*. O elenco não sorteia outro "Nando" no mesmo prédio.
+
+| Fase | Função | O que acontece |
+|---|---|---|
+| P1 · Passa reto | reconhecer | entrando pela esquerda, ele passa reto pra estrela — uma seta a menos |
+| P2 · Corrida no corredor | desviar | contar direto pra ele (de baixo) faz ele subir reto até o Zé; a volta é pela esquerda |
+| P3 · Entrou por onde? | usar de propósito | só ele chega na estrela: pela esquerda manda pro Zé; por cima desce pra Ana |
+
+Cena de chegada: "**Morador novo!**" — *"Tô com pressa! Conto pro primeiro que aparecer."* Testes conferidos por mutação: com a regra desligada, 4 de 15 falham.
+
 | Fase | Função | O que acontece |
 |---|---|---|
 | R1 · Só acredito ouvindo duas vezes | reconhecer | ela é a estrela; a Fofoqueira conta pra ela, e a 2ª fonte vem por Ana e Bia |
@@ -163,6 +174,7 @@ Arte **ilustrada** (gerada por IA a partir de uma prancha do Guilherme), uma fol
 | Exagerados | **Beto** (braços abertos), **Lúcia** |
 | Do Contra | **Nonato** (dedo em riste) |
 | Desconfiada | **Raquel** (com o Yorkshire; em protótipo) |
+| Apressado | **Nando** (em protótipo) |
 | Comuns na campanha | **Cida** (xícara), **Ana**, **Bia** (com o cachorro), **Rita**, **Lia**, **Davi**, **Rui**, **Edu** |
 | Fiscais | **Arnaldo** (em protótipo), **Vera**, **Dona Norma**, **Dr. Álvaro** |
 | Moradores novos | **Marlene, Caio, Jandira, Otávio, Celina, Nando, Solange, Ivo** |
@@ -196,29 +208,31 @@ Arte **ilustrada** (gerada por IA a partir de uma prancha do Guilherme), uma fol
 | 5 | T5 | Fofoqueira do bem | 6 | 3×2 | 2 | Fofoqueira |
 | 6 | T6 | Só três setas | 7 | 3×3 | 3 | Fofoqueira |
 | 7 | H1 | Fofoca de segunda mão | 8 | 3×3 | 3 | 2 Fofoqueiras |
-| 8 | T7 | Atalho que vaza | 7 | 3×3 | 4 | Fofoqueira |
+| 8 | T7 | Recado na portaria | 7 | 3×3 | 4 | Fofoqueira |
 | 9 | T8 | Boato na medida | 6 | 3×2 | 3 | Exagerado, tamanho — **NOVO** |
 | 10 | H2 | Foi na padaria | 6 | 3×3 | 4 | padaria — **NOVO** |
 | 11 | T9 | Escândalo na medida | 9 | 3×3 | 4 | Exagerado, Fofoqueira, tamanho |
 | 12 | H3 | O Zé saiu | 6 | 3×2 | 2 | Fofoqueira, padaria (vítima fora) |
 | 13 | T10 | Liga pra ela | 5 | 3×2 | 2 | celular — **NOVO** |
-| 14 | H4 | Fala cedo, entrega tarde | 7 | 3×3 | 3 | Fofoqueira, padaria |
+| 14 | H4 | Pão quentinho | 8 | 3×3 | 4 | Fofoqueira, padaria (no meio do caminho) |
 | 15 | O1 | A Bia primeiro | 6 | 3×3 | 4 | ordem — **NOVO** |
 | 16 | O2 | Junto não vale | 6 | 3×3 | 3 | Fofoqueira, ordem |
-| 17 | H5 | Volta às quatro | 8 | 3×3 | 3 | Fofoqueira, padaria |
-| 18 | O3 | A Neide por último | 9 | 3×3 | 4 | Fofoqueira, ordem |
-| 19 | H6 | Na hora do pão | 8 | 3×3 | 3 | Fofoqueira, padaria |
+| 17 | H5 | Churrasco na garagem | 8 | 3×3 | 4 | Fofoqueira, Exagerado na padaria, tamanho |
+| 18 | O3 | Festa na laje | 8 | 3×3 | 4 | Fofoqueira, Exagerado, ordem e tamanho |
+| 19 | H6 | Aniversário no 202 | 8 | 3×3 | 3 | Fofoqueira, celular, padaria |
 | 20 | O4 | Um, dois, três | 8 | 3×3 | 4 | Fofoqueira, ordem (3 na fila) |
-| 21 | D1 | Corredor de cima | 10 | 3×4 | 5 | 2 Fofoqueiras, Zé no meio |
+| 21 | D1 | Síndico de férias | 10 | 3×4 | 5 | 2 Fofoqueiras, Zé no meio |
 | 22 | O5 | Fila do pão | 8 | 3×3 | 4 | Fofoqueira, padaria, ordem |
-| 23 | D2 | Antes do Zé voltar | 10 | 3×4 | 5 | 2 Fofoqueiras, padaria |
-| 24 | O6 | Na volta, por ordem | 8 | 3×3 | 4 | Fofoqueira, padaria, ordem |
-| 25 | D3 | A 2 está do lado | 11 | 3×4 | 5 | 2 Fofoqueiras, ordem |
-| 26 | D4 | Fofoca, não escândalo | 11 | 3×4 | 5 | 2 Exagerados, 2 Fofoqueiras, padaria, tamanho |
-| 27 | D5 | Volta comprida | 10 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
+| 23 | D2 | Pombo na janela | 11 | 3×4 | 5 | 2 Fofoqueiras, padaria, tamanho |
+| 24 | O6 | Café da tarde | 8 | 3×3 | 4 | Fofoqueira, padaria, ordem |
+| 25 | D3 | Varanda nova | 11 | 3×4 | 5 | 2 Fofoqueiras, ordem |
+| 26 | D4 | Rifa do condomínio | 11 | 3×4 | 5 | 2 Fofoqueiras, 2 Exagerados, tamanho |
+| 27 | D5 | Sofá novo no 201 | 10 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
 | 28 | D6 | Reunião de condomínio | 11 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
 
-Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio. (Fora da campanha: **A** = Arnaldo, **N** = Nonato, **R** = Raquel.)
+**Repetidas trocadas (2026-11-12, crítica do Fable):** a H6 era a mesma ideia da H5 (Zé fora, a Neide colada nele fala à vontade) e virou celular + padaria — a Cida só volta na 4, pela porta o recado chega na 3, e a Bia liga na hora. A O3 era mais uma "a Neide fecha a fila" (como O2 e O6) e virou fila + tamanho — a 1 quer fofoca e tem que passar pelo Exagerado. As duas com o Zé fora do canto. Títulos que entregavam a resposta ("Volta comprida", "Corredor de cima", "Antes do Zé voltar", "A 2 está do lado", "Fala cedo, entrega tarde", "Na volta, por ordem", "Atalho que vaza") viraram vida de condomínio. Na mesma leva, H4, H5, D2 e D6 também deixaram o "Zé fora + Neide colada": em todas o Zé fica em casa e a padaria muda de lugar — na H4 é quem está no meio do caminho, na H5 é o Exagerado (a estrela quer fofoca), na D2 é a estrela que quer fofoca, e a D6 (final do capítulo) junta fila, padaria e a Neide espalhando no meio do caminho. Todas achadas com um buscador sobre o motor (solução única, a regra muda a jogada, o caminho óbvio perde). A D4 ("Fofoca, não escândalo") também saiu: virou "Rifa do condomínio", com o Zé em casa e a estrela querendo fofoca (o caminho óbvio chega cochicho). **Ainda fica:** a ideia só na H3, onde ela é ensinada, de propósito; e, nos andares 2 a 20, a vítima no canto em boa parte deles.
+
+Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio. (Fora da campanha: **A** = Arnaldo, **N** = Nonato, **R** = Raquel, **P** = Nando.)
 
 **Garantias de toda fase feita à mão** (testes): uma única solução dentro das setas; com uma seta a menos não dá (exceto a T2); a armadilha registrada perde pelo motivo certo; espelhada continua o mesmo quebra-cabeça; **desligar a regra da fase muda a jogada**.
 
@@ -284,6 +298,7 @@ Na **primeira vez** que algo novo aparece, antes da fase. Usa o morador da próp
 | `?bloco=arnaldo` | Fiscal novo! | o Arnaldo bravo; entra uma fofoca, sai um cochicho | "Psiu! Aqui ninguém grita." |
 | `?bloco=nonato` | Morador novo! | entra a versão certa, sai a ao contrário | "Isso aí? Foi o contrário." |
 | `?bloco=raquel` | Moradora nova! | a Raquel desconfiada; um balão, o "?", e o segundo balão | "Hum… quem mais te contou?" |
+| `?bloco=apressado` | Morador novo! | o Nando; o balão entra por um lado e sai pelo outro | "Tô com pressa! Conto pro primeiro que aparecer." |
 
 ---
 
@@ -319,7 +334,7 @@ Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** co
 |---|---|
 | https://gui-zen.github.io/Fofoca/ | a campanha |
 | `?pesquisa` / `?pesquisa&zerar` | **teste com pessoas**: campanha igual pra todos, sem advertências, com registro exportável; `&zerar` = participante novo |
-| `?bloco=arnaldo` / `?bloco=nonato` / `?bloco=raquel` | os protótipos de mecânica (com cena de chegada) |
+| `?bloco=arnaldo` / `?bloco=nonato` / `?bloco=raquel` / `?bloco=apressado` | os protótipos de mecânica (com cena de chegada) |
 | `?bloco=alto` | dois prédios de 5 e 6 andares feitos pela fábrica, pra ver a rolagem |
 | `?bloco=hora` / `ordem` / `dificil` | blocos de 6 fases (diagnóstico) |
 | `?grupo=A` / `?grupo=B` | o antigo teste trilho × giros (diagnóstico) |
@@ -352,7 +367,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas (K); com as K + 1 que o jogador recebe, no máximo 2; o caminho mais curto perde, mesmo com a folga; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente (inclusive a Fofoqueira) muda a jogada.
 
-**Números de hoje:** **650 testes em 21 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
+**Números de hoje:** **668 testes em 22 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 
@@ -382,7 +397,8 @@ npm run build
 
 **Jogo**
 - **Jogar** o Arnaldo, o Nonato e a Raquel e decidir se entram na campanha (e no gerador).
-- **Próximas mecânicas** (Fable, estudo de Transmission, Spooky Express e Cosmic Express, 2026-11-12): **Linguarudo** (com escândalo, vira fofoqueiro), **Dois boatos** (corrida e barreira), **Boato cansa** (perde um tamanho a cada N repasses, como condição de capítulo).
+- **Próximas mecânicas** (Fable, estudos de 2026-11-12; o Apressado já virou o Nando): **Comadres** (duas estrelas que só valem na mesma batida), **Psiu!** (calar um morador uma vez por fase), **Linguarudo** (com escândalo, vira fofoqueiro), **Dois boatos** (corrida e barreira), **Boato cansa** (perde um tamanho a cada N repasses, como condição de capítulo). ⚠️ Concorrente direto: *Rumor Mill: Village Gossip Sim* (Google Play, Crystl Labs) — premissa quase igual; pareceu confuso de cara ("muita informação") — a clareza do Fofoca! é a vantagem a proteger: uma regra nova por vez, legível por um ícone e uma frase.
+- **Arrastar no celular** (2026-11-12): o tabuleiro estava com `touch-action: manipulation` e o navegador tratava o arrasto como rolagem (cancelava o gesto); agora arrastar de quem conta até quem ouve desenha a seta, e um toque na seta apaga. No prédio que rola, a vertical continua rolando (o toque-toque vale sempre).
 - Próximo fiscal (Vera ou Dona Norma), uma regra por vez.
 - Decidir o **celular** (peça do quebra-cabeça ou ajuda).
 - **Som** ("psst" a cada batida, "QUÊ?!" na derrota).
@@ -396,5 +412,5 @@ npm run build
 **Casa**
 - Repositório público https://github.com/Gui-ZeN/Fofoca, sem licença definida. `PRODUCT.md` fica fora do repo.
 - Imagens geradas por IA no repositório público: conferir os termos da ferramenta.
-- Sem nota do projeto no vault (`Projetos/Fofoca.md`); só as consultas.
+- Nota do projeto no vault: `Projetos/Fofoca.md` e `Projetos/Fofoca — Devlog.md` (desde 12/11/2026).
 - A página `?prova` e a mecânica antiga (giros) ainda no código.

@@ -42,10 +42,13 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 
 /* palco: o prédio embaixo de uma faixa fixa pras fichas (fixa: a dica aparecer e sumir não muda o tamanho do prédio) */
 .palco { --folga: clamp(92px, 15vh, 128px); position: relative; flex: 1; min-height: 0; background: var(--ceu); }
-.tabuleiro { position: absolute; top: var(--folga); left: 0; right: 0; bottom: 0; user-select: none; touch-action: manipulation; }
+/* ⚠️ touch-action: com "manipulation", o navegador do celular tratava o arrasto de seta como rolagem e cancelava o
+   gesto no meio (pointercancel) — só o toque-toque funcionava. Prédio que cabe: o gesto é todo do jogo. */
+.tabuleiro { position: absolute; top: var(--folga); left: 0; right: 0; bottom: 0; user-select: none; touch-action: none; }
 .tabuleiro > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 /* prédio alto: o palco rola na vertical (o cômodo não encolhe abaixo de ~100 px) */
-.tabuleiro.rola { overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+/* prédio que rola: o dedo na vertical rola o prédio; arrastar seta vale pros lados (e o toque-toque, sempre) */
+.tabuleiro.rola { overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; touch-action: pan-y; }
 .tabuleiro.rola > svg { position: static; display: block; margin: 0 auto; }
 .mais-andares { position: absolute; z-index: 1; right: 2px; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--tinta); color: var(--papel); font-size: 12px; pointer-events: none; opacity: .9; animation: chama 1.6s ease-in-out infinite; }
 @keyframes chama { 50% { translate: 0 3px; } }
@@ -101,9 +104,11 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .telefone.ativa circle { fill: var(--botao); }
 /* pra quem cada um conta: seta grossa com contorno de papel (lê em cima de qualquer cômodo) */
 .seta > line { stroke: var(--seta); stroke-width: 4.5; stroke-linecap: round; }
+.seta > line.pega { stroke: transparent; stroke-width: 26; cursor: pointer; }
 .seta > line.fundo, .elo-fatal > line.fundo { stroke: var(--papel); stroke-width: 10; }
 .seta > polygon { fill: var(--seta); stroke: var(--papel); stroke-width: 1.5; stroke-linejoin: round; }
-.seta.girada > line:not(.fundo) { stroke: #173E52; }
+/* ⚠️ :not(.pega): sem isso a faixa invisível de 26 (o lugar do dedo) ficava pintada e a seta virava um tubo */
+.seta.girada > line:not(.fundo):not(.pega) { stroke: #173E52; }
 .seta.girada > polygon { fill: #173E52; }
 /* ⚠️ só os filhos diretos: sem o ">", isto pintava por dentro o ícone de telefone da ligação de celular */
 .seta.ligacao > line { stroke: var(--seta); stroke-width: 3; stroke-dasharray: 2 7; }
@@ -133,6 +138,12 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .etiqueta .exagera text { fill: var(--papel); font-size: 11px; text-anchor: middle; }
 .etiqueta .duas rect { fill: #6B4E8E; stroke: none; }
 .etiqueta .duas text { fill: var(--papel); font-size: 11px; text-anchor: middle; }
+.etiqueta .passa rect { fill: #2F6E5A; stroke: none; }
+.etiqueta .passa path { fill: var(--papel); stroke: none; }
+/* pra onde o Nando vai passar (só montando): tracejada, na cor do selo dele */
+.seta.prevista { pointer-events: none; }
+.seta.prevista > line { stroke: #2F6E5A; stroke-width: 3.5; stroke-dasharray: 7 6; }
+.seta.prevista > polygon { fill: #2F6E5A; }
 /* desconfiada em dúvida: o balão da 1ª fonte apagado, com um "?" */
 .em-duvida .balao { opacity: .5; }
 .em-duvida .interroga { font-family: var(--titulo); font-size: 22px; fill: #6B4E8E; stroke: var(--papel); stroke-width: 4; paint-order: stroke; }

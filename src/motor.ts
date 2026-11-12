@@ -1,7 +1,8 @@
 // Motor da Fofoca: regras puras e determinísticas. O mesmo código serve o jogo,
 // os testes e (depois) o gerador de fases.
 
-export type Tipo = 'comum' | 'fofoqueira' | 'exagerado' | 'docontra' | 'tumulo' | 'assunto';
+// apressado (Nando, 2026-11-12): não aceita seta; conta sozinho pra quem mora do lado OPOSTO de quem contou pra ele
+export type Tipo = 'comum' | 'fofoqueira' | 'exagerado' | 'docontra' | 'tumulo' | 'assunto' | 'apressado';
 export type Versao = 'normal' | 'invertida';
 export type Tamanho = 1 | 2 | 3; // cochicho, boato, escândalo
 
@@ -92,6 +93,18 @@ const temSeta = (t: Tipo) => t === 'comum' || t === 'exagerado' || t === 'docont
 export const controlavel = (v: Vizinho) => temSeta(v.tipo);
 
 // Pra quem cada um pode contar no trilho: vizinhos de passagem e, se tiver celular, os destinos dele.
+// Apressado: pra quem ele passa reto, vindo de `de` — o vizinho do outro lado, se houver passagem até ele.
+// ⚠️ Só vale vindo de vizinho de porta/escada (de celular não há "lado": ele guarda). A ideia veio do Sporos
+// (estudo do Fable, 2026-11-12): a única regra em que o LADO por onde o boato entra decide pra onde ele sai.
+export function reto(fase: Fase, v: Vizinho, de: string): string | undefined {
+  const d = fase.vizinhos.find((w) => w.id === de);
+  if (!d || !amigosDe(fase, v.id).includes(de)) return;
+  const [dx, dy] = [v.pos[0] - d.pos[0], v.pos[1] - d.pos[1]];
+  if (Math.abs(dx) + Math.abs(dy) !== 1) return;
+  const outro = fase.vizinhos.find((w) => w.pos[0] === v.pos[0] + dx && w.pos[1] === v.pos[1] + dy);
+  return outro && amigosDe(fase, v.id).includes(outro.id) ? outro.id : undefined;
+}
+
 export const alvosDe = (fase: Fase, v: Vizinho): string[] =>
   controlavel(v) ? [...new Set([...amigosDe(fase, v.id), ...(v.celular ?? [])])] : [];
 
@@ -134,6 +147,9 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       const seta = jogada.setas[id] ?? v.seta;
       if (v.tipo === 'fofoqueira') {
         for (const para of amigosDe(fase, id)) saindo.push({ de: id, para, tamanho: enviado(id, tamanho), versao });
+      } else if (v.tipo === 'apressado') {
+        const para = ouviu[id].de ? reto(fase, v, ouviu[id].de!) : undefined;
+        if (para) saindo.push({ de: id, para, tamanho: enviado(id, tamanho), versao });
       } else if (temSeta(v.tipo) && seta) {
         saindo.push({
           de: id,

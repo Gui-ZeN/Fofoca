@@ -11,6 +11,7 @@ import { fasesDificil } from './dificil';
 import { fasesArnaldo } from './arnaldo';
 import { fasesNonato } from './nonato';
 import { fasesRaquel } from './raquel';
+import { fasesApressado } from './apressado';
 import { fasesAlto } from './alto';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
@@ -53,10 +54,11 @@ const BLOCOS = {
   arnaldo: { nome: 'Arnaldo', letra: 'A', fases: fasesArnaldo }, // protótipo do 1º fiscal (Consulta 6)
   nonato: { nome: 'Nonato', letra: 'N', fases: fasesNonato }, // o Do Contra (Consulta 6)
   raquel: { nome: 'Raquel', letra: 'R', fases: fasesRaquel }, // a desconfiada (2026-11-12)
+  apressado: { nome: 'Nando', letra: 'P', fases: fasesApressado }, // o apressado, passa reto (2026-11-12)
   alto: { nome: 'Prédio alto', letra: 'P', fases: fasesAlto }, // 5 e 6 andares: a rolagem vertical
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|alto/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|alto/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas
@@ -83,7 +85,7 @@ const CAPITULOS = capitulos(ANDARES.length);
 const CANDIDATOS_DIA = ESTOQUE_PESOS.flatMap((p, i) => (p === 'leve' || p === 'media' ? [i] : []));
 
 export function App() {
-  if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={pedido === 'arnaldo' || pedido === 'nonato' || pedido === 'raquel'} />;
+  if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={['arnaldo', 'nonato', 'raquel', 'apressado'].includes(pedido)} />;
   return <Campanha pesquisa={PESQUISA} />;
 }
 
@@ -356,7 +358,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
         ? `${sel.nome} guarda pra si. As setas acabaram: aperte Espalhar ou desfaça.`
         : sel.celular
           ? `${sel.nome} guarda pra si. Toque num vizinho ou ligue pra alguém destacado.`
-          : `${sel.nome} guarda pra si. Toque em quem vai ouvir.`;
+          : `${sel.nome} guarda pra si. Arraste ou toque em quem vai ouvir.`;
 
   return (
     <main>
@@ -375,7 +377,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
         <Cena
           fase={fase} origem={origem} setas={plano_} resultado={resultado} batida={revendo ?? batida} montando={montando} ritmo={ritmo}
           aoTocar={() => {}} aoGirar={girar}
-          trilho={girando ? undefined : { selecionado, alvos, aoApertar: apertar, aoTocar: tocar, aoSoltar: soltar }}
+          trilho={girando ? undefined : { selecionado, alvos, aoApertar: apertar, aoTocar: tocar, aoSoltar: soltar, aoApagar: (de) => ligar(de, plano[de]) }}
         />
         <div className="sobre-o-ceu">
           <p className="boato"><OrigemMini /> {fase.boato}</p>
@@ -498,6 +500,8 @@ function Fim(props: {
     const ids = quemContou(resultado, resultado.culpado!);
     const fofoqueira = fase.vizinhos.find((v) => ids.includes(v.id) && v.tipo === 'fofoqueira');
     if (fofoqueira && ids.length === 1) fala = [fofoqueira.nome, 'Eu ia te contar por último.'];
+    const apressado = fase.vizinhos.find((v) => ids.includes(v.id) && v.tipo === 'apressado');
+    if (apressado && ids.length === 1) fala = [apressado.nome, 'Ué, eu só passei reto!'];
     const quem = ids.map(nome);
     const lista = quem.length > 1 ? `${quem.slice(0, -1).join(', ')} e ${quem[quem.length - 1]}` : quem[0];
     texto = `${lista} ${quem.length > 1 ? 'contaram' : 'contou'} ${pro(vitima!)} ${vitima}!`;

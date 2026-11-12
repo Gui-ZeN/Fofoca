@@ -2,7 +2,8 @@
 // recado que chega antes se perde). Consulta 3 (Astra + pesquisa + simulação, 2026-11-10): a regra que
 // mais cria armadilha e já existia no motor. Prédios com voltas; cada fase tem uma solução e uma
 // armadilha que o jogador "que aprendeu a T4" (não cutucar a Fofoqueira colada no Zé) ainda cai.
-// H1 aquece só com as regras atuais; H2 estreia a padaria; H3 tira o Zé de casa; H4–H6 combinam com a Fofoqueira.
+// H1 aquece só com as regras atuais; H2 estreia a padaria; H3 tira o Zé de casa; H4: o do meio do caminho na padaria; H5: o Exagerado na padaria; H6: com o celular. (Até 2026-11-12, H4–H6 eram
+// todas "Zé fora, a Fofoqueira colada nele fala" — o Fable apontou a repetição jogando.)
 // Jogado numa sessão separada do teste trilho × giros (?bloco=hora).
 
 import type { Vizinho } from './motor';
@@ -57,45 +58,52 @@ export const fasesHora: FaseTrilho[] = [
     armadilha: { r: 'a', a: 'd', d: 'c' }, // evitar a Neide custa 3 setas
   },
   {
-    // fase do Astra (Consulta 3): falar cedo com a Neide (o Zé ainda não voltou) e entregar tarde (a Cida só chega na 4)
-    titulo: 'Fala cedo, entrega tarde',
-    boato: 'O Seu Zé perdeu no dominó pro neto',
-    giros: 0, setas: 3, origens: ['r'],
+    // ⚠️ substitui "Fala cedo, entrega tarde" (2026-11-12): era mais um "Zé fora, a Neide colada nele fala à vontade"
+    // (H3–H6, D2 e D6 repetiam a ideia; crítica do Fable). Aqui o Zé fica em casa e quem está na padaria é o Davi,
+    // no MEIO do caminho: pelo Edu ele recebe na 2 e perde. A Neide atrasa o recado — espalha, a Bia conta pro Davi
+    // na 4, e ele já voltou.
+    titulo: 'Pão quentinho',
+    boato: 'O Seu Zé faz pão de queijo de madrugada',
+    giros: 0, setas: 4, origens: ['r'],
     vizinhos: [
-      v('a', 'Ana', 'comum', [0, 0]), v('r', 'Rita', 'comum', [1, 0]),
-      v('b', 'Bia', 'comum', [0, 1]), v('n', 'Neide', 'fofoqueira', [1, 1]), ze([2, 1], 3),
-      v('e', 'Edu', 'comum', [0, 2]), v('c', 'Cida', 'comum', [1, 2], { ...quer, chega: 4 }),
+      v('r', 'Rita', 'comum', [0, 0]), ze([1, 0]), v('a', 'Ana', 'comum', [2, 0]),
+      v('e', 'Edu', 'comum', [0, 1]), v('d', 'Davi', 'comum', [1, 1], { chega: 3 }), v('c', 'Cida', 'comum', [2, 1], quer),
+      v('n', 'Neide', 'fofoqueira', [0, 2]), v('b', 'Bia', 'comum', [1, 2]),
     ],
-    amizades: [['a', 'r'], ['a', 'b'], ['r', 'n'], ['b', 'n'], ['n', 'z'], ['b', 'e'], ['n', 'c'], ['e', 'c']],
-    solucao: { r: 'n', b: 'e', e: 'c' },
-    armadilha: { r: 'a', a: 'b', b: 'n' }, // a Neide fala tarde demais: o Zé já voltou
+    amizades: [['z', 'r'], ['z', 'a'], ['z', 'd'], ['r', 'e'], ['n', 'b'], ['n', 'e'], ['b', 'd'], ['c', 'd'], ['e', 'd']],
+    solucao: { r: 'e', e: 'n', b: 'd', d: 'c' },
+    armadilha: { r: 'e', e: 'd', d: 'c' }, // o atalho chega no Davi na 2: ele ainda está na padaria
   },
   {
-    // a Neide fala antes do Zé e da Cida voltarem; a Cida tem que receber pelo outro lado, depois da 4
-    titulo: 'Volta às quatro',
+    // ⚠️ substitui "Volta às quatro" (2026-11-12), pelo mesmo motivo da H4. Aqui quem está na padaria é o Exagerado:
+    // a Cida quer uma FOFOCA, e só o Beto aumenta — mas ele só volta na 3 (a Rita, colada nele, fala cedo demais).
+    // A Neide espalha até a Ana, que conta pro Beto quando ele já voltou.
+    titulo: 'Churrasco na garagem',
     boato: 'O Seu Zé conversa com o porteiro eletrônico',
-    giros: 0, setas: 3, origens: ['r'],
+    giros: 0, setas: 4, origens: ['r'],
     vizinhos: [
-      v('a', 'Ana', 'comum', [0, 0]), ze([1, 0], 4), v('e', 'Edu', 'comum', [2, 0]),
-      v('r', 'Rita', 'comum', [0, 1]), v('n', 'Neide', 'fofoqueira', [1, 1]), v('d', 'Davi', 'comum', [2, 1]),
-      v('c', 'Cida', 'comum', [1, 2], { ...quer, chega: 4 }), v('b', 'Bia', 'comum', [2, 2], quer),
+      v('a', 'Ana', 'comum', [0, 0]), v('o', 'Beto', 'exagerado', [1, 0], { chega: 3 }), v('b', 'Bia', 'comum', [2, 0]),
+      v('n', 'Neide', 'fofoqueira', [0, 1]), v('r', 'Rita', 'comum', [1, 1]), v('c', 'Cida', 'comum', [2, 1], { interesse: { tamanho: 2 } }),
+      v('d', 'Davi', 'comum', [0, 2]), ze([1, 2]),
     ],
-    amizades: [['a', 'r'], ['a', 'z'], ['n', 'c'], ['n', 'r'], ['n', 'z'], ['n', 'd'], ['c', 'b'], ['e', 'd'], ['d', 'b']],
-    solucao: { r: 'n', d: 'b', b: 'c' },
-    armadilha: { r: 'n', d: 'b' }, // a Neide conta pra Cida na 2, mas ela só volta na 4
+    amizades: [['z', 'r'], ['z', 'd'], ['r', 'c'], ['r', 'n'], ['r', 'o'], ['c', 'b'], ['b', 'o'], ['n', 'd'], ['n', 'a'], ['o', 'a']],
+    solucao: { r: 'n', a: 'o', o: 'b', b: 'c' },
+    armadilha: { r: 'c' }, // direto: a Cida recebe cochicho e queria fofoca
   },
   {
-    // duas estrelas: a Neide atende a Bia e "perde" o recado da Cida (fora até a 3), que recebe pela volta
-    titulo: 'Na hora do pão',
-    boato: 'O Seu Zé tem medo do aspirador',
+    // ⚠️ substitui "Na hora do pão" (2026-11-12): era a mesma ideia da H5 (Zé fora, a Neide colada nele fala à vontade),
+    // como o Fable apontou jogando. Aqui é celular + padaria: a Cida só volta na 4; pela porta (Davi, Edu) o recado
+    // chega na 3 e se perde. A Neide espalha, a Ana passa pra Bia, e a Bia LIGA pra Cida — chega na 4, na hora.
+    titulo: 'Aniversário no 202',
+    boato: 'O Seu Zé ensaia parabéns no chuveiro',
     giros: 0, setas: 3, origens: ['r'],
     vizinhos: [
-      ze([1, 0], 3), v('u', 'Rui', 'comum', [2, 0]),
-      v('b', 'Bia', 'comum', [0, 1], quer), v('n', 'Neide', 'fofoqueira', [1, 1]), v('r', 'Rita', 'comum', [2, 1]),
-      v('a', 'Ana', 'comum', [0, 2]), v('c', 'Cida', 'comum', [1, 2], { ...quer, chega: 3 }), v('d', 'Davi', 'comum', [2, 2]),
+      v('e', 'Edu', 'comum', [1, 0]), v('c', 'Cida', 'comum', [2, 0], { ...quer, chega: 4 }),
+      v('r', 'Rita', 'comum', [0, 1]), v('d', 'Davi', 'comum', [1, 1]), ze([2, 1]),
+      v('n', 'Neide', 'fofoqueira', [0, 2]), v('a', 'Ana', 'comum', [1, 2]), v('b', 'Bia', 'comum', [2, 2], { celular: ['c'] }),
     ],
-    amizades: [['a', 'b'], ['a', 'c'], ['r', 'n'], ['r', 'd'], ['r', 'u'], ['n', 'b'], ['n', 'c'], ['n', 'z'], ['u', 'z']],
-    solucao: { r: 'n', b: 'a', a: 'c' },
-    armadilha: { r: 'n' }, // a Neide conta pra Cida cedo demais
+    amizades: [['z', 'd'], ['z', 'c'], ['z', 'b'], ['r', 'n'], ['r', 'd'], ['a', 'n'], ['a', 'd'], ['a', 'b'], ['d', 'e'], ['c', 'e']],
+    solucao: { r: 'n', a: 'b', b: 'c' },
+    armadilha: { r: 'd', d: 'e', e: 'c' }, // pela porta: a Cida ainda está na padaria
   },
 ];

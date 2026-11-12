@@ -9,7 +9,7 @@ import { o } from './elenco';
 // pra algo novo". Uma vez só por estreia; "Bora!" pula a qualquer momento. A etiqueta NOVO continua na fase.
 // Quem aparece é o morador da própria fase (já com o nome sorteado), achado pelo papel.
 
-type Demo = 'espalha' | 'aumenta' | 'abafa' | 'inverte' | 'padaria' | 'celular' | 'fila' | 'duvida';
+type Demo = 'espalha' | 'aumenta' | 'abafa' | 'inverte' | 'padaria' | 'celular' | 'fila' | 'duvida' | 'reto';
 export interface Apresentacao {
   demo: Demo;
   titulo: string;
@@ -66,6 +66,12 @@ export const CHEGADAS_DE_TESTE: Record<string, Apresentacao> = {
     fala: 'Isso aí? Foi o contrário.',
     regra: (v) => `${v.nome} é do contra: conta tudo ao contrário. A estrela mostra se quer a versão certa ou a ao contrário.`,
   },
+  P1: {
+    demo: 'reto', titulo: 'Morador novo!',
+    quem: (f) => f.vizinhos.find((v) => v.tipo === 'apressado'),
+    fala: 'Tô com pressa! Conto pro primeiro que aparecer.',
+    regra: (v) => `${v.nome} não espera seta: conta sozinho pra quem mora do outro lado. Ouviu da esquerda, conta pra direita; de baixo, pra cima.`,
+  },
   R1: {
     demo: 'duvida', titulo: 'Moradora nova!',
     quem: (f) => f.vizinhos.find((v) => v.desconfia),
@@ -82,7 +88,7 @@ export function Chegada({ fase, apresentacao, aoFechar }: { fase: Fase; apresent
   const v = apresentacao.quem(fase);
   if (!v) return null;
   const segundo = fase.vizinhos.find((x) => x.interesse?.ordem === 2);
-  const expressao: Expressao = apresentacao.demo === 'abafa' || apresentacao.demo === 'duvida' ? 'bravo' : apresentacao.demo === 'espalha' || apresentacao.demo === 'fila' ? 'contando' : 'ouvindo';
+  const expressao: Expressao = apresentacao.demo === 'abafa' || apresentacao.demo === 'duvida' ? 'bravo' : apresentacao.demo === 'espalha' || apresentacao.demo === 'fila' || apresentacao.demo === 'reto' ? 'contando' : 'ouvindo';
   return (
     <div className="chegada" role="dialog" aria-label={apresentacao.titulo}>
       <p className="chegada-titulo">{apresentacao.titulo}</p>
@@ -127,6 +133,13 @@ export function Chegada({ fase, apresentacao, aoFechar }: { fase: Fase; apresent
           <>
             <g transform={`translate(${PARADA - 90} ${CHAO - 110})`}><g className="entra-balao"><g transform="scale(1.3)"><Boato tamanho={2} /></g></g></g>
             <g transform={`translate(${PARADA + 70} ${CHAO - 120})`}><g className="sai-balao"><g transform="scale(1.3)"><Boato tamanho={2} invertida /></g></g></g>
+          </>
+        )}
+        {apresentacao.demo === 'reto' && (
+          // entra por um lado, sai pelo outro, do mesmo tamanho
+          <>
+            <g transform={`translate(${PARADA - 90} ${CHAO - 110})`}><g className="entra-balao"><Boato tamanho={1} /></g></g>
+            <g transform={`translate(${PARADA + 70} ${CHAO - 110})`}><g className="sai-balao"><Boato tamanho={1} /></g></g>
           </>
         )}
         {apresentacao.demo === 'duvida' && (

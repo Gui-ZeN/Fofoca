@@ -22,6 +22,7 @@ const ELENCO: Record<Tipo, string[]> = {
   tumulo: ['Padre'],
   exagerado: ['Beto', 'Lúcia'],
   docontra: ['Edu', 'Rita'],
+  apressado: ['Nando'], // o gerador antigo (giros) não sorteia esse tipo; só pra fechar o Record
   comum: ['Cida', 'Ana', 'Bia', 'Lia', 'Davi', 'Rui'],
 };
 const PESO: Partial<Record<Tipo, number>> = { fofoqueira: 1, exagerado: 1.4, docontra: 1.4, tumulo: 1 };

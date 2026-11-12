@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { abafados, girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
+import { abafados, girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, reto, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
 import { Personagem, type Expressao } from './Personagem';
 import { Boato, Estrela, Girar, Telefone } from './Icones';
 import { Vazio } from './Vazio';
@@ -134,7 +134,10 @@ function Etiqueta({ v, x0, y0, contou, menos }: { v: Vizinho; x0: number; y0: nu
   const tx = x0 + 14 + selo + (vez ? 9 : 0);
   const fimNome = tx + nome + 6;
   const duas = v.desconfia; // selo "2×": a Raquel só acredita ouvindo de duas pessoas
-  const fim = fimNome + (duas ? 26 : 0);
+  // selo ⚡ (pressa): o Nando passa reto, sozinho. ⚠️ Era "»", e quem jogou leu "sempre pra direita" — a regra é
+  // "pro lado oposto de onde veio"; o caminho de verdade aparece na seta tracejada que sai dele (abaixo)
+  const passa = v.tipo === 'apressado';
+  const fim = fimNome + (duas ? 26 : 0) + (passa ? 26 : 0);
   // "−1": mora colado no Arnaldo e fala um tamanho menor (o efeito no tabuleiro, não só no personagem)
   const xMenos = fim + (mais ? 26 : 0);
   const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 27 : 0);
@@ -155,6 +158,12 @@ function Etiqueta({ v, x0, y0, contou, menos }: { v: Vizinho; x0: number; y0: nu
         <g className="duas" aria-label="só acredita ouvindo de duas pessoas">
           <rect x={fimNome} y={y0 + 12} width={22} height={14} rx={3} />
           <text x={fimNome + 11} y={y0 + 23}>2×</text>
+        </g>
+      )}
+      {passa && (
+        <g className="passa" aria-label="passa reto: conta sozinho pra quem está do outro lado">
+          <rect x={fimNome} y={y0 + 12} width={22} height={14} rx={3} />
+          <path d={`M${fimNome + 12.5},${y0 + 13.5} L${fimNome + 7.5},${y0 + 20} H${fimNome + 11} L${fimNome + 9.5},${y0 + 24.5} L${fimNome + 14.5},${y0 + 18} H${fimNome + 11} Z`} />
         </g>
       )}
       {mais && (
@@ -266,6 +275,7 @@ export interface Desenho {
   aoApertar: (v: Vizinho) => void;
   aoTocar: (v: Vizinho) => void;
   aoSoltar: (de: string, para: string) => void;
+  aoApagar: (de: string) => void; // um toque na seta tira ela (no celular, dois toques pra desfazer era demais)
 }
 
 export function Predio(props: {
@@ -485,6 +495,22 @@ export function Predio(props: {
         );
       })}
 
+      {/* Nando (apressado), montando: com UMA seta chegando nele, a seta tracejada mostra pra onde ele vai passar reto.
+          Ensina a regra na hora, sem tirar o problema (escolher por onde entrar). Com duas chegando, depende de quem
+          chega primeiro: não mostra. */}
+      {montando && trilho && fase.vizinhos.filter((p) => p.tipo === 'apressado').map((p) => {
+        const vem = Object.keys(setas).filter((de) => setas[de] === p.id);
+        const para = vem.length === 1 ? reto(fase, p, vem[0]) : undefined;
+        if (!para) return null;
+        const [x1, y1, x2, y2] = trajeto(p, porId[para]);
+        return (
+          <g key={'prevista' + p.id} className="seta prevista" aria-label={`${p.nome} vai passar pra ${porId[para].nome}`}>
+            <line x1={x1} y1={y1} x2={x2} y2={y2} />
+            <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(x1, y1, x2, y2)} />
+          </g>
+        );
+      })}
+
       {/* setas por cima dos personagens: pra quem cada um conta */}
       {fase.vizinhos.map((v) => {
         const alvo = setas[v.id] ?? v.seta;
@@ -504,8 +530,12 @@ export function Predio(props: {
           );
         }
         const [x1, y1, x2, y2] = trajeto(v, porId[alvo]);
+        const apagavel = trilho && montando && setas[v.id];
         return (
-          <g key={'s' + v.id} className={setas[v.id] ? 'seta girada' : 'seta'}>
+          <g key={'s' + v.id} className={setas[v.id] ? 'seta girada' : 'seta'}
+            onPointerDown={apagavel ? (e) => { e.stopPropagation(); trilho.aoApagar(v.id); } : undefined}>
+            {/* faixa larga e invisível: a seta tem 4,5 de traço, fina demais pro dedo */}
+            {apagavel && <line x1={x1} y1={y1} x2={x2} y2={y2} className="pega" />}
             <line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" />
             <line x1={x1} y1={y1} x2={x2} y2={y2} />
             <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(x1, y1, x2, y2)} />
