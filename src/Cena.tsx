@@ -90,6 +90,18 @@ export function Cena(props: ComponentProps<typeof Predio>) {
     return () => ro.disconnect();
   }, [props.fase]);
 
+  // Prédio que rola: um aviso em cima/embaixo enquanto houver andar escondido. ⚠️ Sem ele o prédio alto abria
+  // cortado e parecia ter só os andares à vista (Fable, 2026-11-11).
+  const [escondido, setEscondido] = useState({ cima: false, baixo: false });
+  useEffect(() => {
+    const el = caixa.current;
+    if (!el || !rola) { setEscondido({ cima: false, baixo: false }); return; }
+    const ver = () => setEscondido({ cima: el.scrollTop > 4, baixo: el.scrollTop + el.clientHeight < el.scrollHeight - 4 });
+    ver();
+    el.addEventListener('scroll', ver, { passive: true });
+    return () => el.removeEventListener('scroll', ver);
+  }, [rola, escala, tela.h]);
+
   // A câmera: andares que importam agora (unidades do desenho → px).
   const { fase, resultado, batida, montando, origem, trilho } = props;
   const andarDe = (id?: string) => fase.vizinhos.find((v) => v.id === id)?.pos[1];
@@ -110,6 +122,10 @@ export function Cena(props: ComponentProps<typeof Predio>) {
   }, [chaveFoco, rola, escala]);
 
   return (
+    <>
+    {/* ⚠️ só a seta, na borda direita (sobre a parede de fora): o "▲ mais andares" no meio tapava a plaquinha de quem morava ali */}
+    {escondido.cima && <span className="mais-andares cima" style={{ top: (abaixo ?? 0) + 6 }} aria-hidden="true">▲</span>}
+    {escondido.baixo && <span className="mais-andares baixo" aria-hidden="true">▼</span>}
     <div ref={caixa} className={rola ? 'tabuleiro rola' : 'tabuleiro'} style={abaixo !== undefined ? { top: Math.max(abaixo, 0) } : undefined}>
       {/* ⚠️ assentado na calçada (YMax): preso no alto, num prédio de 3 andares sobrava um bloco de asfalto
           embaixo; o que sobra fica de céu em cima, onde a dica aparece */}
@@ -147,5 +163,6 @@ export function Cena(props: ComponentProps<typeof Predio>) {
         </g>
       </svg>
     </div>
+    </>
   );
 }

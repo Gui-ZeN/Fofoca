@@ -68,6 +68,7 @@ O motor é determinístico (`src/motor.ts`, função `espalhar`): a mesma jogada
 | **Fofoqueira** (Neide, Lu) | conta pra **todos** os vizinhos de passagem, sozinha, na mesma batida | não | — |
 | **Exagerado** (Beto, Lúcia) | conta **um tamanho maior** (máx. escândalo) | sim | **+1** |
 | **Do Contra** (Nonato) | conta a **versão ao contrário** | sim | **⇄** |
+| **Raquel** (desconfiada) | só **acredita ouvindo de duas pessoas diferentes**; com uma, fica em dúvida e não repassa (nem conta como estrela) | sim | **2×** |
 | **Arnaldo** (fiscal) | vítima; **quem mora colado nele conta um tamanho menor** (mín. cochicho) | não | **−1** em cada vizinho afetado |
 | **Padre** | ouve e não conta (só no motor; fora do trilho — não muda nenhuma jogada) | não | — |
 | **Vítima** (Seu Zé, sorteado ou fiscal) | se ouvir, você perde | não | octógono vermelho com "!" |
@@ -128,6 +129,16 @@ Cena de chegada: "**Fiscal novo!**" — *"Psiu! Aqui ninguém grita."* (entra um
 
 Cena de chegada: "**Morador novo!**" — *"Isso aí? Foi o contrário."* Ficou de fora "dois Do Contra se anulam" (só existe um personagem do contra).
 
+**Raquel, a desconfiada** — `?bloco=raquel` (2026-11-12; com o Yorkshire). Só acredita ouvindo de **duas pessoas diferentes**, somando batidas (duas na mesma batida já convencem; vale o recado que convenceu). Escolhida pela crítica do Fable — é a única regra que quebra "solução = um caminho só": como cada um conta pra um só, abrir dois galhos exige a Fofoqueira, e os galhos se juntam nela. Na tela: selo **2×** na plaquinha; em dúvida, o balão da 1ª fonte apagado com um **?** e a cara desconfiada; na derrota, "Raquel só ouviu da Neide e não acreditou." e a plaquinha "ouviu de 1 só".
+
+| Fase | Função | O que acontece |
+|---|---|---|
+| R1 · Só acredito ouvindo duas vezes | reconhecer | ela é a estrela; a Fofoqueira conta pra ela, e a 2ª fonte vem por Ana e Bia |
+| R2 · Caminho travado | desviar | o atalho passa por ela com uma fonte só e trava; a volta tem 5 setas |
+| R3 · Duas bocas | usar de propósito | só ela chega na estrela: a Fofoqueira abre dois galhos que se juntam nela |
+
+Cena de chegada: "**Moradora nova!**" — *"Hum… quem mais te contou?"* (um balão chega, fica o "?", o segundo vem do outro lado). Testes conferidos por mutação: desligando a regra, 9 de 15 falham.
+
 **Critério pra entrar na campanha** (teste com 5 pessoas): 4/5 reconhecem quem é afetado; 4/5 preveem o tamanho/versão antes de espalhar; 3/5 resolvem a 3ª fase sem ajuda e explicam por que precisaram passar ali.
 
 ### 5.3 Ideias discutidas, ainda não construídas
@@ -151,6 +162,7 @@ Arte **ilustrada** (gerada por IA a partir de uma prancha do Guilherme), uma fol
 | Fofoqueiras | **Neide** (bobes, mão na orelha), **Lu** |
 | Exagerados | **Beto** (braços abertos), **Lúcia** |
 | Do Contra | **Nonato** (dedo em riste) |
+| Desconfiada | **Raquel** (com o Yorkshire; em protótipo) |
 | Comuns na campanha | **Cida** (xícara), **Ana**, **Bia** (com o cachorro), **Rita**, **Lia**, **Davi**, **Rui**, **Edu** |
 | Fiscais | **Arnaldo** (em protótipo), **Vera**, **Dona Norma**, **Dr. Álvaro** |
 | Moradores novos | **Marlene, Caio, Jandira, Otávio, Celina, Nando, Solange, Ivo** |
@@ -206,7 +218,7 @@ Arte **ilustrada** (gerada por IA a partir de uma prancha do Guilherme), uma fol
 | 27 | D5 | Volta comprida | 10 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
 | 28 | D6 | Reunião de condomínio | 11 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
 
-Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio. (Fora da campanha: **A** = Arnaldo, **N** = Nonato.)
+Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio. (Fora da campanha: **A** = Arnaldo, **N** = Nonato, **R** = Raquel.)
 
 **Garantias de toda fase feita à mão** (testes): uma única solução dentro das setas; com uma seta a menos não dá (exceto a T2); a armadilha registrada perde pelo motivo certo; espelhada continua o mesmo quebra-cabeça; **desligar a regra da fase muda a jogada**.
 
@@ -271,6 +283,7 @@ Na **primeira vez** que algo novo aparece, antes da fase. Usa o morador da próp
 | andar 15 | Fila da fofoca | quem chega ganha o ⭐1, a ⭐2 espera na porta | "Eu primeiro, viu?" |
 | `?bloco=arnaldo` | Fiscal novo! | o Arnaldo bravo; entra uma fofoca, sai um cochicho | "Psiu! Aqui ninguém grita." |
 | `?bloco=nonato` | Morador novo! | entra a versão certa, sai a ao contrário | "Isso aí? Foi o contrário." |
+| `?bloco=raquel` | Moradora nova! | a Raquel desconfiada; um balão, o "?", e o segundo balão | "Hum… quem mais te contou?" |
 
 ---
 
@@ -285,6 +298,13 @@ Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** co
 - **Céu pouco:** o prédio ocupa o palco; nas fases pequenas, sol e nuvens lentas no que sobra.
 - **Prédio alto (5–6 andares) rola na vertical:** se, encaixado inteiro, o cômodo ficaria com menos de 100 px, o prédio fica na largura da tela e o palco rola; a câmera vai até onde a fofoca está (quem está selecionado, quem conta e quem ouve em cada batida, a vítima no fim). Prédio que cabe não muda. **Topo enxuto (2026-11-11):** o telhado fica fora da conta e sobe pra trás dos avisos; setas, advertências e a escadinha de tamanhos (só ícones) dividem uma linha; a frase de estado só aparece no tutorial. Com isso o prédio de **5 andares cabe sem rolar** num celular de 390×844; o de 6 ainda rola.
 - **Plaquinha do nome na laje:** subiu 11 unidades e fica meio em cima da laje entre os andares — antes tapava a testa (e às vezes o olho) do morador.
+- **Leitura da tela (2026-11-12, crítica do Fable):**
+  - **Fofoqueira com marca:** megafone na plaquinha (antes não tinha marca nenhuma).
+  - **Tamanho exigido maior** na plaquinha (0,62 → 0,82); plaquinha que não cabe no cômodo **encolhe inteira** até caber (a da Marlene com estrela, "=" e tamanho invadia o vizinho).
+  - **Escadas de madeira**, como as portas: em traço fraco sumiam no desenho do cômodo.
+  - **Vítima sem tracejado de alvo:** dá pra mandar seta pra ela, mas o tracejado parecia convite.
+  - **Prédio que rola avisa:** seta ▲/▼ na borda direita enquanto houver andar escondido.
+  - **Desfecho no alto:** o texto fica por cima dos avisos e os botões vão pro rodapé, no lugar de Desfazer/Espalhar. Antes o quadro inteiro cobria o térreo, onde muitas vezes está quem perdeu.
 - **Arte nítida e sem piscar:** sprites recortados a 460 px de altura (eram 300, borravam em tela 3×) e fundos a 420 px; todas as poses de quem está na fase são pré-carregadas (antes o morador sumia por um instante ao trocar de pose no celular).
 - **Espalhar desligado sem nenhuma seta** (era derrota certa, e um toque duplo em "Próxima fase" caía nele); **Tentar de novo** volta com a origem selecionada.
 - **Movimento:** cochicho e susto nas poses, balão viajando pela seta, luz acendendo, padaria balançando, "QUÊ?!" estourando. Tudo some com "movimento reduzido" (o balão aparece direto no destino).
@@ -299,7 +319,7 @@ Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** co
 |---|---|
 | https://gui-zen.github.io/Fofoca/ | a campanha |
 | `?pesquisa` / `?pesquisa&zerar` | **teste com pessoas**: campanha igual pra todos, sem advertências, com registro exportável; `&zerar` = participante novo |
-| `?bloco=arnaldo` / `?bloco=nonato` | os protótipos de mecânica (com cena de chegada) |
+| `?bloco=arnaldo` / `?bloco=nonato` / `?bloco=raquel` | os protótipos de mecânica (com cena de chegada) |
 | `?bloco=alto` | dois prédios de 5 e 6 andares feitos pela fábrica, pra ver a rolagem |
 | `?bloco=hora` / `ordem` / `dificil` | blocos de 6 fases (diagnóstico) |
 | `?grupo=A` / `?grupo=B` | o antigo teste trilho × giros (diagnóstico) |
@@ -332,7 +352,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas (K); com as K + 1 que o jogador recebe, no máximo 2; o caminho mais curto perde, mesmo com a folga; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente (inclusive a Fofoqueira) muda a jogada.
 
-**Números de hoje:** **635 testes em 20 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
+**Números de hoje:** **650 testes em 21 arquivos**, todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 
@@ -361,7 +381,8 @@ npm run build
 ## 15. O que ainda falta
 
 **Jogo**
-- **Jogar** o Arnaldo e o Nonato e decidir se entram na campanha (e no gerador).
+- **Jogar** o Arnaldo, o Nonato e a Raquel e decidir se entram na campanha (e no gerador).
+- **Próximas mecânicas** (Fable, estudo de Transmission, Spooky Express e Cosmic Express, 2026-11-12): **Linguarudo** (com escândalo, vira fofoqueiro), **Dois boatos** (corrida e barreira), **Boato cansa** (perde um tamanho a cada N repasses, como condição de capítulo).
 - Próximo fiscal (Vera ou Dona Norma), uma regra por vez.
 - Decidir o **celular** (peça do quebra-cabeça ou ajuda).
 - **Som** ("psst" a cada batida, "QUÊ?!" na derrota).

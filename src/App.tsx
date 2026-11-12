@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { alvosDe, amigosDe, controlavel, espalhar, girosUsados, porCelular, quemContou, type Fase, type Resultado, type Vizinho } from './motor';
 import { NOME_TAMANHO, TAMANHO } from './Predio';
 import { Cena } from './Cena';
@@ -10,6 +10,7 @@ import { fasesOrdem } from './ordem';
 import { fasesDificil } from './dificil';
 import { fasesArnaldo } from './arnaldo';
 import { fasesNonato } from './nonato';
+import { fasesRaquel } from './raquel';
 import { fasesAlto } from './alto';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
@@ -51,10 +52,11 @@ const BLOCOS = {
   dificil: { nome: 'Prédio cheio', letra: 'D', fases: fasesDificil },
   arnaldo: { nome: 'Arnaldo', letra: 'A', fases: fasesArnaldo }, // protótipo do 1º fiscal (Consulta 6)
   nonato: { nome: 'Nonato', letra: 'N', fases: fasesNonato }, // o Do Contra (Consulta 6)
+  raquel: { nome: 'Raquel', letra: 'R', fases: fasesRaquel }, // a desconfiada (2026-11-12)
   alto: { nome: 'Prédio alto', letra: 'P', fases: fasesAlto }, // 5 e 6 andares: a rolagem vertical
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|alto/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|alto/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas
@@ -81,7 +83,7 @@ const CAPITULOS = capitulos(ANDARES.length);
 const CANDIDATOS_DIA = ESTOQUE_PESOS.flatMap((p, i) => (p === 'leve' || p === 'media' ? [i] : []));
 
 export function App() {
-  if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={pedido === 'arnaldo' || pedido === 'nonato'} />;
+  if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={pedido === 'arnaldo' || pedido === 'nonato' || pedido === 'raquel'} />;
   return <Campanha pesquisa={PESQUISA} />;
 }
 
@@ -399,6 +401,25 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
             ? <p className="dica">{fase.dica}</p>
             : idx < TUTORIAL && status && <p className="dica status">{status}</p>)}
         </div>
+        {/* ⚠️ O texto do desfecho fica no ALTO do palco, por cima dos avisos (que já não importam), e os botões no rodapé.
+            Antes o quadro inteiro flutuava sobre a rua e cobria o térreo — justo onde muitas vezes está quem perdeu a
+            fase (Fable, 2026-11-11). Crescer o rodapé continua proibido: o prédio pularia (Astra, Consulta 2). */}
+        {terminou && revendo === undefined && (
+          <div className="desfecho">
+            <Fim fase={fase} resultado={resultado!} aviso={aviso} falta={vidas?.falta} dePrimeira={!!CAPS && dePrimeira} fechou={fechou}
+              dava={CAPS && venceuDePrimeira && !dePrimeira ? minimo : undefined}>
+            {/* ⚠️ o fim do bloco e o resumo ficam DENTRO do quadro: no rodapé, a frase espremia "Repetir" e "Rever",
+                e o resumo solto ficava por cima dos avisos */}
+            {resultado?.vitoria && idx === total - 1 && !dia && (
+              <>
+                <p className="zerou">Fim do protótipo. Obrigado por jogar!</p>
+                {/* resumo pro observador do teste (não na Fofoca do dia, que tem uma fase só) */}
+                <p className="resumo">{GRUPO} · tentativas: {SEQUENCIA.map((it) => `${it.rotulo}:${tentativas[it.rotulo] ?? 0}`).join(' · ')}</p>
+              </>
+            )}
+            </Fim>
+          </div>
+        )}
       </section>
 
       {vendoCapitulo && cap ? (
@@ -431,25 +452,17 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
             <button className="principal" onClick={() => setRevendo(undefined)}>Fechar</button>
           </div>
         ) : terminou ? (
-          // ⚠️ O desfecho flutua por cima da rua em vez de crescer o rodapé: crescer encolhia o palco
-          // e o prédio subia ~78 px bem na hora de ver o que aconteceu (Astra, Consulta 2).
-          <div className="desfecho">
-            <Fim
-              fase={fase} resultado={resultado!} ultima={idx === total - 1} aviso={aviso} falta={vidas?.falta}
-              aoRepetir={() => {
-                if (resultado!.vitoria) { setEspelho(!espelho); setElenco(novoElenco()); } // repetir: outro prédio e outro elenco (no teste, a mesma fase de novo)
-                else { setResultado(undefined); setBatida(0); setSelecionado(girando ? undefined : origem); } // tentar de novo: o plano fica; a origem volta selecionada
-              }}
-              aoRever={() => setRevendo(1)}
-              aoAvancar={() => setIdx(idx + 1)}
-              dePrimeira={!!CAPS && dePrimeira} fechou={fechou}
-              dava={CAPS && venceuDePrimeira && !dePrimeira ? minimo : undefined}
-              compartilhar={dia ? { acao: compartilhar, rotulo: copiado ? 'Copiado!' : 'Compartilhar' } : undefined}
-            />
-            {/* resumo pro observador do teste antigo (não na Fofoca do dia, que tem uma fase só) */}
-            {resultado?.vitoria && idx === total - 1 && !dia && (
-              <p className="resumo">{GRUPO} · tentativas: {SEQUENCIA.map((it) => `${it.rotulo}:${tentativas[it.rotulo] ?? 0}`).join(' · ')}</p>
-            )}
+          // os botões do desfecho no lugar de Desfazer/Espalhar (o texto está no alto do palco)
+          <div className="acoes fim-acoes">
+            <button onClick={() => {
+              if (resultado!.vitoria) { setEspelho(!espelho); setElenco(novoElenco()); } // repetir: outro prédio e outro elenco (no teste, a mesma fase de novo)
+              else { setResultado(undefined); setBatida(0); setSelecionado(girando ? undefined : origem); } // tentar de novo: o plano fica; a origem volta selecionada
+            }}>{resultado!.vitoria ? 'Repetir' : 'Tentar de novo'}</button>
+            {/* reassistir uma batida por vez: ver onde o plano saiu do esperado */}
+            {/* ⚠️ rótulo curto: "Passo a passo" quebrava os botões em duas linhas */}
+            <button onClick={() => setRevendo(1)} aria-label="Rever passo a passo">Rever</button>
+            {resultado!.vitoria && dia && <button className="principal" onClick={compartilhar}>{copiado ? 'Copiado!' : 'Compartilhar'}</button>}
+            {resultado!.vitoria && !dia && idx < total - 1 && <button className="principal" onClick={() => setIdx(idx + 1)}>{fechou ? 'Próximo capítulo' : 'Próxima fase'}</button>}
           </div>
         ) : (
           <div className="acoes">
@@ -463,12 +476,12 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
 }
 
 function Fim(props: {
-  fase: Fase; resultado: Resultado; ultima: boolean; aviso?: number; falta?: number; aoRepetir: () => void; aoAvancar: () => void; aoRever: () => void;
+  fase: Fase; resultado: Resultado; aviso?: number; falta?: number;
   dePrimeira?: boolean; fechou?: { numero: number; titulo: string; total: number; estrelas: number };
   dava?: number; // venceu de primeira, mas com seta a mais: com quantas dava
-  compartilhar?: { acao: () => void; rotulo: string };
+  children?: ReactNode; // linhas extras no fim do quadro (fim do bloco, resumo do teste)
 }) {
-  const { fase, resultado, ultima } = props;
+  const { fase, resultado } = props;
   const nome = (id?: string) => fase.vizinhos.find((v) => v.id === id)?.nome ?? '';
   const culpado = fase.vizinhos.find((v) => v.id === resultado.culpado);
   // a vítima pode ser o Seu Zé ou outra pessoa; sem vítima na fase, não há quem "não desconfia"
@@ -496,7 +509,9 @@ function Fim(props: {
     const e = explicar(fase, resultado);
     texto = e?.tipo === 'padaria'
       ? `${nome(e.id)} ainda estava na padaria quando o recado chegou.`
-      : `${culpado?.nome} não ficou sabendo de nada.`;
+      : e?.tipo === 'duvida'
+        ? `${nome(e.id)} só ouviu ${o(nome(e.de)) === 'a' ? 'da' : 'do'} ${nome(e.de)} e não acreditou.`
+        : `${culpado?.nome} não ficou sabendo de nada.`;
   } else if (resultado.motivo === 'tamanho_errado') {
     const queria = culpado!.interesse!.tamanho ?? culpado!.interesse!.minTamanho!;
     texto = `${culpado?.nome} queria ${TAMANHO[queria]} e recebeu ${TAMANHO[resultado.ouviu[culpado!.id].tamanho]}.`;
@@ -530,15 +545,7 @@ function Fim(props: {
             : `Terceira advertência: suspenso por ${relogio(props.falta ?? 0)}.`}
         </p>
       )}
-      <div className="acoes">
-        <button onClick={props.aoRepetir}>{resultado.vitoria ? 'Repetir' : 'Tentar de novo'}</button>
-        {/* reassistir uma batida por vez: ver onde o plano saiu do esperado */}
-        {/* ⚠️ rótulo curto: "Passo a passo" quebrava os botões em duas linhas e o quadro cobria o térreo */}
-        <button onClick={props.aoRever} aria-label="Rever passo a passo">Rever</button>
-        {resultado.vitoria && props.compartilhar && <button className="principal" onClick={props.compartilhar.acao}>{props.compartilhar.rotulo}</button>}
-        {resultado.vitoria && !props.compartilhar && !ultima && <button className="principal" onClick={props.aoAvancar}>{props.fechou ? 'Próximo capítulo' : 'Próxima fase'}</button>}
-        {resultado.vitoria && !props.compartilhar && ultima && <p className="zerou">Fim do protótipo. Obrigado por jogar!</p>}
-      </div>
+      {props.children}
     </div>
   );
 }

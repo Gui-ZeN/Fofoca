@@ -729,5 +729,31 @@
     "h": 460
    }
   }
+ },
+ "Raquel": {
+  "olha": 1,
+  "alt": 0.92,
+  "poses": {
+   "parado": {
+    "f": "raquel-parado.webp",
+    "w": 262,
+    "h": 460
+   },
+   "susto": {
+    "f": "raquel-susto.webp",
+    "w": 256,
+    "h": 460
+   },
+   "bravo": {
+    "f": "raquel-bravo.webp",
+    "w": 288,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "raquel-cochicho.webp",
+    "w": 286,
+    "h": 460
+   }
+  }
  }
 }

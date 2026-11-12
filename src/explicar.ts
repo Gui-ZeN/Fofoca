@@ -10,6 +10,7 @@ export type Explicacao =
   | { tipo: 'versao'; id: string; queria: Versao; veio: Versao }
   | { tipo: 'ordem'; antes: string; depois: string; batidaAntes: number; batidaDepois: number }
   | { tipo: 'padaria'; id: string; chegou: number; volta: number }
+  | { tipo: 'duvida'; id: string; de: string }
   | { tipo: 'sem_noticia'; id: string };
 
 export function explicar(fase: Fase, r: Resultado): Explicacao | undefined {
@@ -27,6 +28,8 @@ export function explicar(fase: Fase, r: Resultado): Explicacao | undefined {
     return { tipo: 'ordem', antes: r.antes!, depois: r.culpado!, batidaAntes: r.ouviu[r.antes!].batida, batidaDepois: r.ouviu[r.culpado!].batida };
   }
   if (r.motivo === 'interessado_nao_ouviu') {
+    // estrela desconfiada que ouviu de uma pessoa só: não acreditou (não é "não ouviu")
+    for (const v of fase.vizinhos) if (v.interesse && !r.ouviu[v.id] && r.duvida?.[v.id]) return { tipo: 'duvida', id: v.id, de: r.duvida[v.id].de! };
     // ⚠️ o motor culpa a 1ª estrela da lista; a que perdeu o recado na padaria pode ser outra — procura em todas
     for (const v of fase.vizinhos) {
       if (!v.interesse || r.ouviu[v.id] || !v.chega) continue;

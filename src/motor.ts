@@ -24,6 +24,10 @@ export interface Vizinho {
   // Arnaldo, o fiscal do barulho (Consulta 6): quem está colado nele (por passagem) conta um tamanho menor.
   // Vale pro tamanho ENVIADO (Exagerado aumenta antes, ele reduz depois); cochicho continua cochicho.
   abafa?: boolean;
+  // Raquel, a desconfiada (2026-11-12): só ACREDITA quando ouviu de duas pessoas diferentes (somando batidas).
+  // Na 1ª ela fica em dúvida: não repassa e, se tiver estrela, ainda não conta como "ficou sabendo". O que ela
+  // acredita (tamanho e versão) é o recado que a convenceu. Duas chegando na mesma batida já convencem.
+  desconfia?: boolean;
 }
 
 export interface Fase {
@@ -70,6 +74,9 @@ export interface Resultado {
   motivo?: Motivo;
   culpado?: string; // quem causou a derrota (assunto ou interessado)
   antes?: string; // ordem_errada: quem tinha que ter sabido primeiro
+  // desconfiados: a 1ª fonte, que não bastou. Fica mesmo se ela acreditar depois (a tela mostra a dúvida entre
+  // uma e outra); "não acreditou até o fim" = está aqui e NÃO está em `ouviu`.
+  duvida?: Record<string, Ouvido>;
 }
 
 export const amigosDe = (fase: Fase, id: string): string[] =>
@@ -111,6 +118,7 @@ const melhor = (a: Mensagem, b: Mensagem) =>
 export function espalhar(fase: Fase, jogada: Jogada): Resultado {
   const porId = new Map(fase.vizinhos.map((v) => [v.id, v]));
   const ouviu: Record<string, Ouvido> = { [jogada.origem]: { tamanho: 1, versao: 'normal', batida: 0, de: null } };
+  const duvida: Record<string, Ouvido> = {};
   const batidas: Mensagem[][] = [];
   let fronteira = [jogada.origem];
   const baixo = abafados(fase);
@@ -137,18 +145,28 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       // túmulo e assunto não contam pra ninguém
     }
     const chegou = new Map<string, Mensagem>();
+    const fontes = new Map<string, Set<string>>(); // desconfiados: de quem ouviram nesta batida
     for (const m of saindo) {
       if (ouviu[m.para]) continue; // cada um ouve uma vez só
-      if ((porId.get(m.para)!.chega ?? 0) > batida) continue; // ninguém em casa: o recado se perde
+      const quem = porId.get(m.para)!;
+      if ((quem.chega ?? 0) > batida) continue; // ninguém em casa: o recado se perde
+      if (quem.desconfia) fontes.set(m.para, (fontes.get(m.para) ?? new Set()).add(m.de));
       const atual = chegou.get(m.para);
       chegou.set(m.para, atual ? melhor(atual, m) : m);
+    }
+    // desconfiado com uma fonte só (contando a de antes): fica em dúvida e não entra na fronteira
+    for (const [id, de] of fontes) {
+      if ((duvida[id] ? 1 : 0) + de.size >= 2) continue; // acreditou
+      const m = chegou.get(id)!;
+      chegou.delete(id);
+      duvida[id] = { tamanho: m.tamanho, versao: m.versao, batida, de: m.de };
     }
     if (saindo.length) batidas.push(saindo);
     for (const m of chegou.values()) ouviu[m.para] = { tamanho: m.tamanho, versao: m.versao, batida, de: m.de };
     fronteira = [...chegou.keys()];
   }
 
-  return { batidas, ouviu, ...avaliar(fase, ouviu) };
+  return { batidas, ouviu, ...(Object.keys(duvida).length ? { duvida } : {}), ...avaliar(fase, ouviu) };
 }
 
 function avaliar(fase: Fase, ouviu: Record<string, Ouvido>): Pick<Resultado, 'vitoria' | 'motivo' | 'culpado' | 'antes'> {

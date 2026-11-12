@@ -34,6 +34,7 @@ function placasDa(e: Explicacao): Placa[] {
   }
   if (e.tipo === 'padaria') return [{ id: e.id, culpa: true, texto: `recado na ${e.chegou} · volta na ${e.volta}` }];
   if (e.tipo === 'sem_noticia') return [{ id: e.id, culpa: true, texto: 'não ouviu' }];
+  if (e.tipo === 'duvida') return [{ id: e.id, culpa: true, texto: 'ouviu de 1 só' }];
   return [];
 }
 
@@ -80,6 +81,18 @@ const OCT = Array.from({ length: 8 }, (_, k) => {
   const a = (Math.PI / 4) * k + Math.PI / 8;
   return `${(10 * Math.cos(a)).toFixed(2)},${(10 * Math.sin(a)).toFixed(2)}`;
 }).join(' ');
+// Fofoqueira: um megafone (conta pra todo mundo em volta, sem seta). ⚠️ Antes ela não tinha marca nenhuma na
+// plaquinha — o jogador só sabia quem era pelo nome da fase (Fable, 2026-11-11).
+export function SeloFofoqueira() {
+  return (
+    <g strokeLinejoin="round" strokeLinecap="round">
+      <path d="M-10,-3 H-5 L3,-8 V8 L-5,3 H-10 Z" fill="#E08A5E" stroke="#283C36" strokeWidth={1.6} />
+      <path d="M-8,3 L-6.5,8" stroke="#283C36" strokeWidth={1.8} />
+      <path d="M5.5,-3 Q7.5,0 5.5,3 M8,-6 Q11.5,0 8,6" fill="none" stroke="#283C36" strokeWidth={1.5} />
+    </g>
+  );
+}
+
 export function SeloVitima() {
   return (
     <g>
@@ -115,22 +128,35 @@ function Etiqueta({ v, x0, y0, contou, menos }: { v: Vizinho; x0: number; y0: nu
   const mais = v.tipo === 'exagerado'; // selo "+1" fixo: a cor do apartamento some quando ele ouve
   const vez = v.interesse?.ordem; // bloco Ordem: o número da vez colado na estrela
   const vitima = v.tipo === 'assunto';
-  const selo = contou || vitima || v.interesse ? 21 : 0;
+  const fofoqueira = v.tipo === 'fofoqueira';
+  const selo = contou || vitima || v.interesse || fofoqueira ? 21 : 0;
   const [ref, nome] = useLargura(v.nome, v.nome.length * 7.4);
   const tx = x0 + 14 + selo + (vez ? 9 : 0);
-  const fim = tx + nome + 6;
+  const fimNome = tx + nome + 6;
+  const duas = v.desconfia; // selo "2×": a Raquel só acredita ouvindo de duas pessoas
+  const fim = fimNome + (duas ? 26 : 0);
   // "−1": mora colado no Arnaldo e fala um tamanho menor (o efeito no tabuleiro, não só no personagem)
   const xMenos = fim + (mais ? 26 : 0);
-  const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 22 : 0);
+  const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 27 : 0);
   return (
+    // ⚠️ plaquinha mais larga que o cômodo (estrela + nome comprido + "=" + tamanho, ou +1/−1/⇄) invadia o vizinho:
+    // encolhe inteira, a partir da ponta esquerda, até caber (L − 10)
     <g className={contou ? 'etiqueta contou' : vitima ? 'etiqueta vitima' : 'etiqueta'}
+      transform={w > L - 10 ? `translate(${x0 + 8} ${y0 + 19}) scale(${(L - 10) / w}) translate(${-(x0 + 8)} ${-(y0 + 19)})` : undefined}
       aria-label={contou ? `${v.nome}: você contou` : vitima ? `${v.nome}: o boato é sobre essa pessoa` : undefined}>
       <rect x={x0 + 8} y={y0 + 8} width={w} height={22} rx={3} />
       {contou && <g transform={`translate(${x0 + 21} ${y0 + 18}) scale(0.82)`}><SeloOrigem /></g>}
       {!contou && vitima && <g transform={`translate(${x0 + 20} ${y0 + 19}) scale(0.82)`}><SeloVitima /></g>}
       {!contou && !vitima && v.interesse && <g transform={`translate(${x0 + 20} ${y0 + 19.5})`}><Estrela r={8.5} /></g>}
+      {!contou && !vitima && !v.interesse && fofoqueira && <g transform={`translate(${x0 + 20} ${y0 + 19})`} aria-label="fofoqueira: conta pra todo mundo em volta"><SeloFofoqueira /></g>}
       {vez && <text x={x0 + 32} y={y0 + 24} className="vez">{vez}</text>}
       <text ref={ref} x={tx} y={y0 + 24}>{v.nome}</text>
+      {duas && (
+        <g className="duas" aria-label="só acredita ouvindo de duas pessoas">
+          <rect x={fimNome} y={y0 + 12} width={22} height={14} rx={3} />
+          <text x={fimNome + 11} y={y0 + 23}>2×</text>
+        </g>
+      )}
       {mais && (
         <g className="exagera" aria-label="aumenta o boato um tamanho">
           <rect x={fim} y={y0 + 12} width={22} height={14} rx={3} />
@@ -150,7 +176,8 @@ function Etiqueta({ v, x0, y0, contou, menos }: { v: Vizinho; x0: number; y0: nu
           <path d="M-3.5,-1.8 h6 l-2,-2 M3.5,1.8 h-6 l2,2" fill="none" stroke="#283C36" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
         </g>
       )}
-      {req && <g transform={`translate(${x0 + 8 + w - 13} ${y0 + 19}) scale(0.62)`}><Boato tamanho={req as Tamanho} invertida={versao === 'invertida'} /></g>}
+      {/* tamanho que a pessoa quer: ⚠️ era 0,62 e quase não se lia no celular (Fable) */}
+      {req && <g transform={`translate(${x0 + 8 + w - 15} ${y0 + 19}) scale(0.82)`}><Boato tamanho={req as Tamanho} invertida={versao === 'invertida'} /></g>}
     </g>
   );
 }
@@ -277,6 +304,8 @@ export function Predio(props: {
     return o && o.batida < batida ? o : undefined;
   };
   const falando = resultado?.batidas[batida - 1] ?? [];
+  // desconfiada que já ouviu de uma pessoa (e ainda não acreditou, até esta batida)
+  const emDuvida = (id: string) => { const d = resultado?.duvida?.[id]; return !!d && d.batida < batida; };
   const ativa = (a: string, b: string) => falando.some((m) => (m.de === a && m.para === b) || (m.de === b && m.para === a));
   const fim = resultado !== undefined && batida > resultado.batidas.length;
   const explicacao = fim && resultado ? explicar(fase, resultado) : undefined;
@@ -314,6 +343,7 @@ export function Predio(props: {
     if (fim && resultado.culpado === v.id && v.tipo === 'assunto') return 'bravo';
     if (falando.some((m) => m.de === v.id)) return 'contando';
     if (o && o.batida === batida - 1) return 'chocado'; // acabou de ouvir e não tem pra quem contar
+    if (!o && emDuvida(v.id)) return 'bravo'; // ouviu de um só: cara de "sei…" até a 2ª fonte
     if (fim && resultado.vitoria && v.interesse) return 'chocado';
     if (montando && origem === v.id) return 'ouvindo';
     return 'neutro';
@@ -427,7 +457,8 @@ export function Predio(props: {
         const selecionado = montando && trilho?.selecionado === v.id;
         const cls = [
           'morador', origem === v.id && 'origem', perdeu && 'culpado', clicavel && 'clicavel',
-          selecionado && 'selecionado', montando && trilho?.alvos.includes(v.id) && 'alvo',
+          // ⚠️ a vítima NÃO ganha o tracejado de alvo: dá pra mandar seta pra ela, mas o tracejado parecia um convite
+          selecionado && 'selecionado', montando && trilho?.alvos.includes(v.id) && v.tipo !== 'assunto' && 'alvo',
         ];
         const pe = pes(v);
         return (
@@ -545,6 +576,15 @@ export function Predio(props: {
             // a animação do balão usa transform do CSS, então a posição fica num grupo de fora
             <g key={'b' + v.id} transform={`translate(${x0 + 24} ${y0 + 48}) scale(1.1)`}>
               <g className="balao"><Boato tamanho={o ? o.tamanho : 1} invertida={o?.versao === 'invertida'} /></g>
+            </g>
+          );
+        }
+        if (emDuvida(v.id)) {
+          const d = resultado!.duvida![v.id];
+          return (
+            <g key={'d' + v.id} transform={`translate(${x0 + 24} ${y0 + 48}) scale(1.1)`} className="em-duvida" aria-label={`${v.nome} ouviu de uma pessoa só e não acreditou`}>
+              <g className="balao"><Boato tamanho={d.tamanho} invertida={d.versao === 'invertida'} /></g>
+              <text x={12} y={-6} className="interroga">?</text>
             </g>
           );
         }
