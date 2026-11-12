@@ -70,7 +70,8 @@ describe.each([['Vera', fasesVera, 'assunto_ouviu'], ['Dona Norma', fasesNorma, 
     expect(resolverTrilho(f, f.setas - 1)).toHaveLength(0);
   });
 
-  it.each(fases.map((f) => [f.titulo, f] as const))('%s: a armadilha vence sem a regra e perde por causa dela', (_t, f) => {
+  // as duas primeiras: a regra atrapalha. A 3ª (a regra como ferramenta) é conferida no duplas.test.ts
+  it.each(fases.slice(0, 2).map((f) => [f.titulo, f] as const))('%s: a armadilha vence sem a regra e perde por causa dela', (_t, f) => {
     expect(jogar(semRegra(f), f.armadilha!).vitoria).toBe(true);
     expect(jogar(f, f.armadilha!).motivo).toBe(motivo);
   });

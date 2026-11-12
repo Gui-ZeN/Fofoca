@@ -13,6 +13,7 @@ import { fasesNonato } from './nonato';
 import { fasesRaquel } from './raquel';
 import { fasesApressado } from './apressado';
 import { fasesAlvaro, fasesNorma, fasesVera } from './fiscais';
+import { fasesDuplas } from './duplas';
 import { fasesAlto } from './alto';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
@@ -59,10 +60,11 @@ const BLOCOS = {
   vera: { nome: 'Vera', letra: 'V', fases: fasesVera }, // a vigia: escuta o vizinho contando
   norma: { nome: 'Dona Norma', letra: 'M', fases: fasesNorma }, // toque de recolher
   alvaro: { nome: 'Dr. Álvaro', letra: 'L', fases: fasesAlvaro }, // lotação
+  duplas: { nome: 'Duplas', letra: 'U', fases: fasesDuplas }, // duas regras na mesma fase
   alto: { nome: 'Prédio alto', letra: 'P', fases: fasesAlto }, // 5 e 6 andares: a rolagem vertical
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|alto/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|duplas|alto/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas

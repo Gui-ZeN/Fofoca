@@ -11,8 +11,16 @@ import { ARTE, CENARIO, urlArte } from './arte';
 // do chão de baixo e atravessa a laje. Os papéis se leem pela forma: origem = selo de balão,
 // vítima = octógono, estrela; selecionado = cantoneiras; pra quem pode contar = tracejado.
 const L = 120; // largura de um apartamento
-export const A = 136; // altura (mais alto que largo: o corpo dos moradores novos tem ~2,5 cabeças)
-const ESCALA = 1.08; // cabeça ≈ 37 no desenho
+// ⚠️ Apartamento BAIXO é o padrão desde 2026-11-12 (Consulta 8, a "terceira saída" do Astra; aprovado pelo dono): num
+// celular de verdade, com a barra do navegador (390×720), o prédio de 5 andares rolava. O cômodo perdeu altura
+// (136 → 112) e o morador encolheu junto (×0,8); largura, plaquinha e texto ficaram do mesmo tamanho. Medido: o chefão
+// 3×5 passou a caber (personagem 96 → 77 px na tela). `?alto` mostra o formato antigo, pra comparar.
+export const ALTO = typeof location !== 'undefined' && new URLSearchParams(location.search).has('alto');
+export const A = ALTO ? 136 : 112;
+const D = A - 136; // o que fica no meio do cômodo (cabeça, porta) sobe junto com o chão
+// ⚠️ balão e placa da derrota sobem MENOS que o chão: subindo tudo, o balão caía em cima do nome e a placa, do rosto
+const DB = D / 2, DP = 0; // a placa fica onde estava (na altura da cintura do morador menor) // altura (mais alto que largo: o corpo dos moradores novos tem ~2,5 cabeças)
+const ESCALA = ALTO ? 1.08 : 0.86; // cabeça ≈ 37 no desenho
 const RAIO = 28; // de onde a ligação de celular sai, a partir da cabeça
 
 // ⚠️ O tamanho do meio não pode se chamar "boato": é o nome da coisa toda, e o Sol (jogando por texto)
@@ -42,13 +50,13 @@ function placasDa(e: Explicacao): Placa[] {
 }
 
 // Altura da cabeça (de onde sai a ligação, pra onde o olhar aponta); o corpo pisa em y0 + A - 8.
-const cabeca = (v: Vizinho) => ({ x: v.pos[0] * L + L / 2, y: v.pos[1] * A + 74 });
+const cabeca = (v: Vizinho) => ({ x: v.pos[0] * L + L / 2, y: v.pos[1] * A + 74 + D });
 const pes = (v: Vizinho) => ({ x: v.pos[0] * L + L / 2 + 2, y: v.pos[1] * A + A - 8 });
 
 // Onde fica a passagem entre dois vizinhos: porta (lado a lado), escada (empilhados, no canto direito) ou telefone.
 function passagem(a: Vizinho, b: Vizinho) {
   const [ca, ra] = a.pos, [cb, rb] = b.pos;
-  if (ra === rb && Math.abs(ca - cb) === 1) return { tipo: 'parede' as const, x: Math.max(ca, cb) * L, y: ra * A + 98 };
+  if (ra === rb && Math.abs(ca - cb) === 1) return { tipo: 'parede' as const, x: Math.max(ca, cb) * L, y: ra * A + 98 + D };
   if (ca === cb && Math.abs(ra - rb) === 1) return { tipo: 'escada' as const, x: ca * L + L - 14, y: Math.max(ra, rb) * A };
   const pa = cabeca(a), pb = cabeca(b);
   return { tipo: 'telefone' as const, x: (pa.x + pb.x) / 2, y: (pa.y + pb.y) / 2 };
@@ -63,7 +71,7 @@ function trajeto(de: Vizinho, para: Vizinho): [number, number, number, number] {
   }
   if (q.tipo === 'escada') {
     const desce = para.pos[1] > de.pos[1];
-    return desce ? [q.x, de.pos[1] * A + 96, q.x, q.y + 42] : [q.x, de.pos[1] * A + 52, q.x, q.y - 30];
+    return desce ? [q.x, de.pos[1] * A + 96 + D, q.x, q.y + 42] : [q.x, de.pos[1] * A + 52 + D, q.x, q.y - 30];
   }
   const r = cabeca(para), d = Math.hypot(r.x - p.x, r.y - p.y) || 1, ux = (r.x - p.x) / d, uy = (r.y - p.y) / d;
   return [p.x + ux * RAIO, p.y + uy * RAIO, r.x - ux * 34, r.y - uy * 34];
@@ -446,7 +454,7 @@ export function Predio(props: {
         const cls = (ativa(a, b) ? ' ativa' : '') + (usada ? ' usada' : '');
         if (p.tipo === 'parede') {
           const r = va.pos[1], c = Math.min(va.pos[0], vb.pos[0]);
-          const gy = r * A + 54, gb = r * A + A - 4, wx = p.x;
+          const gy = r * A + 54 + D, gb = r * A + A - 4, wx = p.x;
           return (
             <g key={a + b} className={'passagem porta' + cls}>
               <rect x={wx - 5} y={gy} width={5} height={gb - gy} className={comodo(c, r)} style={corDe(c, r)} />
@@ -501,7 +509,7 @@ export function Predio(props: {
             onPointerDown={trilho && montando ? (e) => { setArrasto({ de: v.id, x: e.clientX, y: e.clientY }); trilho.aoApertar(v); } : undefined}>
             <rect x={x0 + 9} y={y0 + 9} width={L - 18} height={A - 18} className="toque" />
             {fora(v)
-              ? <Padaria x={pe.x} y={y0 + 84} faltam={montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
+              ? <Padaria x={pe.x} y={y0 + 84 + D} faltam={montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
               : <Personagem v={v} expressao={expressao(v)} x={pe.x} y={pe.y} olha={olharPara(v)} escala={ESCALA} />}
             {/* ⚠️ a plaquinha sobe 11 e fica meio em cima da laje: no lugar de antes (y0+8…30) ela tapava a testa
                 e às vezes o olho — a cabeça do desenho começa em ~y0+9. Assim ela encosta só no alto do cabelo. */}
@@ -605,16 +613,16 @@ export function Predio(props: {
         const x0 = v.pos[0] * L, y0 = v.pos[1] * A;
         return (
           <g key={'placa' + p.id} className={p.culpa ? 'placa-causa culpa' : 'placa-causa'} aria-hidden="true">
-            <rect x={x0 + 6} y={y0 + 60} width={L - 12} height={24} rx={3} />
+            <rect x={x0 + 6} y={y0 + 60 + DP} width={L - 12} height={24} rx={3} />
             {p.icones ? (
               <>
-                <text x={x0 + 10} y={y0 + 73} className="curto">queria</text>
-                <g transform={`translate(${x0 + 56} ${y0 + 72}) scale(0.5)`}><Boato tamanho={p.icones[0]} invertida={p.versoes?.[0]} /></g>
-                <text x={x0 + 67} y={y0 + 73} className="curto">veio</text>
-                <g transform={`translate(${x0 + 101} ${y0 + 72}) scale(0.5)`}><Boato tamanho={p.icones[1]} invertida={p.versoes?.[1]} /></g>
+                <text x={x0 + 10} y={y0 + 73 + DP} className="curto">queria</text>
+                <g transform={`translate(${x0 + 56} ${y0 + 72 + DP}) scale(0.5)`}><Boato tamanho={p.icones[0]} invertida={p.versoes?.[0]} /></g>
+                <text x={x0 + 67} y={y0 + 73 + DP} className="curto">veio</text>
+                <g transform={`translate(${x0 + 101} ${y0 + 72 + DP}) scale(0.5)`}><Boato tamanho={p.icones[1]} invertida={p.versoes?.[1]} /></g>
               </>
             ) : (
-              <text x={x0 + L / 2} y={y0 + 73} className="meio">{p.texto}</text>
+              <text x={x0 + L / 2} y={y0 + 73 + DP} className="meio">{p.texto}</text>
             )}
           </g>
         );
@@ -630,7 +638,7 @@ export function Predio(props: {
           // antes de espalhar, quem você contou já mostra o tamanho com que o boato começa: cochicho
           return (
             // a animação do balão usa transform do CSS, então a posição fica num grupo de fora
-            <g key={'b' + v.id} transform={`translate(${x0 + 24} ${y0 + 48}) scale(1.1)`}>
+            <g key={'b' + v.id} transform={`translate(${x0 + 24} ${y0 + 48 + DB}) scale(1.1)`}>
               <g className="balao"><Boato tamanho={o ? o.tamanho : 1} invertida={o?.versao === 'invertida'} /></g>
             </g>
           );
@@ -638,9 +646,9 @@ export function Predio(props: {
         if (emDuvida(v.id)) {
           const d = resultado!.duvida![v.id];
           return (
-            <g key={'d' + v.id} transform={`translate(${x0 + 24} ${y0 + 48}) scale(1.1)`} className="em-duvida" aria-label={`${v.nome} ouviu de uma pessoa só e não acreditou`}>
+            <g key={'d' + v.id} transform={`translate(${x0 + 24} ${y0 + 48 + DB}) scale(1.1)`} className="em-duvida" aria-label={`${v.nome} ouviu de uma pessoa só e não acreditou`}>
               <g className="balao"><Boato tamanho={d.tamanho} invertida={d.versao === 'invertida'} /></g>
-              <text x={12} y={-6} className="interroga">?</text>
+              <text x={16} y={9} className="interroga">?</text>
             </g>
           );
         }
