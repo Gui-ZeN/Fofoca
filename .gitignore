@@ -6,3 +6,5 @@ dist/
 PRODUCT.md
 # cache local do detector de design (o config.json do .impeccable vai pro repo)
 .impeccable/hook.cache.json
+# folhas de pose originais (geradas por IA, ~40 MB): ficam só no computador; os recortes vão em public/arte
+arte-fonte/
