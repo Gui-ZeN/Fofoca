@@ -10,7 +10,9 @@ import { ARTE, carregarArte } from './arte';
 import { Protecao } from './Protecao';
 import { aplicarMovimento, armazemDoNavegador, lerAjustes } from './ajustes';
 import { ligarMusicaNoPrimeiroToque } from './musica';
+import { migrar } from './migrar';
 
+migrar(); // progresso salvo de antes da ordem nova do prédio (só a campanha; o ?pesquisa não migra)
 aplicarMovimento(lerAjustes(armazemDoNavegador).reduzir);
 ligarMusicaNoPrimeiroToque();
 

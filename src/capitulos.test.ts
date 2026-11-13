@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, FEITOS_A_MAO, ganhaEstrela, POR_BLOCO, textoDoDia } from './capitulos';
-import { CAMPANHA, PREDIO } from './campanha';
+import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, ganhaEstrela, textoDoDia } from './capitulos';
+import { CAMPANHA, POR_BLOCO, PREDIO, SEGMENTOS, VOLTAS } from './campanha';
 import estoque from './andares.json';
 
 const pesos = (estoque as unknown as { saiu: string }[]).map((a) => a.saiu);
 
 describe('capítulos', () => {
-  const lista = capitulos(PREDIO.length);
+  const lista = capitulos(SEGMENTOS);
 
   it('cobrem o prédio inteiro, em sequência, sem buraco nem sobreposição', () => {
     expect(lista[0].inicio).toBe(0);
@@ -25,10 +25,35 @@ describe('capítulos', () => {
     expect(capituloDe(lista, estreia('V1'))!.titulo).toBe('A vigia do terceiro');
   });
 
-  it('depois, um capítulo a cada 25 andares, e todos terminam num chefão', () => {
+  it('o 6º é só o bloco 0; do 7º ao 11º, a estreia (ou as duas, Raquel + Duplas) e o bloco que vem depois dela', () => {
+    expect(lista.slice(5, 11).map((c) => [c.inicio, c.fim])).toEqual([[31, 56], [56, 84], [84, 115], [115, 143], [143, 171], [171, 199]]);
+    expect(lista.slice(5, 11).map((c) => PREDIO[c.inicio].rotulo)).toEqual(['E1', 'P1', 'R1', 'S1', 'A1', 'M1']);
+    // o capítulo da Raquel leva as duas estreias (R1–R3 e U1–U3) e o bloco 2
+    expect(PREDIO.slice(84, 90).map((a) => a.rotulo)).toEqual(['R1', 'R2', 'R3', 'U1', 'U2', 'U3']);
+    expect(PREDIO[90].rotulo).toBe('E51');
+    // capítulo de estreia = estreia(s) + 25 do bloco; o do bloco 0 e os das voltas têm só os 25
+    expect(lista.slice(6, 11).map((c) => c.fim - c.inicio)).toEqual([28, 31, 28, 28, 28]);
+    expect(lista[5].fim - lista[5].inicio).toBe(POR_BLOCO);
+  });
+
+  it('os capítulos de estreia têm título e aviso próprios, no tom do regulamento; as voltas repetem os temas, sem estreia', () => {
+    const [nando, raquel, saida, arnaldo, norma] = lista.slice(6, 11);
+    expect(nando.titulo).toBe('O apressado do 204');
+    expect(nando.aviso).toBe('É PROIBIDO CORRER NOS CORREDORES.');
+    for (const c of [nando, raquel, saida, arnaldo, norma]) {
+      expect(c.aviso, c.titulo).toBe(c.aviso.toUpperCase());
+      expect(c.aviso, c.titulo).toMatch(/\.$/);
+    }
+    expect(new Set(lista.map((c) => c.titulo)).size).toBeGreaterThan(15); // não é tudo igual
+    expect(lista.slice(11).every((c) => c.fim - c.inicio === POR_BLOCO && /^E\d+/.test(PREDIO[c.inicio].rotulo))).toBe(true);
+    expect(lista).toHaveLength(11 + (VOLTAS - 1) * 6);
+  });
+
+  it('todo capítulo depois do 5º termina num chefão (o 25º andar do bloco)', () => {
     for (const c of lista.slice(5)) {
-      expect(c.fim - c.inicio).toBe(POR_BLOCO);
-      expect(pesos[(c.fim - 1 - FEITOS_A_MAO) % pesos.length], `capítulo ${c.numero}`).toBe('chefe');
+      const n = Number(/^E(\d+)/.exec(PREDIO[c.fim - 1].rotulo)?.[1]);
+      expect(n, `capítulo ${c.numero}`).toBeGreaterThan(0);
+      expect(pesos[n - 1], `capítulo ${c.numero}`).toBe('chefe');
     }
   });
 

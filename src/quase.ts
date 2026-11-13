@@ -23,8 +23,8 @@ export function planos(f: Fase, K: number): Plano[] {
   return out;
 }
 
-export type Falha = 'gente demais' | 'sem notícia' | 'chegou cedo' | 'faltou a 2ª fonte' | 'passou da hora' | 'tamanho' | 'versão' | 'ordem' | 'vítima ouviu' | 'vítima no finzinho';
-export const DE_VERDADE = new Set<Falha>(['gente demais', 'chegou cedo', 'faltou a 2ª fonte', 'passou da hora', 'tamanho', 'versão', 'ordem', 'vítima no finzinho']);
+export type Falha = 'gente demais' | 'sem notícia' | 'chegou cedo' | 'faltou a 2ª fonte' | 'passou da hora' | 'já tinha saído' | 'tamanho' | 'versão' | 'ordem' | 'vítima ouviu' | 'vítima no finzinho';
+export const DE_VERDADE = new Set<Falha>(['gente demais', 'chegou cedo', 'faltou a 2ª fonte', 'passou da hora', 'já tinha saído', 'tamanho', 'versão', 'ordem', 'vítima no finzinho']);
 
 // Por que a estrela ficou sem notícia? Contrafactual: tira UMA regra de bloqueio e joga o MESMO plano; se aí ela
 // ouve, foi aquela regra que barrou — é um quase de verdade. ⚠️ Antes (Consulta 8, Astra) qualquer recado perdido
@@ -33,6 +33,8 @@ const BLOQUEIOS: [Falha, (v: Vizinho) => Vizinho][] = [
   ['chegou cedo', (v) => (v.tipo === 'assunto' ? v : { ...v, chega: undefined })],
   ['faltou a 2ª fonte', (v) => ({ ...v, desconfia: undefined })],
   ['passou da hora', (v) => ({ ...v, recolhe: undefined })],
+  // a padaria ao contrário (2026-11-13): a estrela saiu antes de o recado chegar, ou o recado morreu em quem já tinha saído
+  ['já tinha saído', (v) => ({ ...v, sai: undefined })],
 ];
 function barrada(f: Fase, plano: Plano, estrela: string): Falha {
   for (const [nome, tira] of BLOQUEIOS) {

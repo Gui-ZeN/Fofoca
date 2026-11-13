@@ -55,35 +55,6 @@ export const APRESENTACOES: Record<string, Apresentacao> = {
     fala: 'Eu primeiro, viu?',
     regra: () => 'O número na estrela diz quem tem que saber primeiro. Junto não vale.',
   },
-};
-
-// Fora da campanha (blocos de teste): a cena só aparece no link do bloco. Quando a regra entrar na campanha,
-// a cena passa pra APRESENTACOES (e o chegada.test, que confere as estreias, passa a cobrir ela).
-export const CHEGADAS_DE_TESTE: Record<string, Apresentacao> = {
-  A1: {
-    demo: 'abafa', titulo: 'Fiscal novo!',
-    quem: (f) => f.vizinhos.find((v) => v.abafa),
-    fala: 'Psiu! Aqui ninguém grita.',
-    regra: (v) => `${v.nome} reclama de barulho: quem mora colado nele conta um tamanho menor. E o boato é sobre ele.`,
-  },
-  N1: {
-    demo: 'inverte', titulo: 'Morador novo!',
-    quem: (f) => f.vizinhos.find((v) => v.tipo === 'docontra'),
-    fala: 'Isso aí? Foi o contrário.',
-    regra: (v) => `${v.nome} é do contra: conta tudo ao contrário. A estrela mostra se quer a versão certa ou a ao contrário.`,
-  },
-  M1: {
-    demo: 'fiscal', titulo: 'Fiscal nova!',
-    quem: (f) => f.vizinhos.find((v) => v.recolhe),
-    fala: 'Passou da hora, acabou a conversa.',
-    regra: (v) => `Depois da batida ${v.recolhe}, quem mora colado na ${v.nome} não conta mais nada. E o boato é sobre ela.`,
-  },
-  L1: {
-    demo: 'fiscal', titulo: 'Fiscal novo!',
-    quem: (f) => f.vizinhos.find((v) => v.teto),
-    fala: 'Isso é assunto reservado.',
-    regra: (v) => `${v.nome} só tolera ${v.teto} pessoas sabendo (contando quem você contou). Passou disso, ele descobre. E o boato é sobre ele.`,
-  },
   P1: {
     demo: 'reto', titulo: 'Morador novo!',
     quem: (f) => f.vizinhos.find((v) => v.tipo === 'apressado'),
@@ -95,6 +66,43 @@ export const CHEGADAS_DE_TESTE: Record<string, Apresentacao> = {
     quem: (f) => f.vizinhos.find((v) => v.desconfia),
     fala: 'Hum… quem mais te contou?',
     regra: (v) => `${v.nome} só acredita ouvindo de duas pessoas diferentes. Com uma só, fica na dúvida e não passa adiante.`,
+  },
+  A1: {
+    demo: 'abafa', titulo: 'Fiscal novo!',
+    quem: (f) => f.vizinhos.find((v) => v.abafa),
+    fala: 'Psiu! Aqui ninguém grita.',
+    regra: (v) => `${v.nome} reclama de barulho: quem mora colado nele conta um tamanho menor. E o boato é sobre ele.`,
+  },
+  M1: {
+    demo: 'fiscal', titulo: 'Fiscal nova!',
+    quem: (f) => f.vizinhos.find((v) => v.recolhe),
+    fala: 'Passou da hora, acabou a conversa.',
+    regra: (v) => `Depois da batida ${v.recolhe}, quem mora colado na ${v.nome} não conta mais nada. E o boato é sobre ela.`,
+  },
+  S1: {
+    // ⚠️ reaproveita o demo 'padaria' (a placa com o número da batida), sem animação nova: a regra é a mesma ideia da padaria, ao contrário
+    demo: 'padaria', titulo: 'Saída marcada',
+    quem: (f) => f.vizinhos.find((v) => v.sai !== undefined),
+    fala: 'Na hora marcada eu saio, e aí já era.',
+    regra: (v) => `${v.nome} sai de casa na batida marcada: depois disso não ouve nem conta.`,
+  },
+};
+
+// Fora da campanha (blocos de teste): a cena só aparece no link do bloco. Quando a regra entrar na campanha,
+// a cena passa pra APRESENTACOES (e o chegada.test, que confere as estreias, passa a cobrir ela). Hoje só o Nonato (N1)
+// e o Dr. Álvaro (L1) estão fora; P1, R1, A1, M1 e S1 estrearam na campanha em 2026-11-13.
+export const CHEGADAS_DE_TESTE: Record<string, Apresentacao> = {
+  N1: {
+    demo: 'inverte', titulo: 'Morador novo!',
+    quem: (f) => f.vizinhos.find((v) => v.tipo === 'docontra'),
+    fala: 'Isso aí? Foi o contrário.',
+    regra: (v) => `${v.nome} é do contra: conta tudo ao contrário. A estrela mostra se quer a versão certa ou a ao contrário.`,
+  },
+  L1: {
+    demo: 'fiscal', titulo: 'Fiscal novo!',
+    quem: (f) => f.vizinhos.find((v) => v.teto),
+    fala: 'Isso é assunto reservado.',
+    regra: (v) => `${v.nome} só tolera ${v.teto} pessoas sabendo (contando quem você contou). Passou disso, ele descobre. E o boato é sobre ele.`,
   },
 };
 

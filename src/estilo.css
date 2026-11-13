@@ -210,6 +210,20 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .elo-fatal > line.fundo { stroke-linecap: round; }
 .elo-fatal > polygon { fill: var(--vitima); stroke: var(--papel); stroke-width: 1.5; stroke-linejoin: round; }
 .elo-fatal { animation: chega .4s both; }
+/* ⚠️ a escuta da Vera: 3 arcos de som (sem seta, ninguém contou pra ela). Aparecem um depois do outro; o estado base já é
+   visível, então sem animação (.reduzir) ficam todos parados no lugar */
+.ondas-vera { pointer-events: none; }
+.ondas-vera path { fill: none; stroke-linecap: round; }
+.ondas-vera path:not(.fundo) { stroke: var(--vitima); stroke-width: 3.5; }
+.ondas-vera path.fundo { stroke: var(--papel); stroke-width: 7.5; }
+.ondas-vera .onda { animation: onda .25s both; }
+@keyframes onda { from { opacity: 0; } to { opacity: 1; } }
+/* ⚠️ o que a Fofoqueira conta sozinha (teste): tracejado dourado, só na batida dela */
+.fofoca-solta { pointer-events: none; }
+.fofoca-solta > line { stroke: var(--botao); stroke-width: 5; stroke-dasharray: 9 7; stroke-linecap: round; }
+.fofoca-solta > line.fundo { stroke: var(--tinta); stroke-width: 8; }
+/* ⚠️ trecho ativo: enquanto o boato anda, as setas de quem NÃO fala nesta batida esmaecem */
+.seta.fraca { opacity: .35; }
 /* derrota por tamanho/ordem/padaria/estrela sem notícia: plaquinha no pé do apartamento */
 .citado { fill: none; stroke: var(--vitima); stroke-width: 3.5; stroke-dasharray: 9 5; animation: chega .4s both; }
 

@@ -8,6 +8,9 @@
 //      atrasa a Neide de propósito, dando a volta, pra ela só falar depois que o Zé saiu;
 //   3. a PONTE fecha: o morador do meio sai antes de contar. O caminho curto passa por ele e trava; tem que contornar.
 // ⚠️ Em todas, o `sai` só mexe em quem ouve/conta: sair nunca ajuda o boato (a estrela sair é ruim, o Zé sair é bom).
+// ⚠️ Ordem (2026-11-13, estreia na campanha como S1–S3): a PONTE vem primeiro (a regra mais fácil de ler: o do meio some e
+// você contorna), depois o Zé, e a estrela por último, que é a que mais pesa. Os três usos acima estão na ordem em que
+// foram achados; o array está na ordem em que o jogador os vê.
 
 import type { Vizinho } from './motor';
 import type { FaseTrilho } from './trilho';
@@ -18,20 +21,20 @@ const ze = (pos: [number, number], extra: Partial<Vizinho> = {}) => v('z', 'Seu 
 
 export const fasesSaida: FaseTrilho[] = [
   {
-    // a Cida sai na 4 (e mora colada no Zé). Rita→Ana→Bia→Cida chega na 3. Pelas fofoqueiras
-    // (Rita→Neide→Lu→Ana→Bia→Cida) são as mesmas 3 setas, mas a Cida só ouve na 5 e já saiu.
-    titulo: 'Antes da hora',
-    boato: 'O Seu Zé guarda o troco em vaso de planta',
+    // o Davi, no meio, sai na 3. Pelo meio (Rita→Ana→Davi→Cida) ele ouve na 2 e já saiu quando ia contar, na 3.
+    // Pelo alto (Rita→Bia→Edu→Cida) são as mesmas 3 setas. A Neide mora colada no Zé e no Davi, e ninguém precisa dela.
+    titulo: 'A ponte fecha',
+    boato: 'O Seu Zé empresta o guarda-chuva e esquece',
     novidade: 'Padaria: alguém sai de casa na batida marcada',
     giros: 0, setas: 3, origens: ['r'],
     vizinhos: [
-      ze([0, 0]), v('s', 'Cida', 'comum', [0, 1], { interesse: {}, sai: 4 }),
-      v('r', 'Rita', 'comum', [1, 1]), v('n', 'Neide', 'fofoqueira', [2, 1]),
-      v('b', 'Bia', 'comum', [0, 2]), v('a', 'Ana', 'comum', [1, 2]), v('m', 'Lu', 'fofoqueira', [2, 2]),
+      v('d', 'Edu', 'comum', [0, 0]), v('b', 'Bia', 'comum', [1, 0]), v('r', 'Rita', 'comum', [2, 0]),
+      v('s', 'Cida', 'comum', [0, 1], { interesse: {} }), v('c', 'Davi', 'comum', [1, 1], { sai: 3 }), v('a', 'Ana', 'comum', [2, 1]),
+      ze([0, 2]), v('n', 'Neide', 'fofoqueira', [1, 2]),
     ],
-    amizades: [['r', 'n'], ['r', 'a'], ['n', 'm'], ['z', 's'], ['s', 'b'], ['m', 'a'], ['a', 'b']],
-    solucao: { r: 'a', a: 'b', b: 's' },
-    armadilha: { r: 'n', a: 'b', b: 's' }, // a Cida só ouve na batida 5; saiu na 4
+    amizades: [['r', 'a'], ['r', 'b'], ['n', 'z'], ['n', 'c'], ['z', 's'], ['s', 'c'], ['s', 'd'], ['a', 'c'], ['b', 'c'], ['b', 'd']],
+    solucao: { r: 'b', b: 'd', d: 's' },
+    armadilha: { r: 'a', a: 'c', c: 's' }, // o Davi ouve na 2 e sai na 3, antes de contar
   },
   {
     // o Zé sai na 4. A Neide fala com ele e com a Cida juntas: ela tem que falar na 4 ou depois, ou seja,
@@ -50,18 +53,18 @@ export const fasesSaida: FaseTrilho[] = [
     armadilha: { r: 'c', c: 'n' }, // a Neide fala na batida 3, o Zé ainda estava em casa
   },
   {
-    // o Davi, no meio, sai na 3. Pelo meio (Rita→Ana→Davi→Cida) ele ouve na 2 e já saiu quando ia contar, na 3.
-    // Pelo alto (Rita→Bia→Edu→Cida) são as mesmas 3 setas. A Neide mora colada no Zé e no Davi, e ninguém precisa dela.
-    titulo: 'A ponte fecha',
-    boato: 'O Seu Zé empresta o guarda-chuva e esquece',
+    // a Cida sai na 4 (e mora colada no Zé). Rita→Ana→Bia→Cida chega na 3. Pelas fofoqueiras
+    // (Rita→Neide→Lu→Ana→Bia→Cida) são as mesmas 3 setas, mas a Cida só ouve na 5 e já saiu.
+    titulo: 'Antes da hora',
+    boato: 'O Seu Zé guarda o troco em vaso de planta',
     giros: 0, setas: 3, origens: ['r'],
     vizinhos: [
-      v('d', 'Edu', 'comum', [0, 0]), v('b', 'Bia', 'comum', [1, 0]), v('r', 'Rita', 'comum', [2, 0]),
-      v('s', 'Cida', 'comum', [0, 1], { interesse: {} }), v('c', 'Davi', 'comum', [1, 1], { sai: 3 }), v('a', 'Ana', 'comum', [2, 1]),
-      ze([0, 2]), v('n', 'Neide', 'fofoqueira', [1, 2]),
+      ze([0, 0]), v('s', 'Cida', 'comum', [0, 1], { interesse: {}, sai: 4 }),
+      v('r', 'Rita', 'comum', [1, 1]), v('n', 'Neide', 'fofoqueira', [2, 1]),
+      v('b', 'Bia', 'comum', [0, 2]), v('a', 'Ana', 'comum', [1, 2]), v('m', 'Lu', 'fofoqueira', [2, 2]),
     ],
-    amizades: [['r', 'a'], ['r', 'b'], ['n', 'z'], ['n', 'c'], ['z', 's'], ['s', 'c'], ['s', 'd'], ['a', 'c'], ['b', 'c'], ['b', 'd']],
-    solucao: { r: 'b', b: 'd', d: 's' },
-    armadilha: { r: 'a', a: 'c', c: 's' }, // o Davi ouve na 2 e sai na 3, antes de contar
+    amizades: [['r', 'n'], ['r', 'a'], ['n', 'm'], ['z', 's'], ['s', 'b'], ['m', 'a'], ['a', 'b']],
+    solucao: { r: 'a', a: 'b', b: 's' },
+    armadilha: { r: 'n', a: 'b', b: 's' }, // a Cida só ouve na batida 5; saiu na 4
   },
 ];

@@ -27,6 +27,9 @@ const D = A - 136; // o que fica no meio do cômodo (cabeça, porta) sobe junto 
 const DB = D / 2; // altura (mais alto que largo: o corpo dos moradores novos tem ~2,5 cabeças)
 const ESCALA = ALTO ? 1.08 : 0.86; // cabeça ≈ 37 no desenho
 const RAIO = 28; // de onde a ligação de celular sai, a partir da cabeça
+// TESTE (2026-11-13): o que a Fofoqueira espalha sozinha aparece como traço dourado tracejado na batida em que ela fala.
+// Pra desligar, é só trocar por false (o jogo não muda: é só desenho).
+const TRACEJADO_FOFOQUEIRA = true;
 
 // ⚠️ O tamanho do meio não pode se chamar "boato": é o nome da coisa toda, e o Sol (jogando por texto)
 // concluiu que o boato já começava no tamanho 2 e errou as fases do Exagerado. Começa sempre em cochicho.
@@ -388,6 +391,10 @@ export function Predio(props: {
   const falando = resultado?.batidas[batida - 1] ?? [];
   // desconfiada que já ouviu de uma pessoa (e ainda não acreditou, até esta batida)
   const emDuvida = (id: string) => { const d = resultado?.duvida?.[id]; return !!d && d.batida < batida; };
+  // ⚠️ enquanto o boato anda, toda seta parecia igual: não dava pra ver quem está falando AGORA. Quem fala nesta batida
+  // fica cheia e o resto esmaece (só enquanto roda; no fim todas voltam).
+  const andando = resultado !== undefined && !montando && batida >= 1 && batida <= resultado.batidas.length;
+  const fraca = (id: string) => andando && !falando.some((m) => m.de === id) ? ' fraca' : '';
   const ativa = (a: string, b: string) => falando.some((m) => (m.de === a && m.para === b) || (m.de === b && m.para === a));
   const fim = resultado !== undefined && batida > resultado.batidas.length;
   const explicacao = fim && resultado ? explicar(fase, resultado) : undefined;
@@ -606,7 +613,7 @@ export function Predio(props: {
           const ligando = falando.some((m) => m.de === v.id && m.para === alvo);
           const [fx, fy] = [q.x - ux * 30, q.y - uy * 30];
           return (
-            <g key={'s' + v.id} className={ligando ? 'seta ligacao ativa' : 'seta ligacao'}>
+            <g key={'s' + v.id} className={(ligando ? 'seta ligacao ativa' : 'seta ligacao') + fraca(v.id)}>
               <line x1={p.x + ux * 48} y1={p.y + uy * 48} x2={fx} y2={fy} />
               <path d="M-4,-6 L3,0 L-4,6" transform={ponta(p.x, p.y, fx, fy)} />
               <g transform={`translate(${p.x + ux * 37} ${p.y + uy * 37}) scale(0.7)`}><Telefone /></g>
@@ -616,13 +623,25 @@ export function Predio(props: {
         const [x1, y1, x2, y2] = trajeto(v, porId[alvo]);
         const apagavel = trilho && montando && setas[v.id];
         return (
-          <g key={'s' + v.id} className={setas[v.id] ? 'seta girada' : 'seta'}
+          <g key={'s' + v.id} className={(setas[v.id] ? 'seta girada' : 'seta') + fraca(v.id)}
             onPointerDown={apagavel ? (e) => { e.stopPropagation(); trilho.aoApagar(v.id); } : undefined}>
             {/* faixa larga e invisível: a seta tem 4,5 de traço, fina demais pro dedo */}
             {apagavel && <line x1={x1} y1={y1} x2={x2} y2={y2} className="pega" />}
             <line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" />
             <line x1={x1} y1={y1} x2={x2} y2={y2} />
             <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(x1, y1, x2, y2)} />
+          </g>
+        );
+      })}
+
+      {/* ⚠️ o que a Fofoqueira conta sozinha não tinha linha nenhuma, só balões voando: não dava pra ver pra quem ela está
+          contando. Traço dourado tracejado, só na batida dela (some na seguinte); pra vítima vale a seta vermelha do fim. */}
+      {TRACEJADO_FOFOQUEIRA && falando.filter((m) => !m.escuta && porId[m.de].tipo === 'fofoqueira' && porId[m.para].tipo !== 'assunto').map((m) => {
+        const [x1, y1, x2, y2] = trajeto(porId[m.de], porId[m.para]);
+        return (
+          <g key={`solta${batida}-${m.de}-${m.para}`} className="fofoca-solta" aria-label={`${porId[m.de].nome} conta sozinha pra ${porId[m.para].nome}`}>
+            <line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" />
+            <line x1={x1} y1={y1} x2={x2} y2={y2} />
           </g>
         );
       })}
@@ -650,6 +669,24 @@ export function Predio(props: {
           Fica enquanto o resultado está aberto. No empate, todos que entregaram juntos. */}
       {fim && resultado.motivo === 'assunto_ouviu' && quemContou(resultado, resultado.culpado!).map((de) => {
         const [x1, y1, x2, y2] = trajeto(porId[de], porId[resultado.culpado!]);
+        // ⚠️ a Vera não recebeu o boato de ninguém: ela ESCUTOU o vizinho contar pra outra pessoa. Com a seta vermelha
+        // parecia que contaram pra ela; ondas de som saindo de quem falou mostram o que a regra dela faz de verdade.
+        const escutou = (resultado.batidas[resultado.ouviu[resultado.culpado!].batida - 1] ?? []).some((m) => m.escuta && m.de === de && m.para === resultado.culpado);
+        if (escutou) {
+          // ⚠️ as ondas saem da passagem (porta ou escada) entre os dois, bem abertas (±60°): com ±38° pareciam três
+          // tracinhos grudados no "QUÊ?!"; saindo da cabeça de quem falou, o "QUÊ?!" tapava tudo (visto no painel, 2026-11-13)
+          const rumo = Math.atan2(y2 - y1, x2 - x1), abre = 1.05;
+          const raio = [10, 19, 28];
+          return (
+            <g key={'fatal' + de} className="ondas-vera" transform={`translate(${x1} ${y1}) rotate(${(rumo * 180) / Math.PI})`}
+              aria-label={`${porId[resultado.culpado!].nome} escutou ${porId[de].nome} contando`}>
+              {raio.map((r, i) => {
+                const d = `M${(r * Math.cos(abre)).toFixed(1)},${(-r * Math.sin(abre)).toFixed(1)} A${r},${r} 0 0 1 ${(r * Math.cos(abre)).toFixed(1)},${(r * Math.sin(abre)).toFixed(1)}`;
+                return <g key={r} className="onda" style={{ animationDelay: `${i * 130}ms` }}><path d={d} className="fundo" /><path d={d} /></g>;
+              })}
+            </g>
+          );
+        }
         return (
           <g key={'fatal' + de} className="elo-fatal" aria-hidden="true">
             <line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" />

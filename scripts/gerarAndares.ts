@@ -5,7 +5,7 @@
 // Rodar blocos em paralelo e juntar com scripts/juntarAndares.ts.
 import { writeFileSync } from 'node:fs';
 import { aleatorio } from '../src/variar';
-import { batizar, fabricar, moldeDe, pesoDoAndar, type Peso, type Tema } from '../src/fabrica';
+import { batizar, fabricar, moldeDe, moldeValido, personagemDoAndar, pesoDoAndar, type Personagem, type Peso, type Tema } from '../src/fabrica';
 import { assinatura } from '../src/assinatura';
 import { medirQuase, quaseBasta } from '../src/quase';
 import type { FaseTrilho } from '../src/trilho';
@@ -38,6 +38,8 @@ const TEMAS: Record<Peso, Tema[]> = {
 };
 // prédio maior demora mais pra certificar (o resolvedor explora mais caminhos)
 const PRAZO: Record<Peso, number> = { leve: 60_000, media: 90_000, pesada: 240_000, chefe: 420_000 };
+// Com personagem o andar gasta esta fração do prazo em cada fase (personagem, depois básico): como a Vera já fazia (0,6).
+const FATOR_PRAZO = 0.6;
 const MAIS_LEVE: Record<Peso, Peso | undefined> = { chefe: 'pesada', pesada: 'media', media: 'leve', leve: undefined };
 
 const [inicio, fim, saida] = [Number(process.argv[2]), Number(process.argv[3]), process.argv[4]];
@@ -53,6 +55,7 @@ const repete = (a: string) => doCapitulo.slice(-2).includes(a) || doCapitulo.fil
 for (let pos = inicio; pos < fim; pos++) {
   if (pos % 25 === 0) doCapitulo.length = 0;
   const sorte = aleatorio(20261111 + pos * 7919);
+  const quem = personagemDoAndar(pos);
   let peso: Peso | undefined = pesoDoAndar(pos);
   let zeLivre = false; // último recurso (fabrica.ts): só quando o peso mais leve não sai com o Zé pesando
   let feito: (ReturnType<typeof fabricar> & object & { fase: FaseTrilho; a: string }) | undefined;
@@ -63,13 +66,19 @@ for (let pos = inicio; pos < fim; pos++) {
     // ⚠️ 2 andares em 5 tentam a armadilha (era 1 em 3): com o "quase", só ~58% das tentativas dão certo, e com 1 em 3 o
     // estoque ficava com 80,7% de atalho (o andares.test pede < 80%)
     const papeis = pos % 5 === 2 || pos % 5 === 4 ? [true, false] : [false];
-    // 1 andar em 3 tenta a Vera de vítima (fabrica.ts, `vera`); se não sair no prazo, o andar fica com o Seu Zé.
-    // Com ela a Fofoqueira fica livre, e o tema padaria+ordem não entra: seriam 3 regras (teto de leitura = 2).
-    const comVera = pos % 3 === 1;
+    // O elenco do bloco (fabrica.ts, personagemDoAndar): em uns 10 andares de 25 o personagem que estreia, em uns 7 um dos
+    // anteriores, e uns 8 ficam só com o básico. Ele tenta primeiro; se não sair no prazo o andar cai pro básico (o Seu Zé), no
+    // MESMO peso. Com personagem a Fofoqueira fica livre (atalho), e só entram os temas que cabem no teto de leitura (2 regras:
+    // padaria+ordem não cabe com ninguém; o Arnaldo só vale no tema tamanho).
     const largo = Math.floor(pos / 5) % 2 === 0; // médio e pesado alternam 4 e 3 colunas a cada 5 andares (fabrica.ts, moldeDe)
-    for (const vera of comVera ? [true, false] : [false]) {
-    for (const fofArmadilha of vera ? [false] : papeis) {
-      for (const tema of temas.filter((t) => !vera || t !== 'padaria+ordem')) {
+    const opcoes: Partial<Record<Personagem, boolean>>[] = quem ? [{ [quem]: true }, {}] : [{}];
+    for (const extra of opcoes) {
+    const comPersonagem = quem !== undefined && extra[quem] === true;
+    // o chefão não tem o tema tamanho, mas o Arnaldo só existe nele
+    const doPeso = comPersonagem && quem === 'arnaldo' ? [...new Set([...temas, 'tamanho' as Tema])] : temas;
+    const daqui = doPeso.filter((t) => moldeValido({ ...moldeDe(peso, t, largo), ...extra }));
+    for (const fofArmadilha of comPersonagem ? [false] : papeis) {
+      for (const tema of daqui) {
         let ultimo: { fase: FaseTrilho; a: string } | undefined;
         const pesoAqui = peso;
         const aceita = (f: Parameters<typeof batizar>[0], c: Parameters<typeof batizar>[1]) => {
@@ -81,8 +90,8 @@ for (let pos = inicio; pos < fim; pos++) {
         };
         // ⚠️ a Fofoqueira-armadilha que também tem "quase" é rara: com o prazo dividido igual, só 11 de 50 saíram (o
         // estoque ficou com 89% de atalho; o andares.test pede ≤ 80%). Ela ganha 3× o prazo; o atalho de reserva, o resto.
-        const prazo = (PRAZO[peso] / temas.length) * (vera || papeis.length === 1 ? 1 : fofArmadilha ? 1.5 : 0.5) * (comVera ? 0.6 : 1);
-        const achado = fabricar({ ...moldeDe(peso, tema, largo), fofArmadilha, vera, zeLivre }, sorte, prazo, aceita);
+        const prazo = (PRAZO[peso] / daqui.length) * (comPersonagem || papeis.length === 1 ? 1 : fofArmadilha ? 1.5 : 0.5) * (quem ? FATOR_PRAZO : 1);
+        const achado = fabricar({ ...moldeDe(peso, tema, largo), fofArmadilha, ...extra, zeLivre }, sorte, prazo, aceita);
         if (achado && ultimo) feito = { ...achado, ...ultimo };
         if (feito) break;
       }
@@ -97,7 +106,7 @@ for (let pos = inicio; pos < fim; pos++) {
   const fase = feito.fase;
   doCapitulo.push(feito.a);
   estoque.push({ pos, peso: pesoDoAndar(pos), saiu: peso, tema: feito.molde.tema, fase });
-  console.log(`posição ${pos}: ${peso} · ${feito.molde.tema} · ${fase.vizinhos.length} moradores · K=${fase.setas} · ${feito.a}`);
+  console.log(`posição ${pos}: ${peso} · ${feito.molde.tema} · ${quem && feito.molde[quem] ? quem : 'básico'} · ${fase.vizinhos.length} moradores · K=${fase.setas} · ${feito.a}`);
 }
 writeFileSync(saida, JSON.stringify(estoque));
 console.log(`ok ${estoque.length} → ${saida}`);

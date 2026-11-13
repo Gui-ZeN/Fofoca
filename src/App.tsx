@@ -19,7 +19,7 @@ import { fasesAlto } from './alto';
 import largo from './largo.json';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
-import { ESTOQUE, ESTOQUE_PESOS, PREDIO, TUTORIAL } from './campanha';
+import { ESTOQUE, ESTOQUE_PESOS, PREDIO, SEGMENTOS, TUTORIAL } from './campanha';
 import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, ganhaEstrela, textoDoDia, type Capitulo } from './capitulos';
 import { AberturaCapitulo } from './Capitulo';
 import { MAX, atualizar, cheias, falta, gastar, relogio, type Advertencias } from './advertencias';
@@ -31,6 +31,7 @@ import { tocar as tocarSom } from './som'; // `tocar` aqui dentro já é o toque
 import { citados } from './Predio';
 import { baixarRegistro, registro } from './registro';
 import { apagarProgresso, armazemDoNavegador, gravarAjustes, lerAjustes } from './ajustes';
+import { marcarVersao } from './migrar';
 
 // Sem link: a campanha (menu-mapa do prédio + 28 andares intercalados + advertências do síndico).
 // Com link: o teste com pessoas — ?grupo=A/B (10 fases do trilho × 4 de giros, mesmos prédios) ou
@@ -97,7 +98,7 @@ const DO_BLOCO: Item[] = (BLOCO?.fases ?? []).map((fase, i) => ({ modo: 'trilho'
 const SEQ_TESTE: Item[] = BLOCO ? DO_BLOCO : GRUPO === 'A' ? [...TRILHO, ...GIROS] : [...GIROS, ...TRILHO];
 const ANDARES: Item[] = PREDIO.map(({ rotulo, fase }) => ({ modo: 'trilho', fase, rotulo }));
 const ROTULOS = ANDARES.map((a) => a.rotulo);
-const CAPITULOS = capitulos(ANDARES.length);
+const CAPITULOS = capitulos(SEGMENTOS);
 // Fofoca do dia: só andares leves e médios (rápidos pra um desafio diário)
 const CANDIDATOS_DIA = ESTOQUE_PESOS.flatMap((p, i) => (p === 'leve' || p === 'media' ? [i] : []));
 
@@ -158,7 +159,7 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
     return (
       // na pesquisa não tem "apagar progresso": entre participantes, quem zera é o observador (&zerar)
       <Menu key={apagou} titulos={ANDARES.map((a) => a.fase.titulo)} liberada={ler(`${chave}.liberada`, 0)} vidas={vidas} aoJogar={setAndar}
-        aoApagar={pesquisa ? undefined : () => { apagarProgresso(armazemDoNavegador, chave); setApagou(apagou + 1); }}
+        aoApagar={pesquisa ? undefined : () => { apagarProgresso(armazemDoNavegador, chave); marcarVersao(armazemDoNavegador); setApagou(apagou + 1); }}
         capitulos={CAPITULOS} primeira={new Set(ler<string[]>(`${chave}.primeira`, []))} rotulos={ROTULOS}
         // na pesquisa, nada de Fofoca do dia: o teste mede a campanha
         dia={pesquisa ? undefined : { feita: ler(`fofoca.dia.feita.${hoje}`, 0), estrela: ler(`fofoca.dia.estrela.${hoje}`, false), aoJogar: () => setNoDia(true) }}

@@ -107,12 +107,12 @@ describe('bloco Saída', () => {
     a.length === 1 && JSON.stringify(Object.entries(a[0]).sort()) === JSON.stringify(Object.entries(b).sort());
   const quemSai = (f: Fase) => f.vizinhos.filter((x) => x.sai !== undefined);
 
-  it('são três, uma de cada uso: estrela, vítima, meio do caminho', () => {
+  it('são três, uma de cada uso, na ordem em que o jogador vê: meio do caminho (S1), vítima (S2), estrela (S3)', () => {
     expect(fasesSaida).toHaveLength(3);
     const [a, b, c] = fasesSaida.map((f) => quemSai(f));
-    expect(a.map((x) => !!x.interesse)).toEqual([true]);
+    expect(a.map((x) => !x.interesse && x.tipo === 'comum')).toEqual([true]);
     expect(b.map((x) => x.tipo)).toEqual(['assunto']);
-    expect(c.map((x) => !x.interesse && x.tipo === 'comum')).toEqual([true]);
+    expect(c.map((x) => !!x.interesse)).toEqual([true]);
   });
 
   it.each(rotulos)('%s (%s): prédio de 3 colunas e 3 ou 4 andares', (_n, _t, f) => {
@@ -131,8 +131,8 @@ describe('bloco Saída', () => {
     expect(mesma(resolverTrilho(semSai(f)), f.solucao)).toBe(false);
   });
 
-  it('S1 (estrela): a armadilha vence sem o `sai`, e com ele a Cida saiu antes de ouvir', () => {
-    const f = fasesSaida[0];
+  it('S3 (estrela): a armadilha vence sem o `sai`, e com ele a Cida saiu antes de ouvir', () => {
+    const f = fasesSaida[2];
     expect(jogar(semSai(f), f.armadilha!).vitoria).toBe(true);
     const r = jogar(f, f.armadilha!);
     expect(r.vitoria).toBe(false);
@@ -152,8 +152,8 @@ describe('bloco Saída', () => {
     expect(jogar(f, f.solucao).ouviu.z).toBeUndefined();
   });
 
-  it('S3 (ponte): a armadilha vence sem o `sai`, e com ele o Davi ouve e sai antes de contar', () => {
-    const f = fasesSaida[2];
+  it('S1 (ponte): a armadilha vence sem o `sai`, e com ele o Davi ouve e sai antes de contar', () => {
+    const f = fasesSaida[0];
     expect(jogar(semSai(f), f.armadilha!).vitoria).toBe(true);
     const r = jogar(f, f.armadilha!);
     expect(r.vitoria).toBe(false);
@@ -182,7 +182,9 @@ describe('bloco Saída', () => {
     for (const f of fasesSaida) for (const x of f.vizinhos) expect(conhecidos.has(x.nome), x.nome).toBe(true);
   });
 
-  it('a primeira fase traz a novidade', () => {
+  it('a primeira fase (a ponte) traz a novidade, e só ela', () => {
+    expect(fasesSaida[0].titulo).toBe('A ponte fecha');
+    expect(fasesSaida.slice(1).every((f) => !f.novidade)).toBe(true);
     expect(fasesSaida[0].novidade).toBe('Padaria: alguém sai de casa na batida marcada');
   });
 });

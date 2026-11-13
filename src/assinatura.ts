@@ -24,16 +24,18 @@ const REGRAS: [string, (v: Vizinho) => boolean, (v: Vizinho) => Vizinho][] = [
   ['raquel', (v) => !!v.desconfia, (v) => ({ ...v, desconfia: undefined })],
   ['nando', (v) => v.tipo === 'apressado', (v) => (v.tipo === 'apressado' ? { ...v, tipo: 'comum' } : v)],
   ['vera', (v) => !!v.vigia, (v) => ({ ...v, vigia: undefined })],
+  ['norma', (v) => !!v.recolhe, (v) => ({ ...v, recolhe: undefined })],
+  ['saída', (v) => v.sai !== undefined, (v) => ({ ...v, sai: undefined })],
 ];
 
 // ⚠️ quem está na padaria muda o raciocínio: o Zé fora (a Fofoqueira colada nele pode falar), a estrela fora (chegar
 // tarde) ou alguém no meio do caminho (atrasar o recado). Sem isso a régua confundia a H3 com a H4 nova.
-const quemNaPadaria = (f: Fase) => [...new Set(f.vizinhos.filter((v) => v.chega).map((v) => (v.tipo === 'assunto' ? 'zé' : v.interesse ? 'estrela' : 'meio')))].sort().join(',');
+const quemNaPadaria = (f: Fase, campo: 'chega' | 'sai' = 'chega') => [...new Set(f.vizinhos.filter((v) => !!v[campo]).map((v) => (v.tipo === 'assunto' ? 'zé' : v.interesse ? 'estrela' : 'meio')))].sort().join(',');
 
 export function assinatura(f: FaseTrilho): string {
   const regras = REGRAS.filter(([, tem]) => f.vizinhos.some(tem))
     .filter(([, , tira]) => !mesma(resolverTrilho({ ...f, vizinhos: f.vizinhos.map(tira) } as Fase & { setas: number }, f.setas), f.solucao))
-    .map(([nome]) => (nome === 'padaria' ? `padaria(${quemNaPadaria(f)})` : nome));
+    .map(([nome]) => (nome === 'padaria' ? `padaria(${quemNaPadaria(f)})` : nome === 'saída' ? `saída(${quemNaPadaria(f, 'sai')})` : nome));
   const r = jogar(f, f.solucao);
   const fofs = f.vizinhos.filter((v) => v.tipo === 'fofoqueira');
   const papel = !fofs.length ? '-' : fofs.some((v) => r.ouviu[v.id]) ? 'atalho' : 'armadilha';

@@ -1,10 +1,13 @@
 // Capítulos e Fofoca do dia (2026-11-11, Guilherme: "seguir os blocos", com abertura/fechamento, índice por
 // capítulo, desafio opcional e fofoca do dia). Puro e testado; as telas ficam no App, no Menu e no Capitulo.
 //
-// - Os 28 andares feitos à mão viram 4 capítulos curtos, um por regra que estreia ali.
-// - Depois, um capítulo a cada 25 andares do estoque gerado: cada bloco termina num chefão de 6 andares.
+// - Os 31 andares feitos à mão viram 5 capítulos curtos, um por regra que estreia ali.
+// - Depois, os capítulos seguem os SEGMENTOS da campanha (campanha.ts): cada capítulo é (as estreias, se houver) + o bloco
+//   gerado de 25 que vem depois delas, e termina no chefão do bloco. O capítulo 6 é só o bloco 0 (nenhuma estreia antes).
 // - Desafio opcional: a ★ de "de primeira" (andar vencido na primeira tentativa). ⚠️ Não é "menos setas":
 //   toda fase tem solução única e mínima (medido em 178/178), então "menos setas" nunca aconteceria.
+
+import type { Segmento } from './campanha';
 
 export interface Capitulo {
   numero: number;
@@ -14,7 +17,7 @@ export interface Capitulo {
   fim: number; // índice depois do último (exclusivo)
 }
 
-// os 4 feitos à mão: [título, aviso, até o índice (exclusivo)]
+// os 5 feitos à mão: [título, aviso, até o índice (exclusivo)]
 const FEITOS: [string, string, number][] = [
   ['Primeiros boatos', 'PROIBIDO COMENTAR A VIDA ALHEIA.', 5], // T1–T5, o tutorial
   ['Vizinhos novos', 'MORADOR NOVO DEVE SE APRESENTAR NA PORTARIA.', 14], // Exagerado, padaria, celular
@@ -22,10 +25,18 @@ const FEITOS: [string, string, number][] = [
   ['Reunião de condomínio', 'A REUNIÃO SERÁ BREVE.', 28], // prédio cheio
   ['A vigia do terceiro', 'A VIGILÂNCIA É PARA A SEGURANÇA DE TODOS.', 31], // Vera
 ];
-export const FEITOS_A_MAO = 31;
-export const POR_BLOCO = 25; // o estoque gerado: escada leve/média/pesada e um chefão no 25º
 
-// temas dos capítulos gerados (repetem com outra numeração): situações de condomínio, nunca piada de aparência
+// Capítulos de estreia (2026-11-13): título e aviso, na voz "Conforme o regulamento". Chave = id do segmento de estreia.
+// ⚠️ A Raquel e as Duplas formam UM capítulo (duas estreias seguidas, antes do mesmo bloco): vale a 1ª, e as duplas não têm texto.
+const ESTREIAS: Record<string, [string, string]> = {
+  nando: ['O apressado do 204', 'É PROIBIDO CORRER NOS CORREDORES.'],
+  raquel: ['A desconfiada do 105', 'BOATO SEM DUAS FONTES NÃO SERÁ AFIXADO NO MURAL.'],
+  saida: ['A saída das seis', 'QUEM SAIR DE CASA DEVE AVISAR A PORTARIA.'],
+  arnaldo: ['O fiscal do barulho', 'BARULHO SOMENTE ATÉ AS 22 HORAS.'],
+  norma: ['O toque de recolher', 'APÓS O TOQUE DE RECOLHER, NENHUMA CONVERSA NOS CORREDORES.'],
+};
+
+// temas dos capítulos gerados sem estreia (o bloco 0 e as voltas; repetem com outra numeração): situações de condomínio, nunca piada de aparência
 const TEMAS: [string, string][] = [
   ['A encomenda misteriosa', 'ENCOMENDA ALHEIA NÃO SE ABRE NEM SE COMENTA.'],
   ['A festa surpresa', 'FESTA SÓ COM AUTORIZAÇÃO DA ADMINISTRAÇÃO.'],
@@ -39,17 +50,21 @@ const TEMAS: [string, string][] = [
   ['O interfone quebrado', 'RECADO SE DÁ NA PORTARIA, NÃO NA ESCADA.'],
 ];
 
-export function capitulos(total: number): Capitulo[] {
+export function capitulos(segmentos: Segmento[]): Capitulo[] {
   const lista: Capitulo[] = [];
   let inicio = 0;
   for (const [titulo, aviso, ate] of FEITOS) {
-    if (inicio >= total) break;
-    lista.push({ numero: lista.length + 1, titulo, aviso, inicio, fim: Math.min(ate, total) });
+    lista.push({ numero: lista.length + 1, titulo, aviso, inicio, fim: ate });
     inicio = ate;
   }
-  for (let k = 0; inicio < total; k++, inicio += POR_BLOCO) {
-    const [titulo, aviso] = TEMAS[k % TEMAS.length];
-    lista.push({ numero: lista.length + 1, titulo, aviso, inicio, fim: Math.min(inicio + POR_BLOCO, total) });
+  let tema = 0;
+  let estreias: Segmento[] = [];
+  for (const seg of segmentos) {
+    if (seg.tipo === 'feitos') continue;
+    if (seg.tipo === 'estreia') { estreias.push(seg); continue; }
+    const [titulo, aviso] = estreias.length ? ESTREIAS[estreias[0].id] : TEMAS[tema++ % TEMAS.length];
+    lista.push({ numero: lista.length + 1, titulo, aviso, inicio: (estreias[0] ?? seg).inicio, fim: seg.fim });
+    estreias = [];
   }
   return lista;
 }

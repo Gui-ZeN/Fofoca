@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { fasesAlto } from './alto';
 import { enquadrar } from './Cena';
-import { jogar, resolverTrilho } from './trilho';
+import { custo, jogar, resolverTrilho } from './trilho';
+import { FOLGA, papelDoZe } from './fabrica';
+import { formatoDe } from './planta';
 
 describe('bloco Prédio alto', () => {
   it.each(fasesAlto.map((f) => [f.titulo, f] as const))('%s: uma solução só, e o caminho tentador perde', (_t, f) => {
@@ -9,6 +11,14 @@ describe('bloco Prédio alto', () => {
     expect(sols).toHaveLength(1);
     expect(jogar(f, f.solucao).vitoria).toBe(true);
     expect(jogar(f, f.armadilha!).vitoria).toBe(false);
+  });
+
+  it.each(fasesAlto.map((f) => [f.titulo, f] as const))('%s: feito pela fábrica de hoje (planta desenhada, folga de 1 seta, o Zé pesa)', (_t, f) => {
+    // ⚠️ 2026-11-13: antes eram da fábrica antiga (torre com cômodo vazio, Zé de enfeite)
+    expect(formatoDe(f)).toBeDefined();
+    expect(f.setas).toBe(custo(f.solucao) + FOLGA);
+    expect(resolverTrilho(f, custo(f.solucao))).toHaveLength(1);
+    expect(papelDoZe(f, custo(f.solucao), f.solucao)).toBeDefined();
   });
 
   it('5 e 6 andares de verdade', () => {
