@@ -131,9 +131,16 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 /* pra quem o selecionado pode contar: tracejado fino */
 /* ⚠️ seleção e destinos bem visíveis (2026-11-12, o dono achou o azul "muito discreto" em cima da arte ilustrada):
    azul mais vivo, traço grosso, véu claro no cômodo e um contorno branco por trás pra descolar do cenário */
-.morador.alvo .toque { stroke: #1E86C8; stroke-width: 4; stroke-dasharray: 10 6; fill: rgba(72, 170, 235, .20); animation: corre-alvo .8s linear infinite; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff); }
+/* ⚠️ sem `filter` em nada que anima (2026-11-13): o drop-shadow obrigava o celular a refazer o filtro a cada quadro, em
+   todo destino aceso, justo enquanto o dedo arrasta. O contorno branco das cantoneiras virou um traço por baixo. */
+.morador.alvo .toque { stroke: #1E86C8; stroke-width: 4; stroke-dasharray: 10 6; fill: rgba(72, 170, 235, .20); animation: corre-alvo .8s linear infinite; }
+/* o destino debaixo do dedo, durante o arrasto (Predio.tsx, `mira`) */
+.morador.alvo.mira .toque { stroke-width: 6; stroke-dasharray: none; fill: rgba(72, 170, 235, .45); animation: none; }
+.guia { stroke: #1E86C8; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 1 12; pointer-events: none; opacity: 0; }
+.guia.viva { opacity: .9; }
 .morador.selecionado .toque { stroke: #1E86C8; stroke-width: 3; fill: rgba(72, 170, 235, .12); }
-.cantoneiras path { fill: none; stroke: #0F5E94; stroke-width: 7; stroke-linecap: square; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff); }
+.cantoneiras path { fill: none; stroke: #0F5E94; stroke-width: 7; stroke-linecap: square; }
+.cantoneiras path.fundo { stroke: #fff; stroke-width: 11; }
 .cantoneiras { animation: pulsa-sel 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes pulsa-sel { 50% { transform: scale(1.035); } }
 .etiqueta rect { fill: var(--papel); stroke: var(--tinta); stroke-width: 1.6; }

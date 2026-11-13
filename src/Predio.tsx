@@ -313,9 +313,26 @@ export function Predio(props: {
   // Arrasto: no toque, o navegador entrega o soltar pro elemento onde o dedo começou,
   // então o destino é achado pelo ponto onde o dedo saiu.
   const [arrasto, setArrasto] = useState<{ de: string; x: number; y: number }>();
+  // ⚠️ a linha que segue o dedo e o destino que acende debaixo dele são mexidos DIRETO no desenho, sem estado: com
+  // estado, cada movimento redesenhava o prédio inteiro. Antes não havia nada disso — o dedo arrastava no vazio e a seta
+  // só aparecia ao soltar, o que o dono sentiu como "meio travado" no celular (2026-11-13).
+  const raiz = useRef<SVGGElement>(null), guia = useRef<SVGLineElement>(null), mira = useRef<Element | null>(null);
   useEffect(() => {
     if (!arrasto || !trilho) return;
+    const limpar = () => { guia.current?.classList.remove('viva'); mira.current?.classList.remove('mira'); mira.current = null; };
+    const mover = (e: PointerEvent) => {
+      const m = raiz.current?.getScreenCTM(), g = guia.current, de = porId[arrasto.de];
+      if (!m || !g || !de || Math.hypot(e.clientX - arrasto.x, e.clientY - arrasto.y) <= 14) return;
+      const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+      g.setAttribute('x1', String(de.pos[0] * L + L / 2)); g.setAttribute('y1', String(de.pos[1] * A + A / 2));
+      g.setAttribute('x2', String(p.x)); g.setAttribute('y2', String(p.y));
+      g.classList.add('viva');
+      const sob = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-morador]') ?? null;
+      const novo = sob?.classList.contains('alvo') ? sob : null;
+      if (novo !== mira.current) { mira.current?.classList.remove('mira'); novo?.classList.add('mira'); mira.current = novo; }
+    };
     const soltar = (e: PointerEvent) => {
+      limpar();
       const alvo = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-morador]')?.getAttribute('data-morador');
       const andou = Math.hypot(e.clientX - arrasto.x, e.clientY - arrasto.y) > 14;
       if (alvo && alvo !== arrasto.de && andou) trilho.aoSoltar(arrasto.de, alvo);
@@ -323,10 +340,11 @@ export function Predio(props: {
       setArrasto(undefined);
     };
     // se o navegador tomar o gesto (pointercancel), o arrasto morre; senão o próximo toque desenhava uma seta fantasma
-    const cancelar = () => setArrasto(undefined);
+    const cancelar = () => { limpar(); setArrasto(undefined); };
+    window.addEventListener('pointermove', mover);
     window.addEventListener('pointerup', soltar);
     window.addEventListener('pointercancel', cancelar);
-    return () => { window.removeEventListener('pointerup', soltar); window.removeEventListener('pointercancel', cancelar); };
+    return () => { window.removeEventListener('pointermove', mover); window.removeEventListener('pointerup', soltar); window.removeEventListener('pointercancel', cancelar); };
   }); // re-registra a cada render pra enxergar o trilho atual
   const porId = Object.fromEntries(fase.vizinhos.map((v) => [v.id, v]));
   const baixo = abafados(fase);
@@ -388,7 +406,7 @@ export function Predio(props: {
   };
 
   return (
-    <g className="predio">
+    <g className="predio" ref={raiz}>
       {/* caixa d'água e a estrutura (lajes e paredes em corte); o chão é da cena */}
       {CENARIO ? (
         // telhado ilustrado (telhas, caixa d'água, antena, varal), apoiado na laje de cima
@@ -513,7 +531,9 @@ export function Predio(props: {
               // seleção = 4 cantoneiras grossas (forma, não só cor)
               <g className="cantoneiras">
                 {[[x0 + 3, y0 + 3, 1, 1], [x0 + L - 3, y0 + 3, -1, 1], [x0 + 3, y0 + A - 3, 1, -1], [x0 + L - 3, y0 + A - 3, -1, -1]].map(([x, y, sx, sy]) => (
-                  <path key={`${x},${y}`} d={`M${x},${y + sy * 18} V${y} H${x + sx * 18}`} />
+                  // o contorno branco é um traço por baixo, não um filtro (ver estilo.css, .cantoneiras)
+                  [<path key={`f${x},${y}`} className="fundo" d={`M${x},${y + sy * 18} V${y} H${x + sx * 18}`} />,
+                    <path key={`${x},${y}`} d={`M${x},${y + sy * 18} V${y} H${x + sx * 18}`} />]
                 ))}
               </g>
             )}
@@ -653,6 +673,7 @@ export function Predio(props: {
         }
         return null;
       })}
+      <line ref={guia} className="guia" />
     </g>
   );
 }
