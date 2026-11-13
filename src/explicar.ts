@@ -12,6 +12,11 @@ export type Explicacao =
   | { tipo: 'padaria'; id: string; chegou: number; volta: number }
   | { tipo: 'saiu'; id: string; batida: number; sai: number; contando: boolean } // `sai`: ele já tinha saído quando o recado chegou (ou quando ia contar)
   | { tipo: 'duvida'; id: string; de: string }
+  // ⚠️ `id` existe em todas as explicações que a tela enquadra (`citados` em Predio.tsx faz `[e.id]`): em `ronda` é a pessoa
+  // VISITADA (a vítima já é o culpado do resultado); em `vazou` é quem contou (= `de`).
+  | { tipo: 'ronda'; id: string; vitima: string; batida: number } // a vítima estava visitando `id` e escutou, na batida `batida`
+  | { tipo: 'vazou'; id: string; de: string; para: string } // o escândalo contado por `de` vazou pela parede pra vítima `para`
+  | { tipo: 'esfriou'; id: string; batida: number } // a estrela `id` ficou sem ouvir: o recado chegaria na batida `batida`, já fria
   | { tipo: 'reto'; id: string; motivo: 'sem saida' | 'atrapalhou' }
   | { tipo: 'toque'; id: string; batida: number; hora: number; norma: string }
   | { tipo: 'demais'; id: string; souberam: number; teto: number }
@@ -19,7 +24,18 @@ export type Explicacao =
 
 export function explicar(fase: Fase, r: Resultado): Explicacao | undefined {
   if (r.vitoria || !r.motivo) return;
-  if (r.motivo === 'assunto_ouviu') return { tipo: 'vitima', de: quemContou(r, r.culpado!), para: r.culpado! };
+  if (r.motivo === 'assunto_ouviu') {
+    // como a vítima ouviu: recado de verdade (vale como sempre), ronda ou vazamento pela parede. Se chegaram juntos, vale o recado.
+    const o = r.ouviu[r.culpado!];
+    const juntos = (r.batidas[o.batida - 1] ?? []).filter((m) => m.para === r.culpado && m.tamanho === o.tamanho && m.versao === o.versao);
+    if (juntos.length && !juntos.some((m) => !m.ronda && !m.vazou)) {
+      const m = juntos[0];
+      if (m.vazou) return { tipo: 'vazou', id: m.de, de: m.de, para: r.culpado! };
+      const onde = r.rondas?.find((x) => x.batida === o.batida)?.onde;
+      if (onde) return { tipo: 'ronda', id: onde, vitima: r.culpado!, batida: o.batida };
+    }
+    return { tipo: 'vitima', de: quemContou(r, r.culpado!), para: r.culpado! };
+  }
   if (r.motivo === 'tamanho_errado') {
     const v = fase.vizinhos.find((x) => x.id === r.culpado)!;
     return { tipo: 'tamanho', id: v.id, queria: (v.interesse!.tamanho ?? v.interesse!.minTamanho)!, veio: r.ouviu[v.id].tamanho };
@@ -36,6 +52,9 @@ export function explicar(fase: Fase, r: Resultado): Explicacao | undefined {
     return { tipo: 'demais', id: v.id, souberam: Object.keys(r.ouviu).length, teto: v.teto! };
   }
   if (r.motivo === 'interessado_nao_ouviu') {
+    // o boato esfriou antes de chegar na estrela (só existe com `validade`; é a causa, então vem antes das outras)
+    const fria = r.esfriou?.find((e) => !!fase.vizinhos.find((v) => v.id === e.id)?.interesse && !r.ouviu[e.id]);
+    if (fria) return { tipo: 'esfriou', id: fria.id, batida: fria.batida };
     // estrela desconfiada que ouviu de uma pessoa só: não acreditou (não é "não ouviu")
     for (const v of fase.vizinhos) if (v.interesse && !r.ouviu[v.id] && r.duvida?.[v.id]) return { tipo: 'duvida', id: v.id, de: r.duvida[v.id].de! };
     // ⚠️ o motor culpa a 1ª estrela da lista; a que perdeu o recado na padaria pode ser outra — procura em todas.

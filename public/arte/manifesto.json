@@ -289,6 +289,11 @@
     "f": "seu-ze-cochicho.webp",
     "w": 266,
     "h": 460
+   },
+   "ronda": {
+    "f": "seu-ze-ronda.webp",
+    "w": 403,
+    "h": 460
    }
   }
  },
@@ -752,6 +757,258 @@
    "cochicho": {
     "f": "raquel-cochicho.webp",
     "w": 286,
+    "h": 460
+   }
+  }
+ },
+ "Dona Zefa": {
+  "olha": 1,
+  "alt": 0.8,
+  "poses": {
+   "parado": {
+    "f": "dona-zefa-parado.webp",
+    "w": 232,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "dona-zefa-cochicho.webp",
+    "w": 241,
+    "h": 460
+   },
+   "susto": {
+    "f": "dona-zefa-susto.webp",
+    "w": 227,
+    "h": 460
+   }
+  }
+ },
+ "Dudu": {
+  "olha": 1,
+  "alt": 0.92,
+  "poses": {
+   "parado": {
+    "f": "dudu-parado.webp",
+    "w": 230,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "dudu-cochicho.webp",
+    "w": 269,
+    "h": 460
+   },
+   "susto": {
+    "f": "dudu-susto.webp",
+    "w": 237,
+    "h": 460
+   }
+  }
+ },
+ "Íris": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "iris-parado.webp",
+    "w": 212,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "iris-cochicho.webp",
+    "w": 225,
+    "h": 460
+   },
+   "susto": {
+    "f": "iris-susto.webp",
+    "w": 214,
+    "h": 460
+   }
+  }
+ },
+ "Kátia": {
+  "olha": 1,
+  "alt": 0.92,
+  "poses": {
+   "parado": {
+    "f": "katia-parado.webp",
+    "w": 237,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "katia-cochicho.webp",
+    "w": 223,
+    "h": 460
+   },
+   "susto": {
+    "f": "katia-susto.webp",
+    "w": 225,
+    "h": 460
+   }
+  }
+ },
+ "Mirela": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "mirela-parado.webp",
+    "w": 185,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "mirela-cochicho.webp",
+    "w": 222,
+    "h": 460
+   },
+   "susto": {
+    "f": "mirela-susto.webp",
+    "w": 183,
+    "h": 460
+   }
+  }
+ },
+ "Paulo": {
+  "olha": 1,
+  "alt": 0.95,
+  "poses": {
+   "parado": {
+    "f": "paulo-parado.webp",
+    "w": 234,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "paulo-cochicho.webp",
+    "w": 283,
+    "h": 460
+   },
+   "susto": {
+    "f": "paulo-susto.webp",
+    "w": 237,
+    "h": 460
+   }
+  }
+ },
+ "Seu Chico": {
+  "olha": 1,
+  "alt": 0.85,
+  "poses": {
+   "parado": {
+    "f": "seu-chico-parado.webp",
+    "w": 243,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "seu-chico-cochicho.webp",
+    "w": 254,
+    "h": 460
+   },
+   "susto": {
+    "f": "seu-chico-susto.webp",
+    "w": 233,
+    "h": 460
+   }
+  }
+ },
+ "Tânia": {
+  "olha": 1,
+  "alt": 0.9,
+  "poses": {
+   "parado": {
+    "f": "tania-parado.webp",
+    "w": 201,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "tania-cochicho.webp",
+    "w": 231,
+    "h": 460
+   },
+   "susto": {
+    "f": "tania-susto.webp",
+    "w": 206,
+    "h": 460
+   }
+  }
+ },
+ "Tetê": {
+  "olha": 1,
+  "alt": 0.85,
+  "poses": {
+   "parado": {
+    "f": "tete-parado.webp",
+    "w": 209,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "tete-cochicho.webp",
+    "w": 206,
+    "h": 460
+   },
+   "susto": {
+    "f": "tete-susto.webp",
+    "w": 216,
+    "h": 460
+   }
+  }
+ },
+ "Wesley": {
+  "olha": 1,
+  "alt": 0.92,
+  "poses": {
+   "parado": {
+    "f": "wesley-parado.webp",
+    "w": 224,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "wesley-cochicho.webp",
+    "w": 258,
+    "h": 460
+   },
+   "susto": {
+    "f": "wesley-susto.webp",
+    "w": 246,
+    "h": 460
+   }
+  }
+ },
+ "Zeca": {
+  "olha": 1,
+  "alt": 0.92,
+  "poses": {
+   "parado": {
+    "f": "zeca-parado.webp",
+    "w": 230,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "zeca-cochicho.webp",
+    "w": 262,
+    "h": 460
+   },
+   "susto": {
+    "f": "zeca-susto.webp",
+    "w": 244,
+    "h": 460
+   }
+  }
+ },
+ "Soneca": {
+  "olha": 1,
+  "alt": 0.82,
+  "poses": {
+   "parado": {
+    "f": "soneca-parado.webp",
+    "w": 307,
+    "h": 460
+   },
+   "cochicho": {
+    "f": "soneca-cochicho.webp",
+    "w": 317,
+    "h": 460
+   },
+   "susto": {
+    "f": "soneca-susto.webp",
+    "w": 314,
     "h": 460
    }
   }

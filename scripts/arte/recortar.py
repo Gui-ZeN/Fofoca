@@ -4,10 +4,13 @@
 # As folhas originais ficam em arte-fonte/ (FORA do Git: o repo é público e os recortes já estão nele):
 #   arte-fonte/folhas/N.webp  → tabela FOLHAS (uma folha por personagem, numeradas na ordem em que chegaram)
 #   arte-fonte/zip/NN.png     → tabela FOLHAS_ZIP (a 2ª leva, com o cochicho; vale com --zip)
+#   arte-fonte/leva3/NN.png   → tabela FOLHAS_LEVA3 (2026-11-13: 11 moradores novos + o Soneca; vale com --leva3),
+#                               mais ze-ronda.webp (pose "ronda" do Seu Zé, de lanterna) e interfone.webp (o aparelho)
 #
 # Refazer tudo (da pasta Fofoca), nesta ordem — a 2ª passada só refaz quem não está no zip:
 #   python -I scripts/arte/recortar.py arte-fonte/zip <saida> --zip
 #   python -I scripts/arte/recortar.py arte-fonte/folhas <saida> 42 43 44 46
+#   python -I scripts/arte/recortar.py arte-fonte/leva3 <saida> --leva3
 #   python -I scripts/arte/cenario.py arte-fonte/folhas <saida>        (fundos dos cômodos, telhado e bairro)
 # Personagem novo: acrescente a folha em FOLHAS e rode só ela (ex.: ... arte-fonte/folhas <saida> 47).
 #
@@ -88,10 +91,29 @@ FOLHAS_ZIP = {
     24: ('Lúcia', ['parado', 'susto', 'cochicho'], 1, 0.95),
     25: ('Rita', ['parado', 'susto', 'bravo', 'cochicho'], 1, 0.95),
 }
+# 3ª leva (zip do dono, 2026-11-13): moradores comuns pra encher os prédios de 5 colunas, e o Soneca (a mecânica).
+# Todos com parado, cochicho e susto, olhando pra direita. ⚠️ Sem "bravo": nenhum deles é vítima sorteada.
+FOLHAS_LEVA3 = {
+    1: ('Dona Zefa', ['parado', 'cochicho', 'susto'], 1, 0.8),
+    2: ('Dudu', ['parado', 'cochicho', 'susto'], 1, 0.92),
+    3: ('Íris', ['parado', 'cochicho', 'susto'], 1, 0.9),
+    4: ('Kátia', ['parado', 'cochicho', 'susto'], 1, 0.92),
+    5: ('Mirela', ['parado', 'cochicho', 'susto'], 1, 0.9),
+    6: ('Paulo', ['parado', 'cochicho', 'susto'], 1, 0.95),
+    7: ('Seu Chico', ['parado', 'cochicho', 'susto'], 1, 0.85),
+    8: ('Tânia', ['parado', 'cochicho', 'susto'], 1, 0.9),
+    9: ('Tetê', ['parado', 'cochicho', 'susto'], 1, 0.85),
+    10: ('Wesley', ['parado', 'cochicho', 'susto'], 1, 0.92),
+    11: ('Zeca', ['parado', 'cochicho', 'susto'], 1, 0.92),
+    12: ('Soneca', ['parado', 'cochicho', 'susto'], 1, 0.82),
+}
 # pose que olha pro lado contrário do resto da folha
 OLHA_POSE = {('Rui', 'cochicho'): 1}
-ZIP = '--zip' in sys.argv
-if ZIP:
+LEVA3 = '--leva3' in sys.argv
+ZIP = '--zip' in sys.argv or LEVA3  # as duas levas de zip têm arquivos NN.png e somam ao manifesto que já existe
+if LEVA3:
+    FOLHAS = FOLHAS_LEVA3
+elif ZIP:
     FOLHAS = FOLHAS_ZIP
 ALT = 460  # px de altura do sprite: ⚠️ 300 borrava em celular de tela 3x (o morador aparece com ~340 px reais)
 
@@ -142,7 +164,7 @@ def presos(rgb, fundo):
 
 
 # só as folhas pedidas (ex.: 28 29), somando ao manifesto que já existe
-SO = {int(a) for a in sys.argv[3:] if a != '--zip'}
+SO = {int(a) for a in sys.argv[3:] if not a.startswith('--')}
 arq_m = SAIDA / 'manifesto.json'
 manifesto = json.loads(arq_m.read_text(encoding='utf-8')) if (SO or ZIP) and arq_m.exists() else {}
 for n, (nome, poses, olha, alt) in FOLHAS.items():
@@ -173,6 +195,33 @@ for n, (nome, poses, olha, alt) in FOLHAS.items():
         except ValueError: im.save(SAIDA / arq, 'WEBP', quality=82, method=4)
         manifesto[nome]['poses'][pose] = {'f': arq, 'w': im.width, 'h': im.height, **({'olha': OLHA_POSE[(nome, pose)]} if (nome, pose) in OLHA_POSE else {})}
         print(nome, pose, im.size, (SAIDA / arq).stat().st_size // 1024, 'KB')
+
+
+
+def recorte(arq, altura):
+    """uma figura só numa imagem de fundo branco -> RGBA recortado, na altura pedida"""
+    # ⚠️ imagem que já vem com fundo transparente (o interfone): convertida direto pra RGB o fundo vira PRETO e não sai
+    orig = Image.open(arq).convert('RGBA')
+    branco = Image.new('RGBA', orig.size, (255, 255, 255, 255)); branco.alpha_composite(orig)
+    rgb = np.asarray(branco.convert('RGB'))
+    fundo = sem_fundo(rgb)
+    fundo |= presos(rgb, fundo)
+    a = np.where(fundo, 0, 255).astype(np.uint8)
+    ys, xs = np.nonzero(a)
+    im = Image.fromarray(np.dstack([rgb, a])[ys.min():ys.max() + 1, xs.min():xs.max() + 1], 'RGBA')
+    return im.resize((round(im.width * altura / im.height), altura), Image.LANCZOS)
+
+
+if LEVA3 and not SO:
+    # o Seu Zé andando de lanterna: pose "ronda" (a mecânica em que o vilão percorre o prédio)
+    im = recorte(ORIG / 'ze-ronda.webp', ALT)
+    im.save(SAIDA / 'seu-ze-ronda.webp', 'WEBP', quality=82, method=4)
+    manifesto['Seu Zé']['poses']['ronda'] = {'f': 'seu-ze-ronda.webp', 'w': im.width, 'h': im.height}
+    print('Seu Zé ronda', im.size)
+    # o aparelho de interfone: objeto de cenário, fora do manifesto (o jogo chama pelo nome do arquivo)
+    im = recorte(ORIG / 'interfone.webp', 200)
+    im.save(SAIDA / 'interfone.webp', 'WEBP', quality=82, method=4)
+    print('interfone', im.size)
 
 (SAIDA / 'manifesto.json').write_text(json.dumps(manifesto, ensure_ascii=False, indent=1), encoding='utf-8')
 print('total', sum(f.stat().st_size for f in SAIDA.glob('*.webp')) // 1024, 'KB')

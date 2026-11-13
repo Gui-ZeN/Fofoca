@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { alvosDe, amigosDe, ateAVitima, controlavel, espalhar, girosUsados, porCelular, quemContou, type Fase, type Resultado, type Vizinho } from './motor';
 import { NOME_TAMANHO, TAMANHO } from './Predio';
 import { Cena } from './Cena';
-import { BoatoMini, Derrota, OrigemMini, Seta, Vitoria } from './Icones';
+import { BoatoMini, Derrota, FichaValidade, OrigemMini, Seta, Vitoria } from './Icones';
 import { custo, espelhar, fasesTrilho, jogar, type FaseTrilho, type Plano } from './trilho';
 import { fasesGiros, type FaseGiros } from './comparacao';
 import { fasesHora } from './horaCerta';
@@ -15,6 +15,11 @@ import { fasesApressado } from './apressado';
 import { fasesAlvaro, fasesNorma, fasesVera } from './fiscais';
 import { fasesDuplas } from './duplas';
 import { fasesSaida } from './saida';
+import { fasesRonda } from './ronda';
+import { fasesSoneca } from './soneca';
+import { fasesInterfone } from './interfone';
+import { fasesMuro } from './muro';
+import { fasesEsfria } from './esfria';
 import { fasesAlto } from './alto';
 import largo from './largo.json';
 import { dele, ele, o, pro, vestir } from './elenco';
@@ -67,12 +72,18 @@ const BLOCOS = {
   alvaro: { nome: 'Dr. Álvaro', letra: 'L', fases: fasesAlvaro }, // lotação
   duplas: { nome: 'Duplas', letra: 'U', fases: fasesDuplas }, // duas regras na mesma fase
   saida: { nome: 'Saída', letra: 'S', fases: fasesSaida }, // a padaria ao contrário: alguém sai de casa na batida N (2026-11-13)
+  // cinco mecânicas novas (2026-11-13); as letras G, Z, F, J e K não batem com nenhuma outra
+  ronda: { nome: 'Ronda', letra: 'G', fases: fasesRonda }, // a vítima anda pelo prédio e escuta
+  soneca: { nome: 'Soneca', letra: 'Z', fases: fasesSoneca }, // ouve agora, conta duas batidas depois
+  interfone: { nome: 'Interfone', letra: 'F', fases: fasesInterfone }, // atalho por fio entre dois apartamentos
+  muro: { nome: 'Muro fino', letra: 'J', fases: fasesMuro }, // o escândalo atravessa a parede
+  esfria: { nome: 'Boato que esfria', letra: 'K', fases: fasesEsfria }, // o boato tem prazo
   alto: { nome: 'Prédio alto', letra: 'P', fases: fasesAlto }, // 5 e 6 andares: a rolagem vertical
   // experimento de 2026-11-12 ("expandir o prédio pros lados?"): 4 colunas, gerados pela fábrica com `colunas: 4`
   largo: { nome: 'Prédio largo', letra: 'W', fases: largo as unknown as FaseTrilho[] },
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|duplas|saida|alto|largo/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|duplas|saida|ronda|soneca|interfone|muro|esfria|alto|largo/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas
@@ -103,6 +114,8 @@ const CAPITULOS = capitulos(SEGMENTOS);
 const CANDIDATOS_DIA = ESTOQUE_PESOS.flatMap((p, i) => (p === 'leve' || p === 'media' ? [i] : []));
 
 export function App() {
+  // ⚠️ bloco ainda sem fases (as cinco mecânicas novas nasceram vazias): sem isto o Jogo lia `SEQUENCIA[0]` e quebrava
+  if (TESTE && SEQ_TESTE.length === 0) return <main><p>Este bloco ainda não tem fases.</p></main>;
   if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={['arnaldo', 'nonato', 'raquel', 'apressado', 'vera', 'norma', 'alvaro'].includes(pedido)} />;
   return <Campanha pesquisa={PESQUISA} />;
 }
@@ -413,6 +426,8 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
           <div className="fichas">
             <span className={cheio ? 'ficha setas cheio' : 'ficha setas'}>{girando ? 'Giros' : 'Setas'} {usadas}/{limite}</span>
             {/* Dr. Álvaro: quantos vão ficar sabendo com o plano de agora (sem isso era conta de cabeça a cada tentativa) */}
+            {/* boato que esfria: o prazo (N); espalhando, a batida de agora contra o prazo (3/5) */}
+            {fase.validade !== undefined && <FichaValidade validade={fase.validade} batida={revendo ?? batida} montando={montando} />}
             {lotacao && <span className={sabendo > lotacao ? 'ficha lotacao' : 'ficha lotacao ok'}>Sabendo {sabendo}/{lotacao}</span>}
             {cobra && <span className="ficha advertencias"><CartoesAdvertencia restam={vidas!.restam} /></span>}
             {fase.vizinhos.some((v) => v.tipo === 'exagerado' || v.interesse?.tamanho) && (
@@ -599,16 +614,25 @@ function Fim(props: {
     const lista = quem.length > 1 ? `${quem.slice(0, -1).join(', ')} e ${quem[quem.length - 1]}` : quem[0];
     // Vera: ninguém contou pra ela — ela ESCUTOU o vizinho contando pra outra pessoa
     const escutou = resultado.batidas.flat().some((m) => m.escuta && m.para === resultado.culpado);
-    texto = escutou
+    const e = explicar(fase, resultado);
+    const Art = (n: string) => (o(n) === 'a' ? 'A' : 'O'); // o artigo no começo da frase
+    texto = e?.tipo === 'ronda'
+      ? `${Art(vitima!)} ${vitima} estava no apartamento ${o(nome(e.id)) === 'a' ? 'da' : 'do'} ${nome(e.id)} bem na hora do recado.`
+      : e?.tipo === 'vazou'
+      ? `${Art(nome(e.de))} ${nome(e.de)} contou um escândalo colado no muro fino, e ${o(vitima!)} ${vitima} ouviu do outro lado.`
+      : escutou
       ? `${vitima} escutou ${quem.map((n) => `${o(n)} ${n}`).join(' e ')} contando do lado!`
       : `${lista} ${quem.length > 1 ? 'contaram' : 'contou'} ${pro(vitima!)} ${vitima}!`;
     // com a linha da advertência embaixo, a 2ª frase sai: 3 linhas cobriam o térreo
-    if (props.aviso === undefined) texto += ` Agora ${ele(vitima!)} sabe que estão falando ${dele(vitima!)}.`;
+    if (e?.tipo === 'ronda' || e?.tipo === 'vazou') fala = undefined; // a frase já diz tudo: sem "Eu ia te contar por último"
+    if (props.aviso === undefined && e?.tipo !== 'ronda' && e?.tipo !== 'vazou') texto += ` Agora ${ele(vitima!)} sabe que estão falando ${dele(vitima!)}.`;
   } else if (resultado.motivo === 'interessado_nao_ouviu') {
     // Hora certa: o recado chegou, mas a pessoa ainda estava na padaria — `explicar` acha qual estrela foi
     // (o motor culpa a 1ª da lista, que pode não ser ela; ver explicar.test).
     const e = explicar(fase, resultado);
-    texto = e?.tipo === 'padaria'
+    texto = e?.tipo === 'esfriou'
+      ? `O boato esfriou antes de chegar ${o(nome(e.id)) === 'a' ? 'na' : 'no'} ${nome(e.id)} (chegaria na batida ${e.batida}, valia até a ${fase.validade}).`
+      : e?.tipo === 'padaria'
       ? `O recado chegou na batida ${e.chegou}, mas ${o(nome(e.id))} ${nome(e.id)} só voltava da padaria na ${e.volta}.`
       : e?.tipo === 'saiu'
         ? (e.contando ? `${nome(e.id)} ouviu na batida ${e.batida - 1}, mas já tinha saído na ${e.sai} e não chegou a contar.` : `${nome(e.id)} já tinha saído quando o recado chegou (batida ${e.batida}, saiu na ${e.sai}).`)

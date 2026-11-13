@@ -42,6 +42,16 @@ export interface Vizinho {
   recolhe?: number;
   // Dr. Álvaro, a lotação: no máximo N pessoas podem ficar sabendo (contando quem você contou). Passou, perde.
   teto?: number;
+  // Cinco mecânicas novas (protótipos, 2026-11-13; fases em ronda.ts, soneca.ts, interfone.ts, muro.ts, esfria.ts). Todas
+  // opcionais: sem o campo, o motor é exatamente o de antes.
+  // RONDA (só em vítima `assunto`): o vilão que anda. Lista de ids em ciclo; na batida b (1 = a primeira) ela está no
+  // apartamento de `ronda[(b - 1) % ronda.length]` (o próprio id dela = em casa). Visitando X ≠ ela, ESCUTA qualquer
+  // mensagem da MESMA batida com `de === X` ou `para === X` (= ouviu = derrota; a mensagem entra em `batidas` com
+  // `escuta` e `ronda`). Fora de casa, recado mandado PRA ELA se perde; em casa vale a regra normal de vítima.
+  ronda?: string[];
+  // SONECA (morador comum): ouve na batida b e só conta na b + 2 (em vez da b + 1). Entre as duas há uma batida em que ele
+  // não envia nada; `batidas` ganha uma entrada (possivelmente `[]`) pra cada batida até a última em que algo acontece.
+  soneca?: boolean;
 }
 
 export interface Fase {
@@ -56,6 +66,16 @@ export interface Fase {
   // Trilho: o jogador desenha quem conta pra quem, com até `setas` setas. A origem é origens[0].
   // Sem este campo, a fase é da mecânica antiga (setas prontas + giros).
   setas?: number;
+  // INTERFONE (protótipo, 2026-11-13): atalho fixo entre dois apartamentos distantes. Os dois do par viram vizinhos pra
+  // todos os efeitos (`amigosDe`: seta, Fofoqueira, Arnaldo, Vera, Norma), EXCETO o Nando, que só passa reto por porta/escada.
+  interfones?: [string, string][];
+  // MURO FINO (protótipo, 2026-11-13): pares em cômodos colados SEM passagem. Quando um do par CONTA com tamanho 3 (já com
+  // o +1 do Exagerado e o −1 do Arnaldo) pra qualquer pessoa, o outro ouve NA MESMA batida, mesmo tamanho e versão
+  // (mensagem extra com `vazou`). Nos dois sentidos. O vazamento não vaza de novo.
+  murosFinos?: [string, string][];
+  // BOATO QUE ESFRIA (protótipo, 2026-11-13): recado que chegaria numa batida MAIOR que `validade` não é ouvido por
+  // ninguém (na batida `validade` ainda vale) e a simulação para ali.
+  validade?: number;
 }
 
 export interface Jogada {
@@ -69,6 +89,8 @@ export interface Mensagem {
   tamanho: Tamanho;
   versao: Versao;
   escuta?: boolean; // a Vera ouvindo o vizinho contar pra outra pessoa (não foi contado pra ela)
+  ronda?: boolean; // com `escuta`: a vítima em ronda ouvindo (`de` = quem falou; `para` = ela)
+  vazou?: boolean; // muro fino: o escândalo contado por `de` vazou pra `para`, que mora colado
 }
 
 export interface Ouvido {
@@ -95,10 +117,25 @@ export interface Resultado {
   calados?: { id: string; batida: number; norma: string }[]; // quem ia contar e foi calado pelo toque de recolher da Dona Norma
   // quem já tinha saído (`sai`): na batida `batida` o recado chegaria nele (contando: false) ou ele ia contar (contando: true)
   saidas?: { id: string; batida: number; contando: boolean }[];
+  rondas?: { batida: number; onde: string }[]; // onde a vítima em ronda esteve em cada batida simulada (a 1ª com `ronda`)
+  esfriou?: { id: string; batida: number }[]; // quem deixou de ouvir porque o boato esfriou (só a 1ª leva), e a batida em que o recado chegaria
 }
 
-export const amigosDe = (fase: Fase, id: string): string[] =>
+// Vizinhos de porta/escada: só as `amizades`. O Nando (`reto`) só enxerga estes.
+export const portaDe = (fase: Fase, id: string): string[] =>
   fase.amizades.flatMap(([a, b]) => (a === id ? [b] : b === id ? [a] : []));
+
+// Vizinhos pra todos os efeitos: porta/escada + interfone (quem já é vizinho de porta não repete).
+export const amigosDe = (fase: Fase, id: string): string[] => {
+  const porta = portaDe(fase, id);
+  if (!fase.interfones) return porta;
+  const fio = fase.interfones.flatMap(([a, b]) => (a === id ? [b] : b === id ? [a] : [])).filter((x) => !porta.includes(x));
+  return [...porta, ...fio];
+};
+
+// A ligação entre `a` e `b` é um interfone (a tela desenha o fio)? Se também há porta entre eles, vale a porta (sem fio).
+export const porInterfone = (fase: Fase, a: string, b: string) =>
+  !!fase.interfones?.some(([x, y]) => (x === a && y === b) || (x === b && y === a)) && !portaDe(fase, a).includes(b);
 
 
 // Quem está colado em alguém que abafa (Arnaldo): conta um tamanho menor.
@@ -119,11 +156,12 @@ export const controlavel = (v: Vizinho) => temSeta(v.tipo);
 // (estudo do Fable, 2026-11-12): a única regra em que o LADO por onde o boato entra decide pra onde ele sai.
 export function reto(fase: Fase, v: Vizinho, de: string): string | undefined {
   const d = fase.vizinhos.find((w) => w.id === de);
-  if (!d || !amigosDe(fase, v.id).includes(de)) return;
+  // ⚠️ `portaDe`, não `amigosDe` (2026-11-13): o Nando não passa reto por interfone, nem na entrada nem na saída.
+  if (!d || !portaDe(fase, v.id).includes(de)) return;
   const [dx, dy] = [v.pos[0] - d.pos[0], v.pos[1] - d.pos[1]];
   if (Math.abs(dx) + Math.abs(dy) !== 1) return;
   const outro = fase.vizinhos.find((w) => w.pos[0] === v.pos[0] + dx && w.pos[1] === v.pos[1] + dy);
-  return outro && amigosDe(fase, v.id).includes(outro.id) ? outro.id : undefined;
+  return outro && portaDe(fase, v.id).includes(outro.id) ? outro.id : undefined;
 }
 
 export const alvosDe = (fase: Fase, v: Vizinho): string[] =>
@@ -156,8 +194,17 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
   const atrapalhados = new Set<string>();
   const calados: { id: string; batida: number; norma: string }[] = [];
   const saidas: { id: string; batida: number; contando: boolean }[] = [];
+  const esfriou: { id: string; batida: number }[] = [];
+  const rondas: { batida: number; onde: string }[] = [];
   const batidas: Mensagem[][] = [];
-  let fronteira = [jogada.origem];
+  // Quem conta em cada batida: quem ouviu na b conta na b + 1 (na b + 2 se tiver `soneca`). Sem soneca é a fronteira de antes.
+  const agenda = new Map<number, string[]>();
+  const agendar = (id: string, ouviuEm: number) => {
+    const quando = ouviuEm + 1 + (porId.get(id)!.soneca ? 1 : 0);
+    agenda.set(quando, [...(agenda.get(quando) ?? []), id]);
+  };
+  const haDepois = (batida: number) => [...agenda.keys()].some((k) => k > batida);
+  agendar(jogada.origem, 0);
   const baixo = abafados(fase);
   // ⚠️ ordem fixa: o Exagerado aumenta primeiro e o Arnaldo reduz depois. Com o teto em escândalo, +1 e −1
   // nem sempre se anulam (escândalo → escândalo → fofoca).
@@ -165,9 +212,14 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
 
   const vigias = fase.vizinhos.filter((w) => w.vigia);
   const normas = fase.vizinhos.filter((w) => w.recolhe);
+  const rondeiros = fase.vizinhos.filter((w) => w.tipo === 'assunto' && w.ronda?.length);
+  const ondeEsta = (w: Vizinho, batida: number) => w.ronda![(batida - 1) % w.ronda!.length];
+  const foraDeCasa = (w: Vizinho, batida: number) => !!w.ronda?.length && w.tipo === 'assunto' && ondeEsta(w, batida) !== w.id;
 
-  for (let batida = 1; fronteira.length > 0; batida++) {
+  for (let batida = 1; haDepois(batida - 1); batida++) {
+    const fronteira = agenda.get(batida) ?? [];
     let saindo: Mensagem[] = [];
+    if (rondeiros.length) rondas.push({ batida, onde: ondeEsta(rondeiros[0], batida) });
     for (const id of fronteira) {
       const v = porId.get(id)!;
       const { tamanho, versao } = ouviu[id];
@@ -203,15 +255,41 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       const m = saindo.find((x) => perto.includes(x.de) && x.para !== w.id);
       if (m) saindo.push({ ...m, para: w.id, escuta: true });
     }
+    // Muro fino: o escândalo (tamanho 3 já enviado, com Exagerado e Arnaldo aplicados) vaza pro outro lado da parede, na mesma batida.
+    // ⚠️ só mensagens "de verdade" vazam (não a escuta da Vera/ronda nem outro vazamento), e se o outro já é o destinatário não duplica.
+    if (fase.murosFinos) {
+      for (const m of [...saindo]) {
+        if (m.tamanho !== 3 || m.escuta || m.vazou) continue;
+        for (const [a, b] of fase.murosFinos) {
+          const outro = a === m.de ? b : b === m.de ? a : undefined;
+          if (outro && outro !== m.para) saindo.push({ de: m.de, para: outro, tamanho: 3, versao: m.versao, vazou: true });
+        }
+      }
+    }
+    // Ronda: a vítima visitando X escuta a 1ª mensagem da batida que X recebe ou conta (qualquer uma, até as ignoradas)
+    for (const w of rondeiros) {
+      if (ouviu[w.id]) continue;
+      const x = ondeEsta(w, batida);
+      if (x === w.id) continue;
+      const m = saindo.find((s) => s.de === x || s.para === x);
+      if (m) saindo.push({ ...m, para: w.id, escuta: true, ronda: true });
+    }
     const chegou = new Map<string, Mensagem>();
     const fontes = new Map<string, Set<string>>(); // desconfiados: de quem ouviram nesta batida
     const pressa = new Map<string, Set<string>>(); // apressados: de quem ouviram nesta batida
+    let esfriando = false;
     for (const m of saindo) {
       if (ouviu[m.para]) continue; // cada um ouve uma vez só
       const quem = porId.get(m.para)!;
       if ((quem.chega ?? 0) > batida) continue; // ninguém em casa: o recado se perde
+      if (!m.ronda && foraDeCasa(quem, batida)) continue; // vítima em ronda fora de casa: o recado pra ela se perde (a escuta dela chega)
       if (saiu(quem, batida)) { // já saiu: o recado se perde (uma vez por pessoa e batida)
         if (!saidas.some((s) => s.id === m.para && s.batida === batida && !s.contando)) saidas.push({ id: m.para, batida, contando: false });
+        continue;
+      }
+      if (fase.validade !== undefined && batida > fase.validade) { // esfriou: ninguém mais ouve (registra só a 1ª leva)
+        esfriando = true;
+        if (!esfriou.some((e) => e.id === m.para)) esfriou.push({ id: m.para, batida });
         continue;
       }
       if (quem.desconfia) fontes.set(m.para, (fontes.get(m.para) ?? new Set()).add(m.de));
@@ -235,12 +313,20 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
     // ⚠️ Nando com dois recados na mesma batida: não tem "um lado" de onde veio — ele se atrapalha e GUARDA.
     // Antes saía pro lado de quem ganhava o desempate interno (tamanho, versão, ordem da lista): invisível (Consulta 7).
     for (const [id, de] of pressa) if (de.size >= 2 && chegou.has(id)) atrapalhados.add(id);
-    if (saindo.length) batidas.push(saindo);
-    for (const m of chegou.values()) ouviu[m.para] = { tamanho: m.tamanho, versao: m.versao, batida, de: m.de };
-    fronteira = [...chegou.keys()];
+    // ⚠️ batida vazia no meio (Soneca): `batidas[i]` é o relógio da tela, então entra `[]` se ainda há quem conte depois
+    if (saindo.length || haDepois(batida)) batidas.push(saindo);
+    for (const m of chegou.values()) {
+      ouviu[m.para] = { tamanho: m.tamanho, versao: m.versao, batida, de: m.de };
+      agendar(m.para, batida);
+    }
+    if (esfriando) break; // o boato esfriou: a simulação para aqui (quem ouviu antes continua "ouviu")
   }
+  // ⚠️ batida vazia só entra se há ação DEPOIS dela: o último a contar pode ser um soneca calado, e aí sobraria um `[]` no fim.
+  // (Sem soneca nunca há `[]`: a invariante de antes se mantém.) `rondas` acompanha: só as batidas que `batidas` mostra.
+  while (batidas.length && !batidas[batidas.length - 1].length) batidas.pop();
+  while (rondas.length && rondas[rondas.length - 1].batida > batidas.length) rondas.pop();
 
-  return { batidas, ouviu, ...(Object.keys(duvida).length ? { duvida } : {}), ...(calados.length ? { calados } : {}), ...(saidas.length ? { saidas } : {}), ...avaliar(fase, ouviu) };
+  return { batidas, ouviu, ...(Object.keys(duvida).length ? { duvida } : {}), ...(calados.length ? { calados } : {}), ...(saidas.length ? { saidas } : {}), ...(rondas.length ? { rondas } : {}), ...(esfriou.length ? { esfriou } : {}), ...avaliar(fase, ouviu) };
 }
 
 function avaliar(fase: Fase, ouviu: Record<string, Ouvido>): Pick<Resultado, 'vitoria' | 'motivo' | 'culpado' | 'antes'> {
@@ -320,5 +406,7 @@ export function ateAVitima(r: Resultado): Resultado {
     ouviu: Object.fromEntries(Object.entries(r.ouviu).filter(([, o]) => o.batida <= k)),
     ...(r.calados ? { calados: r.calados.filter((c) => c.batida <= k) } : {}),
     ...(r.saidas ? { saidas: r.saidas.filter((x) => x.batida <= k) } : {}),
+    ...(r.rondas ? { rondas: r.rondas.filter((x) => x.batida <= k) } : {}),
+    ...(r.esfriou ? { esfriou: r.esfriou.filter((x) => x.batida <= k) } : {}),
   };
 }

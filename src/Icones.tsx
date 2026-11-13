@@ -133,3 +133,21 @@ export const OrigemMini = () => (
     <circle cx={-4} cy={0} r={1.4} fill={T} /><circle cx={0} cy={0} r={1.4} fill={T} /><circle cx={4} cy={0} r={1.4} fill={T} />
   </Mini>
 );
+
+// BOATO QUE ESFRIA (2026-11-13): o floco de neve e a ficha do topo. Montando mostra só o prazo (N); espalhando, a batida
+// de agora contra o prazo (3/5). Passou do prazo (a batida em que o recado esfria): a ficha fica vermelha, como o "Setas" cheio.
+// ⚠️ A ficha mora aqui, e não em App.tsx, porque o App roda coisa do navegador ao ser importado e não dá pra testá-lo no node.
+export const Floco = () => (
+  <Mini tamanho={18} caixa={24}>
+    <path d="M0,-9 V9 M-7.8,-4.5 L7.8,4.5 M-7.8,4.5 L7.8,-4.5 M-2.4,-7 L0,-4.6 L2.4,-7 M-2.4,7 L0,4.6 L2.4,7" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+  </Mini>
+);
+export function FichaValidade({ validade, batida, montando }: { validade: number; batida: number; montando: boolean }) {
+  const andando = !montando && batida >= 1;
+  return (
+    <span className={andando && batida > validade ? 'ficha validade fria' : 'ficha validade'}
+      aria-label={andando ? `O boato vale até a batida ${validade}; agora é a ${batida}` : `O boato só vale até a batida ${validade}`}>
+      <Floco />{andando ? `${batida}/${validade}` : validade}
+    </span>
+  );
+}

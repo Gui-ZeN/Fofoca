@@ -600,8 +600,8 @@ const POSE_ARTE: Record<Expressao, string[]> = {
   neutro: ['parado'], contando: ['cochicho', 'parado'], ouvindo: ['ouvindo', 'parado'], chocado: ['susto', 'parado'], bravo: ['bravo', 'susto', 'parado'],
 };
 const ALTURA_ARTE = 116; // ×1,08 do prédio = 125: cabe no cômodo (128 de parede)
-function Ilustrado({ s, expressao, olha }: { s: Sprite; expressao: Expressao; olha: [number, number] }) {
-  const p = POSE_ARTE[expressao].map((k) => s.poses[k]).find(Boolean) ?? Object.values(s.poses)[0];
+function Ilustrado({ s, expressao, olha, pose }: { s: Sprite; expressao: Expressao; olha: [number, number]; pose?: string }) {
+  const p = (pose ? s.poses[pose] : undefined) ?? POSE_ARTE[expressao].map((k) => s.poses[k]).find(Boolean) ?? Object.values(s.poses)[0];
   const h = ALTURA_ARTE * s.alt, w = (h * p.w) / p.h;
   const natural = p.olha ?? s.olha; // o Rui olha pra esquerda, mas cochicha pra direita
   const lado = olha[0] > 0.3 ? 1 : olha[0] < -0.3 ? -1 : natural;
@@ -627,8 +627,9 @@ export function precarregar(nomes: string[]) {
 }
 
 // (x, y) = onde os pés pisam
-export function Personagem({ v, expressao, x, y, olha = [0, 0], escala = 1 }: {
+export function Personagem({ v, expressao, x, y, olha = [0, 0], escala = 1, pose }: {
   v: Vizinho; expressao: Expressao; x: number; y: number; olha?: [number, number]; escala?: number;
+  pose?: string; // pose de arte fora das expressões (a "ronda" do Seu Zé, de lanterna); sem ela no desenho, vale a expressão
 }) {
   // o Do Contra se chama Nonato (2026-11-11); as fases dele usam esse nome
   const sprite = ARTE ? SPRITES[v.nome] : undefined;
@@ -636,7 +637,7 @@ export function Personagem({ v, expressao, x, y, olha = [0, 0], escala = 1 }: {
     return (
       <g transform={`translate(${x} ${y}) scale(${escala})`} className="personagem" aria-hidden="true">
         <g className="vivo" style={{ animationDelay: `${-(semente(v.nome) % 32) / 10}s` }}>
-          <Ilustrado s={sprite} expressao={expressao} olha={olha} />
+          <Ilustrado s={sprite} expressao={expressao} olha={olha} pose={pose} />
         </g>
       </g>
     );

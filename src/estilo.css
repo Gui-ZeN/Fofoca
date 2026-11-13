@@ -479,3 +479,51 @@ main.limpo { position: relative; }
 .abre-limpo .boato { border-width: 0; background: none; padding: 0; white-space: normal; font-size: 14.5px; }
 .abre-limpo .novidade { margin: 2px 0 0; }
 .abre-limpo .meta { margin: 0; font-size: 13.5px; color: var(--suave); }
+
+/* ---- Cinco mecânicas novas (2026-11-13). Tudo só aparece quando a fase tem o campo; sem ele, nada disto é usado. ----
+   ⚠️ Selos na madeira escura da plaquinha, traço creme, sem texto (só "z z" e pegadas). Nada de filter: drop-shadow. */
+.etiqueta .soneca rect, .etiqueta .pegadas rect { fill: #5A3E2B; stroke: none; }
+.etiqueta .soneca text { fill: var(--papel); font-family: var(--titulo); font-weight: 400; text-anchor: middle; }
+.etiqueta .soneca .z1 { font-size: 9px; } .etiqueta .soneca .z2 { font-size: 11.5px; } .etiqueta .soneca .z3 { font-size: 14px; }
+.etiqueta .pegadas ellipse, .etiqueta .pegadas circle { fill: var(--papel); stroke: none; }
+/* soneca esperando: balão meio apagado e os "z" subindo (o fundo do balão é o do próprio ícone) */
+.dorme { opacity: .55; }
+.zzz { pointer-events: none; }
+.zzz text { font-family: var(--titulo); fill: #5A3E2B; stroke: var(--papel); stroke-width: 3; paint-order: stroke; text-anchor: middle; animation: sobe 1.6s ease-in-out infinite; }
+.zzz .z1 { font-size: 10px; } .zzz .z2 { font-size: 13px; animation-delay: .25s; } .zzz .z3 { font-size: 16px; animation-delay: .5s; }
+/* ronda: a rota (madeira escura, contorno creme fino) e a visita */
+.rota-ronda { pointer-events: none; }
+.rota-ronda polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.rota-ronda polyline.fundo { stroke: var(--papel); stroke-width: 5.5; }
+.rota-ronda polyline.linha { stroke: #5A3E2B; stroke-width: 2.6; stroke-dasharray: 1 6; }
+.rota-ronda .parada circle { fill: #5A3E2B; stroke: var(--papel); stroke-width: 1.4; }
+.rota-ronda .parada text { fill: var(--papel); font-family: var(--fonte); font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.visita { pointer-events: none; }
+.visita.culpado { transform-box: fill-box; animation: treme .3s 3; }
+/* interfone: aparelho na parede e fio fino, discretos */
+.fio-interfone { pointer-events: none; }
+.fio-interfone path { fill: none; stroke-linecap: round; }
+.fio-interfone path.fundo { stroke: var(--papel); stroke-width: 5; }
+.fio-interfone path:not(.fundo) { stroke: #5A3E2B; stroke-width: 2.4; }
+.aparelho rect { fill: #EBD3A6; stroke: #5A3E2B; stroke-width: 1.5; }
+.aparelho .grade { fill: #5A3E2B; stroke: none; }
+.aparelho .grade-traco { stroke: #EBD3A6; stroke-width: 1; fill: none; }
+.aparelho .botao { fill: #A53D3D; stroke: none; }
+/* a seta que segue o fio (mesmo estilo da seta e da ligação de celular) */
+.seta.fio > path { fill: none; stroke: var(--seta); stroke-width: 4.5; stroke-linecap: round; }
+.seta.fio > path.fundo { stroke: var(--papel); stroke-width: 10; }
+.seta.fio > path.pega { stroke: transparent; stroke-width: 26; cursor: pointer; }
+.seta.fio.girada > path:not(.fundo):not(.pega) { stroke: #173E52; }
+.seta.fio.ativa > path:not(.fundo):not(.pega) { stroke: var(--botao); stroke-width: 5; stroke-dasharray: 2 7; animation: corre .6s linear infinite; }
+/* fofoca solta pelo fio */
+.fofoca-solta > path { fill: none; stroke: var(--botao); stroke-width: 5; stroke-dasharray: 9 7; stroke-linecap: round; }
+.fofoca-solta > path.fundo { stroke: var(--tinta); stroke-width: 8; }
+/* muro fino: tijolinho (padrão no SVG) com rachadura */
+.muro-fino { pointer-events: none; }
+.muro-fino .rachadura { fill: none; stroke: #3A2618; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+/* ondas douradas: alguém que não é a vítima ouviu pelo muro (as vermelhas são as da Vera) */
+.ondas-vera.ouro path:not(.fundo) { stroke: var(--botao); }
+.ondas-vera.ouro path.fundo { stroke: var(--tinta); }
+/* boato que esfria: a ficha do topo, azul-gelo; passou do prazo, vermelha */
+.ficha.validade { background: #245A73; }
+.ficha.validade.fria { background: var(--vitima); }

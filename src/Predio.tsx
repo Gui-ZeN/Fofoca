@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { abafados, amigosDe, espalhar, girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
+import { abafados, amigosDe, espalhar, girosUsados, podeGirar, podeSerOrigem, porCelular, porInterfone, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
 import { Personagem, type Expressao } from './Personagem';
 import { Boato, Estrela, Girar, Telefone } from './Icones';
 import { Vazio } from './Vazio';
@@ -76,6 +76,88 @@ function trajeto(de: Vizinho, para: Vizinho): [number, number, number, number] {
 const ponta = (x1: number, y1: number, x2: number, y2: number) =>
   `translate(${x2} ${y2}) rotate(${(Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI})`;
 
+// ---- Cinco mecânicas novas (2026-11-13): a geometria é pura e exportada pra dar pra testar sem tela (telaMecanicas.test.ts) ----
+// ⚠️ Os campos novos são todos opcionais: sem eles, nada disto desenha nada e as fases antigas ficam idênticas.
+const achar = (fase: Fase, id: string) => fase.vizinhos.find((v) => v.id === id);
+const colunasDe = (fase: Fase) => Math.max(...fase.vizinhos.map((v) => v.pos[0])) + 1;
+
+// RONDA: a vítima que anda. Só a primeira vítima com `ronda` (o motor também só olha a primeira).
+export const rondeiraDe = (fase: Fase) => fase.vizinhos.find((w) => w.tipo === 'assunto' && !!w.ronda?.length);
+
+// A rota, antes de espalhar: uma parada por item de `ronda` (só o primeiro ciclo), com o número da batida. Cada parada fica no
+// alto-direita do apartamento (acima de onde a visita aparece depois); visita repetida ao mesmo apartamento recua um pouco pro lado.
+export function rotaDaRonda(fase: Fase): { n: number; id: string; x: number; y: number }[] {
+  const w = rondeiraDe(fase);
+  if (!w) return [];
+  const vezes = new Map<string, number>();
+  return w.ronda!.flatMap((id, i) => {
+    const v = achar(fase, id);
+    if (!v) return [];
+    const k = vezes.get(id) ?? 0;
+    vezes.set(id, k + 1);
+    return [{ n: i + 1, id, x: v.pos[0] * L + L - 24 - k * 18, y: v.pos[1] * A + 38 }];
+  });
+}
+
+// Em que apartamento ela está agora. Montando: na parada 1. Espalhando: onde `resultado.rondas` diz; depois da última batida
+// (o fim), fica onde esteve na última. ⚠️ A fórmula ronda[(b-1) % len] erraria no fim: a batida do fim é a seguinte à última.
+export function ondeDaRonda(w: Vizinho, r: Resultado | undefined, batida: number, montando: boolean): string {
+  const lista = w.ronda!;
+  if (montando || !r?.rondas?.length) return lista[0];
+  const ultima = r.rondas[r.rondas.length - 1];
+  const b = Math.min(Math.max(batida, 1), ultima.batida);
+  return (r.rondas.find((x) => x.batida === b) ?? ultima).onde;
+}
+
+// INTERFONE: o aparelho fica na parede de CADA ponta, do lado do prédio por onde o fio sai; o fio faz uma curva por FORA do prédio.
+// Mesma linha (sem como dar a volta por fora): os aparelhos ficam de frente um pro outro e o fio pende por dentro.
+export function geometriaFio(fase: Fase, par: [string, string], k = 0) {
+  const va = achar(fase, par[0])!, vb = achar(fase, par[1])!;
+  const y = (v: Vizinho) => v.pos[1] * A + 58;
+  let dirA: number, dirB: number, c1: { x: number; y: number }, c2: { x: number; y: number };
+  const aparelho = (v: Vizinho, dir: number) => ({ x: v.pos[0] * L + (dir < 0 ? 13 : L - 13), y: y(v) });
+  if (va.pos[1] === vb.pos[1]) {
+    dirA = vb.pos[0] > va.pos[0] ? 1 : -1; dirB = -dirA;
+  } else {
+    dirA = dirB = (va.pos[0] + vb.pos[0]) / 2 <= (colunasDe(fase) - 1) / 2 ? -1 : 1;
+  }
+  const a = aparelho(va, dirA), b = aparelho(vb, dirB);
+  const p0 = { x: a.x + dirA * 9, y: a.y }, p3 = { x: b.x + dirB * 9, y: b.y };
+  if (dirA === dirB) {
+    const fora = dirA < 0 ? -22 - 8 * k : colunasDe(fase) * L + 22 + 8 * k; // o fio passa fora da parede do prédio
+    c1 = { x: fora, y: p0.y }; c2 = { x: fora, y: p3.y };
+  } else {
+    c1 = { x: p0.x + (p3.x - p0.x) / 3, y: p0.y + 24 }; c2 = { x: p0.x + ((p3.x - p0.x) * 2) / 3, y: p3.y + 24 };
+  }
+  const meio = { x: (p0.x + 3 * c1.x + 3 * c2.x + p3.x) / 8, y: (p0.y + 3 * c1.y + 3 * c2.y + p3.y) / 8 };
+  return { a, b, p0, c1, c2, p3, meio, d: `M${p0.x},${p0.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${p3.x},${p3.y}` };
+}
+
+// O fio de `de` até `para`, no sentido da seta: de onde sai, onde chega e o ponto de antes da ponta (pra dar o rumo da cabeça).
+export function tracoDoFio(fase: Fase, de: string, para: string) {
+  const k = fase.interfones!.findIndex(([x, y]) => (x === de && y === para) || (x === para && y === de));
+  const g = geometriaFio(fase, fase.interfones![k], k);
+  const volta = fase.interfones![k][0] !== de;
+  const [p0, c1, c2, p3] = volta ? [g.p3, g.c2, g.c1, g.p0] : [g.p0, g.c1, g.c2, g.p3];
+  return { d: `M${p0.x},${p0.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${p3.x},${p3.y}`, x1: p0.x, y1: p0.y, x2: p3.x, y2: p3.y, xm: g.meio.x, ym: g.meio.y, ax: c2.x, ay: c2.y };
+}
+
+// MURO FINO: a faixa entre os dois cômodos (a parede, ou a laje se um mora em cima do outro). Não colados: sem faixa (null).
+export function geometriaMuro(a: Vizinho, b: Vizinho): { tipo: 'parede' | 'laje'; x: number; y: number; w: number; h: number } | null {
+  const [ca, ra] = a.pos, [cb, rb] = b.pos;
+  if (ra === rb && Math.abs(ca - cb) === 1) return { tipo: 'parede', x: Math.max(ca, cb) * L - 3, y: ra * A + 4, w: 6, h: A - 8 };
+  if (ca === cb && Math.abs(ra - rb) === 1) return { tipo: 'laje', x: ca * L + 4, y: Math.max(ra, rb) * A - 3, w: L - 8, h: 6 };
+  return null;
+}
+// De onde as ondas saem e pra onde abrem quando o som atravessa o muro: um pouco antes da faixa, do lado de quem falou.
+export function ondasDoMuro(de: Vizinho, para: Vizinho) {
+  const m = geometriaMuro(de, para);
+  const pa = cabeca(de), pb = cabeca(para);
+  const cx = m ? m.x + m.w / 2 : (pa.x + pb.x) / 2, cy = m ? m.y + m.h / 2 : (pa.y + pb.y) / 2;
+  const rumo = m ? (m.tipo === 'parede' ? (pb.x > pa.x ? 0 : Math.PI) : (pb.y > pa.y ? Math.PI / 2 : -Math.PI / 2)) : Math.atan2(pb.y - pa.y, pb.x - pa.x);
+  return { x: cx - Math.cos(rumo) * 12, y: cy - Math.sin(rumo) * 12, rumo };
+}
+
 // selos de papel (os mesmos do cabeçalho)
 export function SeloOrigem() {
   return (
@@ -135,6 +217,49 @@ const Orelha = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
     d="M-1.5,5.6 q-3.1,-1.2 -3.1,-5.6 a4.6,4.6 0 0 1 9.2,0 q0,2.6 -2.4,4.2 q-1.2,2.5 -3.7,1.4 M-2,0.7 a2.4,2.4 0 0 1 4.6,-0.9 q0,1.2 -1.4,2" />
 );
 
+// ⚠️ Selos das mecânicas novas, só símbolo (nada de palavra): pegadas = a vítima que anda (ronda); "z z" subindo = o morador
+// que cochila (soneca). Madeira escura, traço creme, como o selo da padaria. O selo fica em quem TEM a regra, nunca nos afetados.
+const Pegada = ({ x, y, giro }: { x: number; y: number; giro: number }) => (
+  <g transform={`translate(${x} ${y}) rotate(${giro})`}>
+    <ellipse cx={0} cy={2} rx={2.6} ry={3.6} />
+    <circle cx={-2.2} cy={-3.2} r={1.1} /><circle cx={0} cy={-4.2} r={1.1} /><circle cx={2.2} cy={-3.2} r={1.1} />
+  </g>
+);
+const Zzz = ({ x, y }: { x: number; y: number }) => (
+  <g>
+    <text x={x - 6} y={y + 4} className="z1">z</text>
+    <text x={x + 1} y={y - 1} className="z2">z</text>
+    <text x={x + 8} y={y - 6} className="z3">z</text>
+  </g>
+);
+
+// Ondas de som (as da Vera): 3 arcos que abrem em ±60° a partir de (x, y), olhando pra `rumo`. Dourado = alguém que não é a vítima ouviu.
+// ⚠️ ficam abertos (±60°): com ±38° pareciam três tracinhos grudados no "QUÊ?!"
+function Ondas({ x, y, rumo, ouro, rotulo }: { x: number; y: number; rumo: number; ouro?: boolean; rotulo: string }) {
+  const abre = 1.05;
+  return (
+    <g className={ouro ? 'ondas-vera ouro' : 'ondas-vera'} transform={`translate(${x} ${y}) rotate(${(rumo * 180) / Math.PI})`} aria-label={rotulo}>
+      {[10, 19, 28].map((r, i) => {
+        const d = `M${(r * Math.cos(abre)).toFixed(1)},${(-r * Math.sin(abre)).toFixed(1)} A${r},${r} 0 0 1 ${(r * Math.cos(abre)).toFixed(1)},${(r * Math.sin(abre)).toFixed(1)}`;
+        return <g key={r} className="onda" style={{ animationDelay: `${i * 130}ms` }}><path d={d} className="fundo" /><path d={d} /></g>;
+      })}
+    </g>
+  );
+}
+
+// Aparelho de interfone na parede (caixinha de madeira com a grade do alto-falante e um botão).
+const Aparelho = ({ x, y }: { x: number; y: number }) => ARTE ? (
+  // o interfone desenhado pelo dono (2026-11-13); o de traço abaixo fica pro modo ?vetor
+  <image className="aparelho-arte" href={urlArte('interfone.webp')} x={x - 8} y={y - 13} width={16} height={26} />
+) : (
+  <g className="aparelho" transform={`translate(${x} ${y})`}>
+    <rect x={-6.5} y={-9} width={13} height={18} rx={2.5} />
+    <circle cx={0} cy={-3.2} r={3} className="grade" />
+    <path d="M-2,-3.2 h4 M0,-5.2 v4" className="grade-traco" />
+    <circle cx={0} cy={4.8} r={1.6} className="botao" />
+  </g>
+);
+
 function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizinho; x0: number; y0: number; contou?: boolean; menos?: boolean; perto?: string; comNome?: boolean }) {
   const exato = v.interesse?.tamanho;
   const versao = v.interesse?.versao; // quer a versão certa ou a ao contrário: o balão mostra qual
@@ -165,7 +290,10 @@ function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizi
   // "−1": mora colado no Arnaldo e fala um tamanho menor (o efeito no tabuleiro, não só no personagem)
   const xMenos = fim + (mais ? 26 : 0);
   const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (perto ? 34 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 27 : 0);
-  if (!comNome && w < 10 && !fiscal && sai === undefined) return null; // morador comum sem papel nem regra: nada
+  // mecânicas novas: o selo vai na linha de baixo, depois do que já estiver lá (fiscal, saída)
+  const soneca = !!v.soneca, ronda = vitima && !!v.ronda?.length;
+  const xSelo = x0 + 8 + (fiscal ? (v.vigia ? 24 : 46) + 4 : 0) + (sai !== undefined ? 52 : 0);
+  if (!comNome && w < 10 && !fiscal && sai === undefined && !soneca) return null; // morador comum sem papel nem regra: nada
   return (
     // ⚠️ plaquinha mais larga que o cômodo (estrela + nome comprido + "=" + tamanho, ou +1/−1/⇄) invadia o vizinho:
     // encolhe inteira, a partir da ponta esquerda, até caber (L − 10)
@@ -198,6 +326,21 @@ function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizi
           <path d={`M${x0 + 29},${y0 + 39} h9 m-3.2,-3.4 l3.4,3.4 l-3.4,3.4`} />
           {/* só o número: pão + seta saindo + a batida (sem palavras, como os outros selos) */}
           <text x={x0 + 43} y={y0 + 43.5}>{sai}</text>
+        </g>
+      )}
+      {soneca && (
+        // ⚠️ SONECA: "z z" subindo, sem texto. Ouve numa batida e só conta duas depois (a regra se aprende jogando)
+        <g className="soneca" aria-label="cochila: ouve e só conta duas batidas depois">
+          <rect x={xSelo} y={y0 + 31} width={30} height={16} rx={3} />
+          <Zzz x={xSelo + 15} y={y0 + 40} />
+        </g>
+      )}
+      {ronda && (
+        // ⚠️ RONDA (vítima): pegadas, sem texto. A rota dela aparece no prédio antes de espalhar
+        <g className="pegadas" aria-label="anda pelo prédio: escuta quem falar no apartamento onde estiver">
+          <rect x={xSelo + (soneca ? 34 : 0)} y={y0 + 31} width={30} height={16} rx={3} />
+          <Pegada x={xSelo + (soneca ? 34 : 0) + 11} y={y0 + 41} giro={-12} />
+          <Pegada x={xSelo + (soneca ? 34 : 0) + 20} y={y0 + 38} giro={12} />
         </g>
       )}
       {perto && (
@@ -398,6 +541,21 @@ export function Predio(props: {
   const fim = resultado !== undefined && batida > resultado.batidas.length;
   const explicacao = fim && resultado ? explicar(fase, resultado) : undefined;
   const semGiro = girosUsados(fase, setas) >= fase.giros;
+  // RONDA: onde a vítima está agora (a casa dela fica vazia enquanto ela visita). `aFora` = visitando outro apartamento.
+  const rondeira = rondeiraDe(fase);
+  const visitada = rondeira ? ondeDaRonda(rondeira, resultado, batida, montando) : undefined;
+  const aFora = !!rondeira && visitada !== rondeira.id;
+  const celulaDe = (v: Vizinho) => (aFora && v.id === rondeira!.id ? porId[visitada!].pos : v.pos);
+  // a luz que acende e o vermelho do culpado vão pro apartamento onde ela ESTÁ (não pra casa vazia dela)
+  const acendeNa = (c: number, r: number) => {
+    return fase.vizinhos.some((v) => { const [vc, vr] = celulaDe(v); return vc === c && vr === r && !!ouviuAte(v.id); });
+  };
+  const culpadoNa = (c: number, r: number) => {
+    const v = fim ? porId[resultado!.culpado ?? ''] : undefined;
+    if (!v) return false;
+    const [vc, vr] = celulaDe(v);
+    return vc === c && vr === r && !!naCelula(c, r);
+  };
   // Fora de casa enquanto não deu a batida da volta (no fim, todo mundo já voltou).
   const fora = (v: Vizinho) => !!v.chega && !fim && (montando || batida < v.chega);
   // Já saiu de casa (`sai`): da batida N em diante, até o fim (quem saiu não volta). Montando, ainda está em casa.
@@ -405,7 +563,7 @@ export function Predio(props: {
   // a cor do cômodo (as duas metades da porta usam a mesma, pra parede sumir de verdade)
   const comodo = (c: number, r: number) => {
     const v = naCelula(c, r);
-    return ['comodo', ARTE && v && `parede-${(c + r * 2) % 4}`, !v && 'vazio', v && ouviuAte(v.id) && 'ouviu', v && fim && resultado.culpado === v.id && 'culpado'].filter(Boolean).join(' ');
+    return ['comodo', ARTE && v && `parede-${(c + r * 2) % 4}`, !v && 'vazio', v && acendeNa(c, r) && 'ouviu', v && culpadoNa(c, r) && 'culpado'].filter(Boolean).join(' ');
   };
   // arte ilustrada: o fundo ilustrado de cada cômodo; a luz de quem ouviu vem por cima
   const fundo = (c: number, r: number) => {
@@ -414,7 +572,7 @@ export function Predio(props: {
   };
   const luz = (c: number, r: number) => {
     const v = naCelula(c, r);
-    return ['luz', v && ouviuAte(v.id) && 'ouviu', v && fim && resultado.culpado === v.id && 'culpado'].filter(Boolean).join(' ');
+    return ['luz', v && acendeNa(c, r) && 'ouviu', v && culpadoNa(c, r) && 'culpado'].filter(Boolean).join(' ');
   };
   // metade de porta e buraco de escada: a cor dominante do fundo, pra parede sumir sem emenda
   const corDe = (c: number, r: number) => (CENARIO ? { fill: fundo(c, r).cor } : undefined);
@@ -542,10 +700,69 @@ export function Predio(props: {
         );
       })}
 
+      {/* ⚠️ MURO FINO: a parede (ou a laje) entre os dois cômodos desenhada de outro jeito — mais fina, de tijolinho e com rachadura —
+          pra se ler que ali o som passa. Não marca quem é afetado: só a faixa. */}
+      {fase.murosFinos && (
+        <g className="muros-finos">
+          <defs>
+            <pattern id="tijolinho" width="8" height="6" patternUnits="userSpaceOnUse">
+              <rect width="8" height="6" fill="#C98E5E" />
+              <path d="M0,3 H8 M4,0 V3 M0,3 V6 M8,3 V6" fill="none" stroke="#8A5A22" strokeWidth={0.9} />
+            </pattern>
+          </defs>
+          {fase.murosFinos.map(([a, b]) => {
+            const m = porId[a] && porId[b] ? geometriaMuro(porId[a], porId[b]) : null;
+            if (!m) return null;
+            const rachadura = m.tipo === 'parede'
+              ? `M${m.x + 3},${m.y + m.h * 0.18} l-2.2,9 l3.6,8 l-2.8,10 l2.4,9`
+              : `M${m.x + m.w * 0.3},${m.y + 3} l9,-2.2 l8,3.6 l10,-2.8 l9,2.4`;
+            return (
+              <g key={'muro' + a + b} className="muro-fino" aria-label="Muro fino: o som passa por aqui">
+                <rect x={m.x} y={m.y} width={m.w} height={m.h} fill="url(#tijolinho)" />
+                <path d={rachadura} className="rachadura" />
+              </g>
+            );
+          })}
+        </g>
+      )}
+
+      {/* ⚠️ INTERFONE: um aparelho na parede de cada ponta e um fio fino por FORA do prédio entre eles (quando o par está na
+          mesma linha, o fio pende por dentro). Só quando o laço é fio de verdade (se também há porta entre os dois, vale a porta). */}
+      {fase.interfones?.map(([a, b], k) => {
+        if (!porId[a] || !porId[b] || !porInterfone(fase, a, b)) return null;
+        const g = geometriaFio(fase, [a, b], k);
+        return (
+          <g key={'fio' + a + b} className="fio-interfone" aria-label="Interfone ligando dois apartamentos">
+            <path d={g.d} className="fundo" />
+            <path d={g.d} />
+            <Aparelho x={g.a.x} y={g.a.y} /><Aparelho x={g.b.x} y={g.b.y} />
+          </g>
+        );
+      })}
+
+      {/* ⚠️ RONDA, antes de espalhar: a rota da vítima, uma parada por item (só o primeiro ciclo), com o número da batida em que
+          ela está lá. Linha pontilhada em madeira escura com contorno creme. Some quando o boato começa a andar. */}
+      {montando && rondeira && (() => {
+        const rota = rotaDaRonda(fase);
+        const pontos = rota.map((p) => `${p.x},${p.y}`).join(' ');
+        return (
+          <g className="rota-ronda" aria-label={`Rota de ${rondeira.nome}: o número é a batida em que ela está em cada apartamento`}>
+            {rota.length > 1 && <polyline points={pontos} className="fundo" />}
+            {rota.length > 1 && <polyline points={pontos} className="linha" />}
+            {rota.map((p) => (
+              <g key={'parada' + p.n} className="parada" transform={`translate(${p.x} ${p.y})`}>
+                <circle r={8.5} /><text>{p.n}</text>
+              </g>
+            ))}
+          </g>
+        );
+      })()}
+
       {/* moradores */}
       {fase.vizinhos.map((v) => {
         const x0 = v.pos[0] * L, y0 = v.pos[1] * A;
-        const perdeu = fim && resultado.culpado === v.id;
+        const ausente = aFora && v.id === rondeira!.id; // a vítima em ronda, fora de casa: o apartamento dela fica vazio
+        const perdeu = fim && resultado.culpado === v.id && !ausente;
         const clicavel = montando && (trilho ? true : podeSerOrigem(fase, v));
         const selecionado = montando && trilho?.selecionado === v.id;
         const cls = [
@@ -571,7 +788,7 @@ export function Predio(props: {
                 ))}
               </g>
             )}
-            {fora(v) || saiuJa(v)
+            {ausente ? null : fora(v) || saiuJa(v)
               ? <Padaria x={pe.x} y={y0 + 84 + D} faltam={saiuJa(v) ? undefined : montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
               : <Personagem v={v} expressao={expressao(v)} x={pe.x} y={pe.y} olha={olharPara(v)} escala={ESCALA} />}
             {/* ⚠️ a plaquinha sobe 11 e fica meio em cima da laje: no lugar de antes (y0+8…30) ela tapava a testa
@@ -586,6 +803,18 @@ export function Predio(props: {
           </g>
         );
       })}
+
+      {/* ⚠️ RONDA: a vítima desenhada no apartamento que visita — menor e deslocada pro lado, pra não cobrir quem mora lá */}
+      {aFora && rondeira && (() => {
+        const hospede = porId[visitada!], base = pes(hospede);
+        const perdeuAqui = fim && resultado.culpado === rondeira.id;
+        return (
+          <g className={perdeuAqui ? 'visita culpado' : 'visita'} aria-label={`${rondeira.nome} está no apartamento de ${hospede.nome}`}>
+            {/* andando de lanterna enquanto ronda; pego no flagra, volta a ser a cara de bravo */}
+            <Personagem v={rondeira} expressao={expressao(rondeira)} x={base.x + 32} y={base.y} olha={[-1, 0]} escala={ESCALA * 0.72} pose={perdeuAqui ? undefined : 'ronda'} />
+          </g>
+        );
+      })()}
 
       {/* Nando (apressado), montando: com UMA seta chegando nele, a seta tracejada mostra pra onde ele vai passar reto.
           Ensina a regra na hora, sem tirar o problema (escolher por onde entrar). Com duas chegando, depende de quem
@@ -608,6 +837,21 @@ export function Predio(props: {
       {fase.vizinhos.map((v) => {
         const alvo = setas[v.id] ?? v.seta;
         if (!alvo) return null;
+        if (porInterfone(fase, v.id, alvo)) {
+          // ⚠️ INTERFONE: a seta segue o fio (a curva por fora do prédio), não a reta entre as cabeças
+          const t = tracoDoFio(fase, v.id, alvo);
+          const apagavel = trilho && montando && setas[v.id];
+          const ligando = falando.some((m) => m.de === v.id && m.para === alvo);
+          return (
+            <g key={'s' + v.id} className={['seta fio', setas[v.id] && 'girada', ligando && 'ativa'].filter(Boolean).join(' ') + fraca(v.id)}
+              onPointerDown={apagavel ? (e) => { e.stopPropagation(); trilho.aoApagar(v.id); } : undefined}>
+              {apagavel && <path d={t.d} className="pega" />}
+              <path d={t.d} className="fundo" />
+              <path d={t.d} />
+              <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(t.ax, t.ay, t.x2, t.y2)} />
+            </g>
+          );
+        }
         if (trilho && porCelular(fase, v.id, alvo)) {
           // ligação de celular: o telefone fica com quem liga e a ponta aponta pra quem atende
           const p = cabeca(v), q = cabeca(porId[alvo]);
@@ -640,10 +884,10 @@ export function Predio(props: {
           contando. Traço dourado tracejado, só na batida dela (some na seguinte); pra vítima vale a seta vermelha do fim. */}
       {TRACEJADO_FOFOQUEIRA && falando.filter((m) => !m.escuta && porId[m.de].tipo === 'fofoqueira' && porId[m.para].tipo !== 'assunto').map((m) => {
         const [x1, y1, x2, y2] = trajeto(porId[m.de], porId[m.para]);
+        const fio = porInterfone(fase, m.de, m.para) ? tracoDoFio(fase, m.de, m.para) : undefined; // pelo interfone, a linha segue o fio
         return (
           <g key={`solta${batida}-${m.de}-${m.para}`} className="fofoca-solta" aria-label={`${porId[m.de].nome} conta sozinha pra ${porId[m.para].nome}`}>
-            <line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" />
-            <line x1={x1} y1={y1} x2={x2} y2={y2} />
+            {fio ? <><path d={fio.d} className="fundo" /><path d={fio.d} /></> : <><line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" /><line x1={x1} y1={y1} x2={x2} y2={y2} /></>}
           </g>
         );
       })}
@@ -651,11 +895,13 @@ export function Predio(props: {
       {/* o boato andando: em cada batida, um balão do tamanho que foi enviado sai de quem conta e percorre a seta
           até quem ouve (a Fofoqueira manda vários de uma vez). ⚠️ A posição final também está no estilo base:
           com movimento reduzido a animação some e o balão aparece direto no destino, não no canto do prédio. */}
-      {falando.map((m) => {
-        const [x1, y1, x2, y2] = trajeto(porId[m.de], porId[m.para]);
+      {/* ⚠️ sem balão pro que é som atravessando o muro (vazou) nem pra escuta da vítima em ronda: pra esses valem as ondas */}
+      {falando.filter((m) => !m.vazou && !m.ronda).map((m) => {
+        const fio = porInterfone(fase, m.de, m.para) ? tracoDoFio(fase, m.de, m.para) : undefined; // interfone: o balão vai pelo fio, passando fora do prédio
+        const [x1, y1, x2, y2] = fio ? [fio.x1, fio.y1, fio.x2, fio.y2] : trajeto(porId[m.de], porId[m.para]);
         // o meio do caminho, levantado: de lado o balão dá um pulinho; pela escada, abre uma barriguinha pro lado
         const deLado = Math.abs(x2 - x1) > Math.abs(y2 - y1);
-        const xm = (x1 + x2) / 2 + (deLado ? 0 : -12), ym = (y1 + y2) / 2 - 16 - (deLado ? 16 : 0);
+        const xm = fio ? fio.xm : (x1 + x2) / 2 + (deLado ? 0 : -12), ym = fio ? fio.ym - 16 : (y1 + y2) / 2 - 16 - (deLado ? 16 : 0);
         const estilo = {
           '--x1': `${x1}px`, '--y1': `${y1 - 16}px`, '--xm': `${xm}px`, '--ym': `${ym}px`, '--x2': `${x2}px`, '--y2': `${y2 - 16}px`,
           transform: `translate(${x2}px, ${y2 - 16}px)`, animationDuration: `${Math.round(ritmo * 0.8)}ms`,
@@ -667,27 +913,37 @@ export function Predio(props: {
         );
       })}
 
+      {/* ⚠️ MURO FINO: o escândalo que vazou pra alguém que NÃO é a vítima — ondas douradas atravessando o muro, na batida em que acontece
+          (pra vítima valem as vermelhas do fim, mais abaixo) */}
+      {falando.filter((m) => m.vazou && porId[m.para]?.tipo !== 'assunto').map((m) => (
+        <Ondas key={`vaza${batida}-${m.de}-${m.para}`} {...ondasDoMuro(porId[m.de], porId[m.para])} ouro rotulo={`${porId[m.para].nome} ouviu pelo muro fino`} />
+      ))}
+
       {/* derrota pela vítima: o último elo, de quem contou de fato (inclusive a Fofoqueira) até ela, com direção.
           Fica enquanto o resultado está aberto. No empate, todos que entregaram juntos. */}
       {fim && resultado.motivo === 'assunto_ouviu' && quemContou(resultado, resultado.culpado!).map((de) => {
         const [x1, y1, x2, y2] = trajeto(porId[de], porId[resultado.culpado!]);
         // ⚠️ a Vera não recebeu o boato de ninguém: ela ESCUTOU o vizinho contar pra outra pessoa. Com a seta vermelha
         // parecia que contaram pra ela; ondas de som saindo de quem falou mostram o que a regra dela faz de verdade.
-        const escutou = (resultado.batidas[resultado.ouviu[resultado.culpado!].batida - 1] ?? []).some((m) => m.escuta && m.de === de && m.para === resultado.culpado);
+        const nessa = (resultado.batidas[resultado.ouviu[resultado.culpado!].batida - 1] ?? []).filter((m) => m.de === de && m.para === resultado.culpado);
+        const escutou = nessa.some((m) => m.escuta);
+        // ⚠️ MURO FINO: o escândalo atravessou a parede — ondas vermelhas (a vítima ouviu), saindo do lado de quem falou
+        if (nessa.some((m) => m.vazou)) {
+          return <Ondas key={'fatal' + de} {...ondasDoMuro(porId[de], porId[resultado.culpado!])} rotulo={`${porId[resultado.culpado!].nome} ouviu pelo muro fino`} />;
+        }
+        // ⚠️ RONDA: a vítima estava no apartamento de quem falou (ou de quem recebeu); as ondas ficam NESSE apartamento, não na casa dela
+        if (nessa.some((m) => m.ronda)) {
+          const onde = porId[resultado.rondas?.find((x) => x.batida === resultado.ouviu[resultado.culpado!].batida)?.onde ?? visitada!];
+          const cab = cabeca(onde);
+          const [ox, oy, rumo] = de === onde.id
+            ? [cab.x + 22, cab.y, 0] // quem falou é quem mora lá: as ondas abrem pro lado onde ela está
+            : (([a, b, c, d]) => [a, b, Math.atan2(d - b, c - a)])(trajeto(porId[de], onde));
+          return <Ondas key={'fatal' + de} x={ox} y={oy} rumo={rumo} rotulo={`${porId[resultado.culpado!].nome} escutou ${porId[de].nome} contando, no apartamento de ${onde.nome}`} />;
+        }
         if (escutou) {
           // ⚠️ as ondas saem da passagem (porta ou escada) entre os dois, bem abertas (±60°): com ±38° pareciam três
           // tracinhos grudados no "QUÊ?!"; saindo da cabeça de quem falou, o "QUÊ?!" tapava tudo (visto no painel, 2026-11-13)
-          const rumo = Math.atan2(y2 - y1, x2 - x1), abre = 1.05;
-          const raio = [10, 19, 28];
-          return (
-            <g key={'fatal' + de} className="ondas-vera" transform={`translate(${x1} ${y1}) rotate(${(rumo * 180) / Math.PI})`}
-              aria-label={`${porId[resultado.culpado!].nome} escutou ${porId[de].nome} contando`}>
-              {raio.map((r, i) => {
-                const d = `M${(r * Math.cos(abre)).toFixed(1)},${(-r * Math.sin(abre)).toFixed(1)} A${r},${r} 0 0 1 ${(r * Math.cos(abre)).toFixed(1)},${(r * Math.sin(abre)).toFixed(1)}`;
-                return <g key={r} className="onda" style={{ animationDelay: `${i * 130}ms` }}><path d={d} className="fundo" /><path d={d} /></g>;
-              })}
-            </g>
-          );
+          return <Ondas key={'fatal' + de} x={x1} y={y1} rumo={Math.atan2(y2 - y1, x2 - x1)} rotulo={`${porId[resultado.culpado!].nome} escutou ${porId[de].nome} contando`} />;
         }
         return (
           <g key={'fatal' + de} className="elo-fatal" aria-hidden="true">
@@ -706,16 +962,24 @@ export function Predio(props: {
 
       {/* balões e botões de girar, sempre na camada de cima */}
       {fase.vizinhos.map((v) => {
-        const x0 = v.pos[0] * L, y0 = v.pos[1] * A;
+        const [cx, cy] = celulaDe(v); // a vítima em ronda leva o balão e o "QUÊ?!" pro apartamento onde está
+        const x0 = cx * L, y0 = cy * A;
         const o = ouviuAte(v.id);
         const perdeu = fim && resultado.culpado === v.id;
         if (o && perdeu && v.tipo === 'assunto') return <Que key={'b' + v.id} x={x0 + 18} y={y0 - 2} />;
         if (o || (montando && trilho && v.id === origem)) {
+          // ⚠️ SONECA: na batida de espera (ouviu e ainda não conta) o balão fica meio apagado, com "z z z" subindo
+          const dorme = !!v.soneca && !!o && !fim && batida === o.batida + 1;
           // antes de espalhar, quem você contou já mostra o tamanho com que o boato começa: cochicho
           return (
             // a animação do balão usa transform do CSS, então a posição fica num grupo de fora
             <g key={'b' + v.id} transform={`translate(${x0 + 24} ${y0 + 48 + DB}) scale(1.1)`}>
-              <g className="balao"><Boato tamanho={o ? o.tamanho : 1} invertida={o?.versao === 'invertida'} /></g>
+              <g className={dorme ? 'dorme' : undefined}><g className="balao"><Boato tamanho={o ? o.tamanho : 1} invertida={o?.versao === 'invertida'} /></g></g>
+              {dorme && (
+                <g className="zzz" aria-label="cochilando: segura o boato mais uma batida">
+                  <text x={13} y={-12} className="z1">z</text><text x={20} y={-20} className="z2">z</text><text x={27} y={-29} className="z3">z</text>
+                </g>
+              )}
             </g>
           );
         }

@@ -7,14 +7,16 @@ import type { Fase } from './motor';
 
 // Trocas só dentro do mesmo gênero, pra "a Cida" / "o Davi" continuarem certos nas dicas.
 // Os 8 moradores novos (2026-11-11) entram aqui: todos têm arte ilustrada com as 4 poses.
-const FEMININAS = ['Rita', 'Ana', 'Bia', 'Cida', 'Marlene', 'Jandira', 'Celina', 'Solange'];
+// ⚠️ os da 3ª leva (2026-11-13: Dona Zefa, Íris, Kátia, Mirela, Tânia, Tetê · Dudu, Paulo, Seu Chico, Wesley, Zeca) não têm a
+// pose "bravo"; se um deles for sorteado de vítima, a tela cai no susto (Personagem.tsx, POSE_ARTE).
+const FEMININAS = ['Rita', 'Ana', 'Bia', 'Cida', 'Marlene', 'Jandira', 'Celina', 'Solange', 'Dona Zefa', 'Íris', 'Kátia', 'Mirela', 'Tânia', 'Tetê'];
 // ⚠️ sem o Nando: ele é o apressado (apressado.ts). Sorteado como morador comum, ensinava que "Nando" não tem regra
 // (Consulta 8, Astra; 4 designers da Consulta 7 disseram o mesmo dos fiscais).
-const MASCULINOS = ['Davi', 'Rui', 'Edu', 'Caio', 'Otávio', 'Ivo'];
+const MASCULINOS = ['Davi', 'Rui', 'Edu', 'Caio', 'Otávio', 'Ivo', 'Dudu', 'Paulo', 'Seu Chico', 'Wesley', 'Zeca'];
 // Fiscais que podem ser a vítima no lugar do Seu Zé, SEM regra própria (pedido do Guilherme: "sem mudar as mecânicas").
 // ⚠️ O Arnaldo fica de fora: ele tem regra (abafa), e aparecer como vítima comum ensinaria errado.
 const FISCAIS = ['Vera', 'Dona Norma', 'Dr. Álvaro'];
-export const ELAS = new Set(['Rita', 'Ana', 'Bia', 'Cida', 'Lia', 'Lúcia', 'Lu', 'Neide', 'Marlene', 'Jandira', 'Celina', 'Solange', 'Vera', 'Dona Norma']);
+export const ELAS = new Set(['Rita', 'Ana', 'Bia', 'Cida', 'Lia', 'Lúcia', 'Lu', 'Neide', 'Marlene', 'Jandira', 'Celina', 'Solange', 'Vera', 'Dona Norma', 'Dona Zefa', 'Íris', 'Kátia', 'Mirela', 'Tânia', 'Tetê']);
 export const SEU_ZE = 'Seu Zé';
 
 const ela = (nome: string) => ELAS.has(nome);

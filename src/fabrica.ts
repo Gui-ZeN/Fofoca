@@ -151,7 +151,7 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   for (let c = 0; c < colunas; c++) if (!usados.some(([x]) => x === c)) return null;
   if (formato !== 'cheio' && formato !== 'espalhado' && usados.filter(([, r]) => r === m.andares - 1).length < colunas) return null;
   if ((vitPos[0] === 0 || vitPos[0] === W) && (vitPos[1] === 0 || vitPos[1] === H)) return null;
-  const ids = 'zabcdefghijklmnop'.slice(0, n).split('');
+  const ids = 'zabcdefghijklmnopqrstuvwxy0123456'.slice(0, n).split(''); // provisórios; `batizar` troca pelos de verdade
   const am: [string, string][] = [];
   for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
     const [a, b] = [usados[i], usados[j]];
@@ -310,12 +310,17 @@ export function certificar(f: Fase, m: Molde): Certificado | undefined {
 // Só nomes com arte ilustrada (⚠️ antes havia Gil, Tião e Juca, sem desenho). A ordem alterna gênero; na tela
 // o elenco ainda troca dentro do mesmo gênero (elenco.ts). Os ids viram uma letra fixa por nome.
 // ⚠️ sem o Nando (é o apressado; ver elenco.ts)
-const COMUNS = ['Ana', 'Davi', 'Bia', 'Rui', 'Lia', 'Edu', 'Marlene', 'Caio', 'Jandira', 'Otávio', 'Celina', 'Solange', 'Ivo'];
+// ⚠️ 24 comuns desde a 3ª leva de arte (2026-11-13; eram 13): com ~17 rostos no total, um prédio 5×6 saía com 13
+// apartamentos vazios. A ordem continua alternando gênero.
+const COMUNS = ['Ana', 'Davi', 'Bia', 'Rui', 'Lia', 'Edu', 'Marlene', 'Caio', 'Jandira', 'Otávio', 'Celina', 'Solange', 'Ivo',
+  'Dona Zefa', 'Dudu', 'Íris', 'Paulo', 'Kátia', 'Seu Chico', 'Mirela', 'Wesley', 'Tânia', 'Zeca', 'Tetê'];
 const ID: Record<string, string> = {
   Rita: 'r', Bia: 'b', Cida: 'c', Ana: 'a', Neide: 'n', Lu: 'l', Beto: 'o', 'Lúcia': 'u',
   Davi: 'd', Rui: 'y', Edu: 'e', Lia: 'i', 'Seu Zé': 'z', Vera: 'z',
   Marlene: 'm', Caio: 'k', Jandira: 'j', 'Otávio': 'v', Celina: 'x', Nando: 'w', Solange: 's', Ivo: 'h',
   Raquel: 'q', Arnaldo: 'z', 'Dona Norma': 'z',
+  // ⚠️ as minúsculas acabaram (sobravam f, g, p, t): os outros da 3ª leva usam MAIÚSCULA. O id só precisa ser único.
+  'Dona Zefa': 'f', Dudu: 'g', Paulo: 'p', 'Tetê': 't', 'Íris': 'I', 'Kátia': 'K', Mirela: 'M', 'Seu Chico': 'C', 'Tânia': 'T', Wesley: 'W', Zeca: 'Z',
 };
 
 export function batizar(f: Fase, c: Certificado, titulo: string, boato: string): FaseTrilho {
