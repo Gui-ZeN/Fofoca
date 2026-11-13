@@ -43,7 +43,12 @@ export function enquadrar(W: number, H: number, larguraPx: number, alturaPx: num
   const encaixa = Math.min(larguraPx / W, alturaPx / H);
   if (encaixa * L >= COMODO_MIN || larguraPx <= 0 || alturaPx <= 0) return { escala: encaixa, rola: false };
   // cômodo de pelo menos COMODO_MIN, sem passar da largura da tela
-  return { escala: Math.max(encaixa, Math.min(larguraPx / W, COMODO_MIN / L)), rola: true };
+  const escala = Math.max(encaixa, Math.min(larguraPx / W, COMODO_MIN / L));
+  // ⚠️ só rola se, nessa escala, o prédio NÃO couber na altura. Antes rolava sempre que o cômodo ficava abaixo de
+  // COMODO_MIN — e o prédio de 4 colunas fica (o limite dele é a largura), mesmo cabendo inteiro: 102 dos 199 andares
+  // da campanha ganhavam `touch-action: pan-y` sem ter o que rolar, e o navegador podia tomar o arrasto vertical
+  // (seta pela escada) como rolagem. Provável causa do "meio travado" que o dono sentiu no bloco largo (2026-11-13).
+  return { escala, rola: escala * H > alturaPx + 0.5 };
 }
 
 export function Cena(props: ComponentProps<typeof Predio>) {

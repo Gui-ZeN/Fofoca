@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { abafados, amigosDe, colados, espalhar, girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
+import { abafados, amigosDe, espalhar, girosUsados, podeGirar, podeSerOrigem, porCelular, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
 import { Personagem, type Expressao } from './Personagem';
 import { Boato, Estrela, Girar, Telefone } from './Icones';
 import { Vazio } from './Vazio';
@@ -128,7 +128,7 @@ function useLargura(texto: string, chute: number) {
 
 // Plaquinha com o nome (e o que a pessoa exige para acreditar), no canto de cima.
 // No trilho o tamanho é exato e aparece com "=" ("quer exatamente um boato"); na mecânica antiga é mínimo.
-// A orelha da Vera: no selo dela e no de quem mora colado nela. ⚠️ Eram as palavras "ouve" e "psiu" em vermelho sobre
+// A orelha da Vera, no selo dela (os vizinhos já tiveram uma também; saiu, ver `perto` mais abaixo). ⚠️ Eram as palavras "ouve" e "psiu" em vermelho sobre
 // branco, do protótipo dos fiscais; num jogo que fala por símbolo e usa plaquinha de madeira, destoavam (dono, 2026-11-13).
 const Orelha = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
   <path className="orelha" transform={`translate(${x} ${y}) scale(${s})`}
@@ -201,10 +201,10 @@ function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizi
         </g>
       )}
       {perto && (
-        // mora colado (por porta ou escada) na Vera ("psiu": não pode contar) ou na Dona Norma ("até N")
-        <g className="perto" aria-label={perto === 'psiu' ? 'mora colado na Vera: se contar, ela escuta' : `mora colado na Dona Norma: só conta ${perto}`}>
-          <rect x={xPerto} y={y0 + 11} width={perto === 'psiu' ? 20 : 30} height={16} rx={3} />
-          {perto === 'psiu' ? <Orelha x={xPerto + 10} y={y0 + 18.5} s={0.9} /> : <text x={xPerto + 15} y={y0 + 23}>{perto}</text>}
+        // mora colado (por porta ou escada) na Dona Norma: "até N"
+        <g className="perto" aria-label={`mora colado na Dona Norma: só conta ${perto}`}>
+          <rect x={xPerto} y={y0 + 11} width={30} height={16} rx={3} />
+          <text x={xPerto + 15} y={y0 + 23}>{perto}</text>
         </g>
       )}
       {passa && (
@@ -378,7 +378,6 @@ export function Predio(props: {
   const porId = Object.fromEntries(fase.vizinhos.map((v) => [v.id, v]));
   const baixo = abafados(fase);
   // vizinhos de passagem da Vera e da Dona Norma: marcados na plaquinha, como o −1 do Arnaldo
-  const daVera = colados(fase, 'vigia');
   const daNorma = new Map(fase.vizinhos.filter((w) => w.recolhe).flatMap((w) => amigosDe(fase, w.id).map((id) => [id, `até ${w.recolhe}`] as [string, string])));
   const colunas = Math.max(...fase.vizinhos.map((v) => v.pos[0])) + 1;
   const andares = Math.max(...fase.vizinhos.map((v) => v.pos[1])) + 1;
@@ -578,7 +577,10 @@ export function Predio(props: {
             {/* ⚠️ a plaquinha sobe 11 e fica meio em cima da laje: no lugar de antes (y0+8…30) ela tapava a testa
                 e às vezes o olho — a cabeça do desenho começa em ~y0+9. Assim ela encosta só no alto do cabelo. */}
             <Etiqueta v={v} x0={x0} y0={y0 - 11} contou={!!fase.origens && origem === v.id} menos={baixo.has(v.id) && v.tipo !== 'assunto'}
-              perto={v.tipo === 'assunto' ? undefined : daVera.has(v.id) ? 'psiu' : daNorma.get(v.id)}
+              // ⚠️ os vizinhos da Vera NÃO ganham mais selo (era "psiu", depois uma orelha): marcava de antemão quem não
+              // podia falar, e o dono quer que isso se descubra jogando (2026-11-13: "as pessoas têm que entender o jogo
+              // jogando"). A regra está no selo DELA e na cena de chegada. A Dona Norma ainda marca os vizinhos ("até N").
+              perto={v.tipo === 'assunto' ? undefined : daNorma.get(v.id)}
               comNome={!SEM_NOMES || selecionado || fim} />
             {v.celular && <g transform={`translate(${x0 + 22} ${y0 + A - 28}) scale(0.9)`} className="tem-celular"><Telefone /></g>}
           </g>

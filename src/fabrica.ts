@@ -23,6 +23,11 @@ import { celulas, FORMATOS, type Formato } from './planta';
 
 // setas além do mínimo (K): o contador deixa de entregar o tamanho do caminho
 export const FOLGA = 1;
+// De cada 100 tentativas de montar um prédio, quantas vão pros vazios espalhados em vez de uma planta de vazios juntos
+// (ver montar e planta.ts). ⚠️ 0,85 e não 0,5 (2026-11-13): espalhado certifica menos que as plantas — em 20 s, com o
+// Zé pesando: leve 4×3 33 contra 84, médio 4×4 10 contra 43, pesado 3×5 25 contra 49, chefão 7 contra 25 (só o médio
+// 3×4 rende mais, 67 contra 55). Com metade das tentativas, as plantas ganhavam de longe no estoque final.
+export const ESPALHADO = 0.85;
 
 export type Tema = 'cadeia' | 'padaria' | 'ordem' | 'tamanho' | 'padaria+ordem';
 export type Peso = 'leve' | 'media' | 'pesada' | 'chefe';
@@ -54,6 +59,8 @@ export interface Molde {
   // último recurso do gerador: aceitar o andar mesmo com o Zé de enfeite (papelDoZe). Só o prédio de 3 andares usa,
   // quando nada sai no prazo — ali quase não sobra caminho alternativo pra ele cortar.
   zeLivre?: boolean;
+  // quanto do sorteio de planta vai pros VAZIOS ESPALHADOS (planta.ts): 0 = nunca, 1 = sempre. Padrão: ESPALHADO.
+  espalhado?: number;
   formato?: Formato; // a planta do prédio (planta.ts); sem isso, sorteia uma que caiba na lotação do molde
 }
 
@@ -108,8 +115,22 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   const cabe = (fo: Formato) => { const t = celulas(fo, m.andares, false, colunas).length; return t >= m.n[0] && t <= m.n[1] + 1; };
   // ⚠️ no 3×4 a grade cheia (com furos) também entra: com o Zé obrigado a pesar (papelDoZe), das plantas só os degraus
   // rendem nesse tamanho, e o médio estreito ficaria todo igual (medido em 2026-11-12). Nos largos não precisa.
-  const formato = m.formato ?? pick([...FORMATOS.filter(cabe), ...(colunas === 3 && m.andares <= 4 ? ['cheio' as Formato] : [])], sorte);
-  const cel = celulas(formato, m.andares, sorte() < 0.5, colunas);
+  const sorteado = m.n[0] + Math.floor(sorte() * (m.n[1] - m.n[0] + 1));
+  const total = colunas * m.andares;
+  // vazios espalhados: grade inteira com 2+ vazios, nenhum colado em outro. Só dá se a lotação deixar 2 de fora.
+  const daEspalhado = total - m.n[0] >= 2;
+  const formato = m.formato ?? (daEspalhado && sorte() < (m.espalhado ?? ESPALHADO) ? 'espalhado'
+    : pick([...FORMATOS.filter(cabe), ...(colunas === 3 && m.andares <= 4 ? ['cheio' as Formato] : [])], sorte));
+  let cel = celulas(formato, m.andares, sorte() < 0.5, colunas);
+  if (formato === 'espalhado') {
+    const quantos = total - Math.min(sorteado, total - 2), vazios: [number, number][] = [];
+    for (const [c, r] of embaralha(cel, sorte)) {
+      if (vazios.length === quantos) break;
+      if (!vazios.some(([x, y]) => Math.abs(x - c) + Math.abs(y - r) === 1)) vazios.push([c, r]);
+    }
+    if (vazios.length < quantos) return null;
+    cel = cel.filter(([c, r]) => !vazios.some(([x, y]) => x === c && y === r));
+  }
   const portas = ([c, r]: [number, number]) => cel.filter(([x, y]) => Math.abs(x - c) + Math.abs(y - r) === 1).length;
   const canto = ([c, r]: [number, number]) => (c === 0 || c === colunas - 1) && (r === 0 || r === m.andares - 1);
   // o Zé "do meio" é o que tem 3+ portas possíveis (numa planta com poço, a coluna do meio pode nem existir)
@@ -118,8 +139,7 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   const vitPos = pick(paraZe, sorte);
   // ⚠️ numa planta sobra no MÁXIMO 1 cômodo: com a lotação sorteada solta sobravam 2 ou 3 e o desenho se desfazia
   // (4 andares do estoque de 2026-11-13 saíram sem planta reconhecível)
-  const sorteado = m.n[0] + Math.floor(sorte() * (m.n[1] - m.n[0] + 1));
-  const n = Math.min(cel.length, formato === 'cheio' ? sorteado : Math.max(sorteado, cel.length - 1));
+  const n = formato === 'espalhado' ? cel.length : Math.min(cel.length, formato === 'cheio' ? sorteado : Math.max(sorteado, cel.length - 1));
   const usados = [vitPos, ...embaralha(cel.filter(([c, r]) => !(c === vitPos[0] && r === vitPos[1])), sorte).slice(0, n - 1)];
   // ⚠️ canto de VERDADE é o do prédio desenhado: com a última coluna ou o último andar vazios, o prédio encolhe
   // (Predio.medidas) e o Zé "do meio da borda" vira canto (3 de 150 na 1ª geração)
@@ -129,7 +149,7 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   if (!usados.some(([, r]) => r === 0)) return null;
   // …nem uma coluna inteira (o prédio largo viraria estreito, ou ficaria com uma faixa vazia do lado), nem o térreo
   for (let c = 0; c < colunas; c++) if (!usados.some(([x]) => x === c)) return null;
-  if (formato !== 'cheio' && usados.filter(([, r]) => r === m.andares - 1).length < colunas) return null;
+  if (formato !== 'cheio' && formato !== 'espalhado' && usados.filter(([, r]) => r === m.andares - 1).length < colunas) return null;
   if ((vitPos[0] === 0 || vitPos[0] === W) && (vitPos[1] === 0 || vitPos[1] === H)) return null;
   const ids = 'zabcdefghijklmnop'.slice(0, n).split('');
   const am: [string, string][] = [];

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { alvosDe, amigosDe, type Vizinho } from './motor';
 import { ELENCO, FOLGA, papelDoZe, personagemDoAndar } from './fabrica';
-import { formatoDe } from './planta';
+import { formatoDe, vaziosEspalhados } from './planta';
 import { custo, jogar, resolverTrilho, type FaseTrilho } from './trilho';
 import estoque from './andares.json';
 import manifesto from '../public/arte/manifesto.json';
@@ -40,8 +40,14 @@ describe('estoque de andares gerados', () => {
     // ⚠️ antes (2026-11-12) os vazios eram furos sorteados numa grade cheia. Só o 3×4 ainda pode ser a grade com furos
     // (fabrica.ts, montar): ali, com o Zé pesando na jogada, só os degraus rendem.
     const altos = fases.filter((a) => Math.max(...a.fase.vizinhos.map((v) => v.pos[1])) !== 3 || Math.max(...a.fase.vizinhos.map((v) => v.pos[0])) !== 2);
-    expect(altos.filter((a) => !formatoDe(a.fase)).map((a) => a.pos)).toEqual([]);
+    expect(altos.filter((a) => !formatoDe(a.fase) && !vaziosEspalhados(a.fase)).map((a) => a.pos)).toEqual([]);
     expect(new Set(fases.map((a) => formatoDe(a.fase)).filter(Boolean)).size).toBeGreaterThanOrEqual(4);
+  });
+
+  it('os vazios ficam SEPARADOS na maioria dos andares (nenhum colado em outro), não amontoados num canto', () => {
+    // ⚠️ o dono, jogando (2026-11-13): "por que os apartamentos vazios sempre estão juntos? seria bem melhor se fossem
+    // separados". Antes eram 0 de 150: toda planta (L, degraus…) junta os vazios, e o prédio virava só um prédio menor.
+    expect(fases.filter((a) => vaziosEspalhados(a.fase)).length).toBeGreaterThan(75);
   });
 
   it('o prédio não tem coluna vazia nem buraco no térreo (fora o 3×4, que pode ser a grade com furos)', () => {
@@ -51,7 +57,8 @@ describe('estoque de andares gerados', () => {
       const v = a.fase.vizinhos, W = Math.max(...v.map((x) => x.pos[0])) + 1, H = Math.max(...v.map((x) => x.pos[1])) + 1;
       const colunaVazia = Array.from({ length: W }, (_, c) => c).some((c) => !v.some((x) => x.pos[0] === c));
       const terreo = v.filter((x) => x.pos[1] === H - 1).length;
-      return colunaVazia || (terreo < W && !(W === 3 && H === 4));
+      // nos vazios espalhados o térreo pode ter um apartamento vazio: é um vazio no meio do caminho, de propósito
+      return colunaVazia || (terreo < W && !(W === 3 && H === 4) && !vaziosEspalhados(a.fase));
     }).map((a) => a.pos);
     expect(ruins).toEqual([]);
   });

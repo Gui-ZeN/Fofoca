@@ -100,9 +100,6 @@ export interface Resultado {
 export const amigosDe = (fase: Fase, id: string): string[] =>
   fase.amizades.flatMap(([a, b]) => (a === id ? [b] : b === id ? [a] : []));
 
-// Quem mora colado na Dona Norma (toque de recolher) ou na Vera (vigia): pra tela marcar os cômodos afetados.
-export const colados = (fase: Fase, regra: 'recolhe' | 'vigia'): Set<string> =>
-  new Set(fase.vizinhos.filter((w) => w[regra]).flatMap((w) => amigosDe(fase, w.id)));
 
 // Quem está colado em alguém que abafa (Arnaldo): conta um tamanho menor.
 export const abafados = (fase: Fase): Set<string> =>

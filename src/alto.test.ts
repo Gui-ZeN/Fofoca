@@ -40,4 +40,15 @@ describe('enquadrar (rolagem do prédio alto)', () => {
   it('sem tamanho medido ainda, encaixa (não rola)', () => {
     expect(enquadrar(408, 900, 0, 0).rola).toBe(false);
   });
+
+  it('prédio de 4 colunas que cabe inteiro NÃO rola, mesmo com o cômodo menor que 100 px', () => {
+    // ⚠️ num celular de 390 de largura o prédio de 4 colunas fica com cômodo de ~90 px (o limite é a largura). O
+    // "rola" ligava só por causa disso, sem nada pra rolar: 102 dos 199 andares da campanha (achado jogando a campanha
+    // inteira no painel, 2026-11-13). E com "rola" o tabuleiro deixa o navegador tratar o arrasto vertical como rolagem.
+    const r = enquadrar(4 * 120 + 36, 66 - 14 + 4 * 112 + 26, 390, 620);
+    expect(r.rola).toBe(false);
+    expect(r.escala).toBeCloseTo(390 / 516);
+    // e o que não cabe mesmo (6 andares) continua rolando
+    expect(enquadrar(4 * 120 + 36, 66 + 8 * 112 + 26, 390, 620).rola).toBe(true);
+  });
 });

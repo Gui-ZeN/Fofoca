@@ -157,7 +157,6 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 /* selos de regra na madeira escura da plaquinha (eram vermelho-vítima sobre branco, do protótipo) */
 .etiqueta .fiscal rect { fill: #5A3E2B; stroke: none; }
 .etiqueta .orelha { fill: none; stroke: var(--papel); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.etiqueta .perto .orelha { stroke: #5A3E2B; }
 .etiqueta .fiscal text { fill: var(--papel); font-size: 12px; text-anchor: middle; }
 .etiqueta .saida rect { fill: #5A3E2B; stroke: none; }
 .etiqueta .saida text { fill: var(--papel); font-size: 12.5px; text-anchor: start; }

@@ -6,7 +6,7 @@
 
 import { amigosDe, type Fase } from './motor';
 
-export type Formato = 'cheio' | 'L' | 'U' | 'poco' | 'H' | 'degraus';
+export type Formato = 'cheio' | 'L' | 'U' | 'poco' | 'H' | 'degraus' | 'espalhado';
 
 // As células (coluna, andar) onde pode morar alguém, num prédio de `colunas` × `andares`. O andar 0 é o de cima;
 // o térreo (andares - 1) está sempre inteiro — prédio não flutua.
@@ -43,6 +43,19 @@ export function formatoDe(f: Fase): Formato | undefined {
     const cel = new Set(celulas(formato, andares, espelhado, Math.max(...f.vizinhos.map((v) => v.pos[0])) + 1).map((p) => p.join()));
     if (cel.size - f.vizinhos.length <= 1 && f.vizinhos.every((v) => cel.has(v.pos.join()))) return formato;
   }
+}
+
+// Vazios ESPALHADOS: o prédio é a grade inteira, com 2 ou mais apartamentos vazios e nenhum colado em outro (nem de
+// lado, nem em cima). ⚠️ Pedido do dono (2026-11-13): "por que os apartamentos vazios sempre estão juntos? seria bem
+// melhor se fossem separados, criaria muito mais desafios". Nas plantas (L, degraus) os vazios ficam amontoados num
+// canto: o prédio vira só um prédio menor. Separados, cada vazio é uma parede no MEIO do caminho. A fábrica sorteia
+// quais (fabrica.ts, montar); aqui fica só o reconhecimento.
+export function vaziosEspalhados(f: Fase): boolean {
+  const W = Math.max(...f.vizinhos.map((v) => v.pos[0])) + 1, H = Math.max(...f.vizinhos.map((v) => v.pos[1])) + 1;
+  const mora = new Set(f.vizinhos.map((v) => v.pos.join()));
+  const vazios: [number, number][] = [];
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) if (!mora.has(`${c},${r}`)) vazios.push([c, r]);
+  return vazios.length >= 2 && vazios.every(([c, r], i) => vazios.every(([x, y], j) => i === j || Math.abs(x - c) + Math.abs(y - r) !== 1));
 }
 
 // Gargalo: existe um morador (fora a origem e a vítima) que, tirado, separa a origem de alguma estrela.
