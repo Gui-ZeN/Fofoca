@@ -10,6 +10,7 @@ const usa: Record<string, (f: FaseTrilho) => boolean> = {
   H2: (f) => f.vizinhos.some((v) => !!v.chega),
   T10: (f) => f.vizinhos.some((v) => !!v.celular),
   O1: (f) => f.vizinhos.some((v) => !!v.interesse?.ordem),
+  V1: (f) => f.vizinhos.some((v) => !!v.vigia),
 };
 
 describe('cenas de chegada', () => {

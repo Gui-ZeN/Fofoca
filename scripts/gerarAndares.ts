@@ -20,7 +20,7 @@ const BOATOS = [
   'O Seu Zé mandou carta pra rádio pedindo música', 'O Seu Zé errou o nome do neto na festa', 'O Seu Zé faz crochê ouvindo rock',
   'O Seu Zé ganhou concurso de bolo no clube', 'O Seu Zé fala câmbio no interfone', 'O Seu Zé tem playlist de música de novela',
   'O Seu Zé escondeu o controle da TV na geladeira', 'O Seu Zé chamou a vizinha de mãe sem querer', 'O Seu Zé aprendeu uma dancinha da internet',
-  'O Seu Zé ficou preso na porta giratória do banco', 'O Seu Zé pediu autógrafo pro carteiro', 'O Seu Zé assiste desenho animado de manhã',
+  'O Seu Zé travou a porta giratória do banco', 'O Seu Zé pediu autógrafo pro carteiro', 'O Seu Zé assiste desenho animado de manhã',
   'O Seu Zé faz fila pra comprar pão de queijo às seis', 'O Seu Zé ensina o papagaio a cantar o hino', 'O Seu Zé batizou a geladeira de Berenice',
 ];
 const TITULOS = [
@@ -37,7 +37,7 @@ const TEMAS: Record<Peso, Tema[]> = {
   chefe: ['padaria+ordem', 'padaria', 'ordem'],
 };
 // prédio maior demora mais pra certificar (o resolvedor explora mais caminhos)
-const PRAZO: Record<Peso, number> = { leve: 20_000, media: 60_000, pesada: 240_000, chefe: 420_000 };
+const PRAZO: Record<Peso, number> = { leve: 60_000, media: 90_000, pesada: 240_000, chefe: 420_000 };
 const MAIS_LEVE: Record<Peso, Peso | undefined> = { chefe: 'pesada', pesada: 'media', media: 'leve', leve: undefined };
 
 const [inicio, fim, saida] = [Number(process.argv[2]), Number(process.argv[3]), process.argv[4]];
@@ -54,6 +54,7 @@ for (let pos = inicio; pos < fim; pos++) {
   if (pos % 25 === 0) doCapitulo.length = 0;
   const sorte = aleatorio(20261111 + pos * 7919);
   let peso: Peso | undefined = pesoDoAndar(pos);
+  let zeLivre = false; // último recurso (fabrica.ts): só quando o peso mais leve não sai com o Zé pesando
   let feito: (ReturnType<typeof fabricar> & object & { fase: FaseTrilho; a: string }) | undefined;
   while (peso && !feito) {
     const temas = [...TEMAS[peso]].sort(() => sorte() - 0.5); // tenta os temas do peso numa ordem sorteada
@@ -62,8 +63,13 @@ for (let pos = inicio; pos < fim; pos++) {
     // ⚠️ 2 andares em 5 tentam a armadilha (era 1 em 3): com o "quase", só ~58% das tentativas dão certo, e com 1 em 3 o
     // estoque ficava com 80,7% de atalho (o andares.test pede < 80%)
     const papeis = pos % 5 === 2 || pos % 5 === 4 ? [true, false] : [false];
-    for (const fofArmadilha of papeis) {
-      for (const tema of temas) {
+    // 1 andar em 3 tenta a Vera de vítima (fabrica.ts, `vera`); se não sair no prazo, o andar fica com o Seu Zé.
+    // Com ela a Fofoqueira fica livre, e o tema padaria+ordem não entra: seriam 3 regras (teto de leitura = 2).
+    const comVera = pos % 3 === 1;
+    const largo = Math.floor(pos / 5) % 2 === 0; // médio e pesado alternam 4 e 3 colunas a cada 5 andares (fabrica.ts, moldeDe)
+    for (const vera of comVera ? [true, false] : [false]) {
+    for (const fofArmadilha of vera ? [false] : papeis) {
+      for (const tema of temas.filter((t) => !vera || t !== 'padaria+ordem')) {
         let ultimo: { fase: FaseTrilho; a: string } | undefined;
         const pesoAqui = peso;
         const aceita = (f: Parameters<typeof batizar>[0], c: Parameters<typeof batizar>[1]) => {
@@ -75,14 +81,17 @@ for (let pos = inicio; pos < fim; pos++) {
         };
         // ⚠️ a Fofoqueira-armadilha que também tem "quase" é rara: com o prazo dividido igual, só 11 de 50 saíram (o
         // estoque ficou com 89% de atalho; o andares.test pede ≤ 80%). Ela ganha 3× o prazo; o atalho de reserva, o resto.
-        const prazo = (PRAZO[peso] / temas.length) * (papeis.length === 1 ? 1 : fofArmadilha ? 1.5 : 0.5);
-        const achado = fabricar({ ...moldeDe(peso, tema), fofArmadilha }, sorte, prazo, aceita);
+        const prazo = (PRAZO[peso] / temas.length) * (vera || papeis.length === 1 ? 1 : fofArmadilha ? 1.5 : 0.5) * (comVera ? 0.6 : 1);
+        const achado = fabricar({ ...moldeDe(peso, tema, largo), fofArmadilha, vera, zeLivre }, sorte, prazo, aceita);
         if (achado && ultimo) feito = { ...achado, ...ultimo };
         if (feito) break;
       }
       if (feito) break;
     }
-    if (!feito) { console.log(`  posição ${pos}: nada em ${peso}, descendo`); peso = MAIS_LEVE[peso]; }
+      if (feito) break;
+    }
+    if (!feito && !MAIS_LEVE[peso] && !zeLivre) { console.log(`  posição ${pos}: ${peso} sem o Zé pesando`); zeLivre = true; }
+    else if (!feito) { console.log(`  posição ${pos}: nada em ${peso}, descendo`); peso = MAIS_LEVE[peso]; }
   }
   if (!feito) throw new Error(`posição ${pos}: nenhuma fase`);
   const fase = feito.fase;

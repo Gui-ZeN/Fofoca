@@ -103,6 +103,7 @@ O motor é determinístico (`src/motor.ts`, função `espalhar`): a mesma jogada
 | **Padaria (fora de casa)** | placa com pão e número: recado que chega antes daquela batida se perde. Vale pra estrela e pra vítima | 10 |
 | **Celular** | uma pessoa pode ligar pra alguém longe, sem passagem (linha pontilhada com telefone) | 13 (só ali) |
 | **Ordem** | ⭐1 tem que saber antes da ⭐2; junto não vale | 15 |
+| **Vera, a vigia** | a vítima é ela, e ela **escuta quando um vizinho dela conta algo** pra outra pessoa (os vizinhos ganham o selo "psiu"). Ouvir e guardar do lado dela pode; contar, não | 29 |
 
 **Passagens:** **porta** (vizinhos lado a lado: a parede some, batente e folha aberta) e **escada** (um em cima do outro: um lance do chão de baixo até o buraco na laje). Só existe passagem onde está desenhada.
 
@@ -154,7 +155,7 @@ Cena de chegada: "**Moradora nova!**" — *"Hum… quem mais te contou?"* (um ba
 
 ### 5.3 Ideias discutidas, ainda não construídas
 
-- **Vera, a vigia** — `?bloco=vera` (protótipo, 2026-11-12). **Escuta quando um vizinho dela conta algo** pra outra pessoa; receber e guardar do lado dela pode. Selo "ouve". Derrota: "Vera escutou o Rui contando do lado!". Fala de chegada: *"Eu não durmo. Eu escuto."*
+- **Vera, a vigia** — `?bloco=vera` (protótipo de 2026-11-12; **na campanha desde 2026-11-13**, andares 29–31, e no estoque gerado). **Escuta quando um vizinho dela conta algo** pra outra pessoa; receber e guardar do lado dela pode. Selo "ouve". Derrota: "Vera escutou o Rui contando do lado!". Fala de chegada: *"Eu não durmo. Eu escuto."*
 - **Dona Norma** — `?bloco=norma` (protótipo). Toque de recolher: **depois da batida N, quem mora colado nela não conta mais nada**. Selo "até N". Fala: *"Passou da hora, acabou a conversa."* (O rascunho era "fecha uma passagem após a batida N"; virou a vizinhança inteira, que se lê melhor. Alternativa não feita: tolerar ouvir uma vez.)
 - **Dr. Álvaro** — `?bloco=alvaro` (protótipo). Lotação: **no máximo N pessoas sabendo**, contando a origem. Selo "máx N"; derrota "Ficaram 5 sabendo, e o Dr. Álvaro só tolera 4." Só morde com Fofoqueira no prédio (ela espalha demais), e todas as fases dele têm. Fala: *"Isso é assunto reservado."*
 - Os três têm **3 fases cada** (`src/fiscais.ts`), achadas com buscador. As duas primeiras são "a regra atrapalha"; a 3ª da **Vera** (a estrela mora colada nela: receber e guardar pode) e da **Dona Norma** (uma Fofoqueira colada nela ouve na solução, tarde o bastante pra já estar calada) usam a regra como **ferramenta**. O **Dr. Álvaro não ganhou** fase assim: com a Fofoqueira na solução ela sai em 1–2 setas e a lotação deixa de decidir (busca sem candidatos) — as três dele seguem "desvie da Neide", motivo de o Astra sugerir adiá-lo. Na tela: selo do fiscal embaixo do nome, vizinhos marcados ("psiu" / "até N"), contador "Sabendo N/M" pro Álvaro. Testes por mutação: com as três regras desligadas, 21 de 28 falhavam.
@@ -201,7 +202,7 @@ Arte **ilustrada** (gerada por IA a partir de uma prancha do Guilherme), uma fol
 - Regra nova aparece numa **etiqueta NOVO** de uma linha e numa **cena de chegada** antes da fase (seção 10).
 - **Intercalado:** fase pesada, depois uma mais leve.
 
-### 7.3 Os 28 andares feitos à mão
+### 7.3 Os 31 andares feitos à mão
 
 | Andar | Rótulo | Nome | Moradores | Prédio | Setas | O que tem |
 |---|---|---|---|---|---|---|
@@ -233,14 +234,17 @@ Arte **ilustrada** (gerada por IA a partir de uma prancha do Guilherme), uma fol
 | 26 | D4 | Rifa do condomínio | 11 | 3×4 | 5 | 2 Fofoqueiras, 2 Exagerados, tamanho |
 | 27 | D5 | Sofá novo no 201 | 10 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
 | 28 | D6 | Reunião de condomínio | 11 | 3×4 | 6 | 2 Fofoqueiras, padaria, ordem |
+| 29 | V1 | De olho no corredor | 8 | 3×3 | 3 | **Vera** — **NOVO** |
+| 30 | V2 | Paredes têm ouvidos | 8 | 3×3 | 4 | Vera |
+| 31 | V3 | Na ponta do pé | 8 | 3×3 | 4 | Vera, Fofoqueira (a estrela mora colada na Vera) |
 
 **Repetidas trocadas (2026-11-12, crítica do Fable):** a H6 era a mesma ideia da H5 (Zé fora, a Neide colada nele fala à vontade) e virou celular + padaria — a Cida só volta na 4, pela porta o recado chega na 3, e a Bia liga na hora. A O3 era mais uma "a Neide fecha a fila" (como O2 e O6) e virou fila + tamanho — a 1 quer fofoca e tem que passar pelo Exagerado. As duas com o Zé fora do canto. Títulos que entregavam a resposta ("Volta comprida", "Corredor de cima", "Antes do Zé voltar", "A 2 está do lado", "Fala cedo, entrega tarde", "Na volta, por ordem", "Atalho que vaza") viraram vida de condomínio. Na mesma leva, H4, H5, D2 e D6 também deixaram o "Zé fora + Neide colada": em todas o Zé fica em casa e a padaria muda de lugar — na H4 é quem está no meio do caminho, na H5 é o Exagerado (a estrela quer fofoca), na D2 é a estrela que quer fofoca, e a D6 (final do capítulo) junta fila, padaria e a Neide espalhando no meio do caminho. Todas achadas com um buscador sobre o motor (solução única, a regra muda a jogada, o caminho óbvio perde). A D4 ("Fofoca, não escândalo") também saiu: virou "Rifa do condomínio", com o Zé em casa e a estrela querendo fofoca (o caminho óbvio chega cochicho). **Ainda fica:** a ideia só na H3, onde ela é ensinada, de propósito; e, nos andares 2 a 20, a vítima no canto em boa parte deles.
 
-Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio. (Fora da campanha: **A** = Arnaldo, **N** = Nonato, **R** = Raquel, **P** = Nando.)
+Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio, **V** = Vera. (Fora da campanha: **A** = Arnaldo, **N** = Nonato, **R** = Raquel, **P** = Nando.)
 
 **Garantias de toda fase feita à mão** (testes): uma única solução dentro das setas; com uma seta a menos não dá (exceto a T2); a armadilha registrada perde pelo motivo certo; espelhada continua o mesmo quebra-cabeça; **desligar a regra da fase muda a jogada**.
 
-### 7.4 Prédio sem fim (andar 29 em diante)
+### 7.4 Prédio sem fim (andar 32 em diante)
 - **150 andares gerados** (`src/andares.json`), em blocos de **25**: leve → média → pesada… e um **chefão** no 25º.
 
 | Peso | Prédio | Moradores | Setas | Extra |
@@ -260,6 +264,14 @@ Letras: **T** = trilho, **H** = Hora certa, **O** = Ordem, **D** = Prédio cheio
 
 **Folga e variedade (2026-11-12, a partir da crítica do Fable jogando):** "Setas" é o mínimo K; o jogador recebe **K + 1** (`FOLGA`), pra contar as setas deixar de entregar o tamanho do caminho. A 1ª Fofoqueira **mora longe do Zé** e precisa mudar a jogada, e o Zé nunca fica no canto do prédio desenhado. **Papel da Fofoqueira:** 2 andares em 3 ela é atalho; 1 em 3 (`fofArmadilha`) é **armadilha** — ninguém dela ouve na solução, e ela pega quem passar por ela com ordem, tamanho ou padaria; onde nenhum tema dá armadilha, o andar fica com o atalho. ⚠️ Só longe do Zé ela vira o atalho em 92% ("é sempre por ela"); armadilha deixada onde cair voltava a ser a colada no Zé (54 de 58). Antes → depois, medido nos 150: setas = caminho 100% → 0%; Fofoqueira colada no Zé 100% → 15%; Fofoqueira de atalho 27% → 75%, de armadilha 73% → 25%; solução que é só uma corrente de setas 73% → 25%; Zé no canto 43% → 0%; Zé com uma porta só 43% → 0%.
 
+**O vazio é parede (2026-11-12, pergunta do dono: "qual a pegada dos apartamentos vazios?"):** os cômodos vazios eram sobra do sorteio numa grade cheia — furos que não decidiam nada. Agora a fábrica sorteia uma **planta** (`src/planta.ts`) e os moradores a preenchem, sobrando no máximo 1 cômodo (nunca uma coluna inteira, o alto ou o térreo): **L** (bloco embaixo e uma torre), **U** (duas torres ligadas por baixo), **poço** (anel em volta de um vão), **H** (duas torres com ponte) e **degraus** (escadaria). Sem regra nova: o jogador lê "por aqui não dá, tem que contornar". No estoque de 2026-11-13: degraus 79, L 48, H 6, U 3, poço 1, e 13 em grade com furos — só o 3×4 ainda aceita a grade, porque ali, com o vilão pesando, das plantas só os degraus rendem. ⚠️ O zigue-zague ficou de fora: vira uma árvore, o caminho é um só, e o certificado recusou 1,4 milhão de tentativas. ⚠️ Degraus e L dominam; U, poço e H rendem pouco. ⚠️ "Gargalo" (um morador por onde o boato é obrigado a passar) deixou de ser meta: subiu pra 88 com as plantas e caiu pra 33 quando o vilão passou a pesar — vilão que pesa pede caminho alternativo, o contrário de gargalo.
+
+**O vilão tem que pesar (2026-11-13, o dono jogando: "o nosso vilão é um pedaço de nada… geralmente tá na ponta"):** medido, o Seu Zé era **enfeite em 111 dos 150** andares gerados e em 20 dos 28 feitos à mão — tirando a ameaça dele, a solução era a mesma. Motivo: morador só conta pra quem a seta aponta, então o Zé só ouve sem querer pela Fofoqueira, e ela tinha sido afastada dele. Agora o certificado refaz a conta com a vítima virando um morador comum (`papelDoZe`, `src/fabrica.ts`) e só aceita o andar se algo muda: aparece solução com menos setas (**desvio**, 42 andares) ou outras soluções com as mesmas setas (**corta**, 108). Enfeite: **0**. Vilão na coluna da borda: 129 → 75. ⚠️ Exigir "o vilão bloqueia TODO caminho curto" zera a produção: a volta vira o único caminho e a fase fica óbvia. ⚠️ O tema "só Fofoqueira" quase some com o Zé (ele só pesa junto de padaria, ordem ou tamanho); volta com a Vera. Os 28 feitos à mão **não** foram refeitos.
+
+**Vera no estoque:** 1 andar em 3 tenta sair com a **Vera** de vítima no lugar do Zé (`vera` no molde); só vale se a escuta dela muda a jogada, e se não sair no prazo o andar fica com o Zé. Saíram **45 de 150**. Com ela o tema padaria+ordem não entra (seriam 3 regras; o teto de leitura é 2).
+
+**Prédio de 4 colunas (2026-11-13, o dono: "será que não teremos que expandir o prédio pros lados?" e, vendo o protótipo, "ainda tá bem legível"):** o 3×3 era onde tudo quebrava (a Vera não rendia nenhum andar; o Zé só pesava com a padaria). Medido com a máquina livre, só plantas, vilão pesando, andares aceitos em 16–20 s: leve **4×3** 127 com o Zé e 65 com a Vera (L, H, degraus) contra 45 e 3 no 3×4 (só degraus); médio 4×4 65/31 (L, U, degraus) contra 115/19 no 3×4 (degraus); pesado 4×4 46/15 (U, poço, degraus) contra 86/19 no 3×5 (L, degraus); 4×5 e chefão largo não compensam. Daí o estoque: **leve 4×3** (8–10 moradores), **médio** alternando 4×4 e 3×4 a cada 5 andares, **pesado** alternando 4×4 e 3×5, **chefão 3×5**. Hoje: 60 em 4×3, 42 em 4×4, 27 em 3×4, 21 em 3×5. Num celular de 390 de largura o cômodo cai pra ~93 e os selos pequenos ficam no limite — 4 colunas é o teto (teste). ⚠️ Medição de rendimento só vale com o gerador parado: feita junto com ele, a conta tinha saído ao contrário (3×4 melhor que 4×3).
+
 Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (antes havia Gil, Tião e Juca, sem desenho, e um teto de 7 moradores comuns). Regerado de novo em 2026-11-12 (folga e variedade, abaixo): 60 leves de 3 andares, 54 médias de 4, 30 pesadas de 5, 6 chefões de 6 — nenhum precisou descer de peso. Os 150 saem em ~3 min com 6 processos em paralelo.
 
 - Temas sorteados: corrente de Fofoqueiras, padaria, ordem, tamanho, padaria+ordem.
@@ -267,7 +279,7 @@ Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (
 
 ### 7.5 Capítulos, ★ e Fofoca do dia
 
-- **Capítulos** (`src/capitulos.ts`): os 28 feitos à mão viram 4 — *Primeiros boatos* (1–5), *Vizinhos novos* (6–14), *Fila da fofoca* (15–20), *Reunião de condomínio* (21–28); depois, **um a cada 25 andares**, sempre terminando num chefão de 6 andares, com temas de condomínio que se repetem (*A encomenda misteriosa*, *A festa surpresa*, *O bolo desaparecido*, *A obra no 302*, *O apagão*…).
+- **Capítulos** (`src/capitulos.ts`): os 31 feitos à mão viram 5 — *Primeiros boatos* (1–5), *Vizinhos novos* (6–14), *Fila da fofoca* (15–20), *Reunião de condomínio* (21–28), *A vigia do terceiro* (29–31, a Vera); depois, **um a cada 25 andares**, sempre terminando num chefão de 6 andares, com temas de condomínio que se repetem (*A encomenda misteriosa*, *A festa surpresa*, *O bolo desaparecido*, *A obra no 302*, *O apagão*…).
 - **Abertura:** no 1º andar do capítulo (uma vez por aparelho, antes da cena de chegada), "Capítulo 5 · A encomenda misteriosa", o Seu Zé e o aviso da administração do tema. **Fechamento:** no último andar, o desfecho diz "Capítulo 5 concluído · ★ 18 de 25" e o botão vira **Próximo capítulo**.
 - **Desafio opcional = ★ de primeira:** o andar vencido na primeira tentativa **e sem seta além do mínimo** ganha ★ ("★ De primeira!" no desfecho; ★ no índice). Venceu de primeira gastando a folga: "Sem ★: dava com 4 setas." (`ganhaEstrela`, capitulos.ts). O "sem seta além" entrou com a folga dos andares gerados (2026-11-12): sem ele, a folga barateava a ★.
 - **Fofoca do dia:** botão no menu (fora do `?pesquisa`). Um andar leve ou médio do estoque, **o mesmo pra todo mundo no dia** (escolhido pela data do aparelho, elenco fixo pela data), sem advertência. Vencendo, **Compartilhar** manda o dia e o resultado ("espalhei de primeira ★ sem a vítima descobrir"), nunca a solução. O menu mostra "feita" (e "de primeira ★").
@@ -319,7 +331,7 @@ Na **primeira vez** que algo novo aparece, antes da fase. Usa o morador da próp
 Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** como padrão.
 
 - **Prédio montado com peças ilustradas:** 4 fundos de apartamento (verde, rosa, listrado, azul, cada um com seu móvel), 4 vazios à noite (aluga-se, mudança, lençol, gato), telhado (telhas, caixa d'água, antena, varal) e bairro ao fundo. O que muda durante o jogo (paredes, portas, escadas, setas, plaquinhas, luz) é desenhado em código por cima.
-- **Leitura por forma, não só cor:** origem = selo de balão; vítima = octógono com "!"; estrela; selecionado = 4 cantoneiras; pode ouvir = tracejado; ouviu = luz amarela forte com moldura; vítima pega = vermelho, "QUÊ?!" e seta vermelha; +1 / −1 / ⇄ nas plaquinhas.
+- **Leitura por forma, não só cor:** origem = selo de balão; vítima = octógono com "!"; estrela; selecionado = 4 cantoneiras; pode ouvir = tracejado azul (**todo** destino possível acende igual, inclusive a vítima — sem ela, o destaque virava dica); ouviu = luz amarela forte com moldura; vítima pega = vermelho, "QUÊ?!" e seta vermelha; +1 / −1 / ⇄ nas plaquinhas.
 - **A plaquinha mede o nome de verdade** (não chuta por letra): cabe com fonte nova e tradução.
 - **Cores e letras:** tinta marrom e tons quentes; botão mostarda com texto escuro (botão de elevador, afunda ao apertar). **Patua One** (marca e títulos) + **Asap** (interface).
 - **Céu pouco:** o prédio ocupa o palco; nas fases pequenas, sol e nuvens lentas no que sobra.
@@ -348,6 +360,7 @@ Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** co
 | `?pesquisa` / `?pesquisa&zerar` | **teste com pessoas**: campanha igual pra todos, sem advertências, com registro exportável; `&zerar` = participante novo |
 | `?bloco=arnaldo` / `?bloco=nonato` / `?bloco=raquel` / `?bloco=apressado` | os protótipos de mecânica (com cena de chegada) |
 | `?bloco=alto` | dois prédios de 5 e 6 andares feitos pela fábrica, pra ver a rolagem |
+| `?bloco=largo` | três prédios de **4 colunas** (4×3, 4×4 e 4×4 com a Vera) — o experimento que virou formato do estoque |
 | `?bloco=hora` / `ordem` / `dificil` | blocos de 6 fases (diagnóstico) |
 | `?grupo=A` / `?grupo=B` | o antigo teste trilho × giros (diagnóstico) |
 | `?vetor` | o jogo com o desenho antigo em SVG |
@@ -379,7 +392,7 @@ Protocolo do teste com 5 pessoas: `README.md` (entregar sem explicar; pedir pra 
 
 **Certificado da fábrica:** uma única solução no menor número de setas (K); com as K + 1 que o jogador recebe, no máximo 2; o caminho mais curto perde, mesmo com a folga; nas pesadas, "não cutucar o Zé nem a Fofoqueira colada nele" também perde; cada regra presente (inclusive a Fofoqueira) muda a jogada.
 
-**Números de hoje:** **1126 testes em 26 arquivos** (o teste do teto roda por andar: campanha, estoque e protótipos), todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
+**Números de hoje:** **1152 testes em 27 arquivos** (o teste do teto roda por andar: campanha, estoque e protótipos), todos passando (os de Arnaldo e Nonato conferidos por mutação: desligando a regra, 9/15 e 7/13 falham). Pacote do jogo **381 KB** (95 KB comprimido) + arte **3,6 MB** (só as poses de quem está na fase são baixadas).
 
 **Guardado no aparelho:** `fofoca.campanha.*` (andar liberado, tentativas, cenas vistas), `fofoca.advertencias`, `fofoca.pesquisa.*`, `fofoca.registro`, `fofoca.participante`; nos blocos, `fofoca.<bloco>.*`.
 
@@ -400,7 +413,7 @@ npm run build
 - **Em prédios aleatórios, o caminho mais curto ganha 98% das vezes**: a dificuldade vem de armadilha, não de regra a mais (Consulta 3).
 - **Nas 178 fases:** mediana de 8 moradores, 5 ouvem, 4 setas, 1 estrela, 4 batidas. **Solução única em 178/178**, e ela já é a que faz **menos gente ouvir** → teto de ouvintes e "desafio de menos setas" não mudam nada nas fases atuais.
 - **A Fofoqueira é mais perigo que ajuda:** está em 171 fases; no caminho de uma estrela em 39; a armadilha perde por ela contar pra vítima em 83.
-- **Celular em 1 fase** (andar 13). Tamanho em 37, padaria em 55, ordem em 54. Última estreia no andar 15.
+- **Celular em 2 fases** (andares 13 e 19; conferido pelo Astra na Consulta 9). Tamanho em 37, padaria em 55, ordem em 54. Última estreia no andar 15.
 - **Diagnóstico do Sol (Consulta 6):** falta **variedade** de raciocínio, não necessariamente dificuldade — e só gente jogando separa as duas coisas.
 
 ---
@@ -411,7 +424,7 @@ npm run build
 - **Jogar** o Arnaldo, o Nonato e a Raquel e decidir se entram na campanha (e no gerador).
 - **Próximas mecânicas** (Fable, estudos de 2026-11-12; o Apressado já virou o Nando): **Comadres** (duas estrelas que só valem na mesma batida), **Psiu!** (calar um morador uma vez por fase), **Linguarudo** (com escândalo, vira fofoqueiro), **Dois boatos** (corrida e barreira), **Boato cansa** (perde um tamanho a cada N repasses, como condição de capítulo). ⚠️ Concorrente direto: *Rumor Mill: Village Gossip Sim* (Google Play, Crystl Labs) — premissa quase igual; pareceu confuso de cara ("muita informação") — a clareza do Fofoca! é a vantagem a proteger: uma regra nova por vez, legível por um ícone e uma frase.
 - **Arrastar no celular** (2026-11-12): o tabuleiro estava com `touch-action: manipulation` e o navegador tratava o arrasto como rolagem (cancelava o gesto); agora arrastar de quem conta até quem ouve desenha a seta, e um toque na seta apaga. No prédio que rola, a vertical continua rolando (o toque-toque vale sempre).
-- Próximo fiscal (Vera ou Dona Norma), uma regra por vez.
+- Próximo fiscal (Dona Norma), uma regra por vez. A Vera já entrou.
 - Decidir o **celular** (peça do quebra-cabeça ou ajuda).
 - **Som** ("psst" a cada batida, "QUÊ?!" na derrota).
 - Mais adiante: álbum dos moradores, variação visual por capítulo (chuva, festa junina, noite).

@@ -19,6 +19,7 @@
 
 import { alvosDe, amigosDe, controlavel, type Fase, type Tamanho, type Vizinho } from './motor';
 import { jogar, resolverTrilho, type FaseTrilho, type Plano } from './trilho';
+import { celulas, FORMATOS, type Formato } from './planta';
 
 // setas além do mínimo (K): o contador deixa de entregar o tamanho do caminho
 export const FOLGA = 1;
@@ -27,7 +28,8 @@ export type Tema = 'cadeia' | 'padaria' | 'ordem' | 'tamanho' | 'padaria+ordem';
 export type Peso = 'leve' | 'media' | 'pesada' | 'chefe';
 
 export interface Molde {
-  andares: number; // altura do prédio (3 colunas sempre; de 5 andares pra cima o palco rola na vertical)
+  andares: number; // altura do prédio (de 5 andares pra cima o palco rola na vertical)
+  colunas?: number; // largura (padrão 3). 4 é experimento de 2026-11-12: "expandir o prédio pros lados?"
   n: [number, number]; // moradores
   fof: number; // Fofoqueiras (a 1ª mora longe do Zé; a 2ª, onde cair)
   estrelas: number;
@@ -39,13 +41,24 @@ export interface Molde {
   // virou o atalho em 92% dos andares — "a saída é sempre por ela" (2026-11-12). A armadilha TAMBÉM mora longe
   // do Zé: deixada onde cair, ela caía colada nele em 54 de 58 e voltava a ser a placa de "não toque".
   fofArmadilha?: boolean;
+  // a vítima é a Vera, a vigia (fiscais.ts): escuta quando um vizinho dela CONTA algo. É a vilã que pesa pela posição —
+  // passar perto dela é o risco, sem depender da Fofoqueira (2026-11-12, "o vilão é um pedaço de nada").
+  vera?: boolean;
+  // último recurso do gerador: aceitar o andar mesmo com o Zé de enfeite (papelDoZe). Só o prédio de 3 andares usa,
+  // quando nada sai no prazo — ali quase não sobra caminho alternativo pra ele cortar.
+  zeLivre?: boolean;
+  formato?: Formato; // a planta do prédio (planta.ts); sem isso, sorteia uma que caiba na lotação do molde
 }
 
-export function moldeDe(peso: Peso, tema: Tema): Molde {
+export function moldeDe(peso: Peso, tema: Tema, largo = false): Molde {
   const base: Record<Peso, Omit<Molde, 'tema'>> = {
     // Prédio cresce com o peso (2026-11-11, "a fábrica com prédios maiores"): mais andares = caminhos mais
     // longos e mais lugar pra armadilha. 5 e 6 andares rolam na tela (Cena.tsx), com cômodo de ≥100 px.
-    leve: { andares: 3, n: [6, 7], fof: 1, estrelas: 1, k: [3, 4], zeMeio: false, aprendeu: false },
+    // ⚠️ o leve é 4×3 (largo), não 3×3 (2026-11-13): no 3×3 a Vera não rendia NENHUM andar e o Zé só pesava com a
+    // padaria — não sobra caminho alternativo. Medido com a máquina livre, exigindo o vilão pesando: 4×3 rende 127
+    // andares com o Zé e 65 com a Vera, em L, H e degraus; o 3×4 rende 45 e 3, só em degraus. (Na véspera, com a
+    // máquina ocupada, a conta tinha saído ao contrário — não confie em medição feita com o gerador rodando.)
+    leve: { andares: 3, colunas: 4, n: [8, 10], fof: 1, estrelas: 1, k: [3, 4], zeMeio: false, aprendeu: false },
     media: { andares: 4, n: [8, 10], fof: 1, estrelas: 1, k: [4, 5], zeMeio: false, aprendeu: false },
     pesada: { andares: 5, n: [10, 12], fof: 2, estrelas: 1, k: [5, 6], zeMeio: true, aprendeu: true },
     // ⚠️ chefão em 5 andares, não 6 (Consulta 7, 20 de 20 designers): o 3×6 rolava na tela — o clímax do capítulo
@@ -53,7 +66,11 @@ export function moldeDe(peso: Peso, tema: Tema): Molde {
     // a mesma rede que o 3×5 (+1 morador, +1 passagem); a altura só comprava rolagem.
     chefe: { andares: 5, n: [11, 12], fof: 2, estrelas: 2, k: [6, 7], zeMeio: true, aprendeu: true },
   };
-  const m = { ...base[peso], tema };
+  // `largo`: a variante de 4 colunas do médio e do pesado (o dono achou legível no celular, 2026-11-12). Rende um pouco
+  // menos que a de 3, mas em plantas que a de 3 não dá (L e U no médio; U e poço no pesado) — o gerador alterna as duas.
+  // O chefão fica em 3×5: em 4×5 quase nada certifica (5 andares em 20 s, contra 26).
+  const larga: Partial<Record<Peso, Partial<Molde>>> = { media: { andares: 4, colunas: 4, n: [10, 12] }, pesada: { andares: 4, colunas: 4, n: [11, 13] } };
+  const m = { ...base[peso], ...(largo ? larga[peso] : {}), tema };
   if (tema === 'ordem' || tema === 'padaria+ordem') m.estrelas = Math.max(2, m.estrelas);
   return m;
 }
@@ -67,16 +84,34 @@ const embaralha = <T,>(xs: T[], sorte: () => number) => {
 
 // Prédio aleatório no formato do molde (ids provisórios; os nomes vêm depois, em `vestirFabricada`).
 export function montar(m: Molde, sorte: () => number): Fase | null {
-  const cel: [number, number][] = [];
-  for (let r = 0; r < m.andares; r++) for (let c = 0; c < 3; c++) cel.push([c, r]);
-  const meio = cel.filter(([c, r]) => c === 1 && r > 0 && r < m.andares - 1);
-  const canto = ([c, r]: [number, number]) => (c === 0 || c === 2) && (r === 0 || r === m.andares - 1);
-  const vitPos = m.zeMeio ? pick(meio, sorte) : pick(cel.filter((x) => !canto(x)), sorte);
-  const n = m.n[0] + Math.floor(sorte() * (m.n[1] - m.n[0] + 1));
+  // ⚠️ o vazio é PAREDE desenhada (planta.ts): o prédio tem formato e só sobra, no máximo, 1 cômodo vazio fora dele.
+  // Antes as células vazias eram sobra do sorteio numa grade cheia — furos que não decidiam nada.
+  const colunas = m.colunas ?? 3;
+  const cabe = (fo: Formato) => { const t = celulas(fo, m.andares, false, colunas).length; return t >= m.n[0] && t <= m.n[1] + 1; };
+  // ⚠️ no 3×4 a grade cheia (com furos) também entra: com o Zé obrigado a pesar (papelDoZe), das plantas só os degraus
+  // rendem nesse tamanho, e o médio estreito ficaria todo igual (medido em 2026-11-12). Nos largos não precisa.
+  const formato = m.formato ?? pick([...FORMATOS.filter(cabe), ...(colunas === 3 && m.andares <= 4 ? ['cheio' as Formato] : [])], sorte);
+  const cel = celulas(formato, m.andares, sorte() < 0.5, colunas);
+  const portas = ([c, r]: [number, number]) => cel.filter(([x, y]) => Math.abs(x - c) + Math.abs(y - r) === 1).length;
+  const canto = ([c, r]: [number, number]) => (c === 0 || c === colunas - 1) && (r === 0 || r === m.andares - 1);
+  // o Zé "do meio" é o que tem 3+ portas possíveis (numa planta com poço, a coluna do meio pode nem existir)
+  const paraZe = cel.filter((x) => !canto(x) && portas(x) >= (m.zeMeio ? 3 : 2));
+  if (!paraZe.length) return null;
+  const vitPos = pick(paraZe, sorte);
+  // ⚠️ numa planta sobra no MÁXIMO 1 cômodo: com a lotação sorteada solta sobravam 2 ou 3 e o desenho se desfazia
+  // (4 andares do estoque de 2026-11-13 saíram sem planta reconhecível)
+  const sorteado = m.n[0] + Math.floor(sorte() * (m.n[1] - m.n[0] + 1));
+  const n = Math.min(cel.length, formato === 'cheio' ? sorteado : Math.max(sorteado, cel.length - 1));
   const usados = [vitPos, ...embaralha(cel.filter(([c, r]) => !(c === vitPos[0] && r === vitPos[1])), sorte).slice(0, n - 1)];
   // ⚠️ canto de VERDADE é o do prédio desenhado: com a última coluna ou o último andar vazios, o prédio encolhe
   // (Predio.medidas) e o Zé "do meio da borda" vira canto (3 de 150 na 1ª geração)
   const W = Math.max(...usados.map(([c]) => c)), H = Math.max(...usados.map(([, r]) => r));
+  // o cômodo que sobra vazio não pode ser a ponta de cima da planta (a torre do L, o alto dos degraus): o prédio
+  // perderia um andar e o formato com ele
+  if (!usados.some(([, r]) => r === 0)) return null;
+  // …nem uma coluna inteira (o prédio largo viraria estreito, ou ficaria com uma faixa vazia do lado), nem o térreo
+  for (let c = 0; c < colunas; c++) if (!usados.some(([x]) => x === c)) return null;
+  if (formato !== 'cheio' && usados.filter(([, r]) => r === m.andares - 1).length < colunas) return null;
   if ((vitPos[0] === 0 || vitPos[0] === W) && (vitPos[1] === 0 || vitPos[1] === H)) return null;
   const ids = 'zabcdefghijklmnop'.slice(0, n).split('');
   const am: [string, string][] = [];
@@ -117,6 +152,7 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
     tipo: id === 'z' ? 'assunto' : fofs.includes(id) ? 'fofoqueira' : exag.includes(id) ? 'exagerado' : 'comum',
     ...(est.includes(id) ? { interesse: { ...(ordem ? { ordem: est.indexOf(id) + 1 } : {}), ...(temTamanho ? { tamanho: 2 as Tamanho } : {}) } } : {}),
     ...(id === 'z' && quem.includes('z') ? { chega: 2 + Math.floor(sorte() * 3) } : {}),
+    ...(id === 'z' && m.vera ? { vigia: true } : {}),
     ...(id === est[0] && quem.includes('e') ? { chega: 3 + Math.floor(sorte() * 3) } : {}),
   }));
   return { titulo: '', boato: '', giros: 0, vizinhos, amizades: am, origens: [origem] };
@@ -157,6 +193,20 @@ function obvios(f: Fase, K: number, evita: string[]): Plano[] {
 
 export interface Certificado { K: number; solucao: Plano; armadilha: Plano }
 
+// O Zé PESA na jogada? Refaz a conta com o mesmo prédio e o Zé virando um morador qualquer (pode ouvir e passar adiante):
+//  - 'desvio': sem a ameaça existe solução com menos setas — ele obriga a dar a volta;
+//  - 'corta': com as mesmas setas aparecem outras soluções — ele elimina caminhos que davam certo;
+//  - undefined: nada muda. O Zé é enfeite e o andar é recusado.
+// ⚠️ Antes disso o Zé era "um pedaço de nada" (dono jogando, 2026-11-12): só precisava não apontar pra ele. Em 150
+// andares, o caminho óbvio só perdia por causa dele em 13, e com as plantas ele foi parar na borda em 129.
+// ⚠️ Não troque por "o Zé bloqueia TODO caminho mais curto": aí a volta é o único caminho, o óbvio vira a solução e o
+// certificado recusa tudo (0 andares leves e médios em 3 milhões de tentativas).
+export function papelDoZe(f: Fase, K: number, solucao: Plano): 'desvio' | 'corta' | undefined {
+  const semAmeaca: Fase = { ...f, vizinhos: f.vizinhos.map((v) => (v.tipo === 'assunto' ? { ...v, tipo: 'comum', vigia: undefined } : v)) };
+  for (let k = 2; k < K; k++) if (resolverTrilho(semAmeaca, k).length) return 'desvio';
+  return mesma(resolverTrilho(semAmeaca, K), solucao) ? undefined : 'corta';
+}
+
 export function certificar(f: Fase, m: Molde): Certificado | undefined {
   let K = 0, sol: Plano[] = [];
   for (K = 2; K <= m.k[1]; K++) { sol = resolverTrilho(f, K); if (sol.length) break; }
@@ -177,6 +227,9 @@ export function certificar(f: Fase, m: Molde): Certificado | undefined {
   if (f.vizinhos.some((v) => v.interesse?.tamanho) && mesma(resolverTrilho(sem(f, 'tamanho'), K), p)) return;
   const comum: Fase = { ...f, vizinhos: f.vizinhos.map((v) => (v.tipo === 'fofoqueira' ? { ...v, tipo: 'comum' } : v)) };
   if (fofs.length && mesma(resolverTrilho(comum, K), p)) return;
+  // a Vera: sem a escuta dela (só "não contar pra ela"), a jogada tem que ser outra
+  if (f.vizinhos.some((v) => v.vigia) && mesma(resolverTrilho({ ...f, vizinhos: f.vizinhos.map((v) => ({ ...v, vigia: undefined })) }, K), p)) return;
+  if (!m.zeLivre && !papelDoZe(f, K, p)) return; // por último: é a conta mais cara
   return { K, solucao: p, armadilha: ingenuos[0] };
 }
 
@@ -188,12 +241,13 @@ export function certificar(f: Fase, m: Molde): Certificado | undefined {
 const COMUNS = ['Ana', 'Davi', 'Bia', 'Rui', 'Lia', 'Edu', 'Marlene', 'Caio', 'Jandira', 'Otávio', 'Celina', 'Solange', 'Ivo'];
 const ID: Record<string, string> = {
   Rita: 'r', Bia: 'b', Cida: 'c', Ana: 'a', Neide: 'n', Lu: 'l', Beto: 'o', 'Lúcia': 'u',
-  Davi: 'd', Rui: 'y', Edu: 'e', Lia: 'i', 'Seu Zé': 'z',
+  Davi: 'd', Rui: 'y', Edu: 'e', Lia: 'i', 'Seu Zé': 'z', Vera: 'z',
   Marlene: 'm', Caio: 'k', Jandira: 'j', 'Otávio': 'v', Celina: 'x', Nando: 'w', Solange: 's', Ivo: 'h',
 };
 
 export function batizar(f: Fase, c: Certificado, titulo: string, boato: string): FaseTrilho {
-  const nome: Record<string, string> = { z: 'Seu Zé', [f.origens![0]]: 'Rita' };
+  const vera = f.vizinhos.some((v) => v.vigia);
+  const nome: Record<string, string> = { z: vera ? 'Vera' : 'Seu Zé', [f.origens![0]]: 'Rita' };
   const ests = f.vizinhos.filter((v) => v.interesse).sort((a, b) => (a.interesse!.ordem ?? 0) - (b.interesse!.ordem ?? 0));
   ests.forEach((v, i) => (nome[v.id] = ests.length === 1 ? 'Cida' : ['Bia', 'Cida', 'Ana'][i]));
   f.vizinhos.filter((v) => v.tipo === 'fofoqueira').forEach((v, i) => (nome[v.id] = ['Neide', 'Lu'][i]));
@@ -203,7 +257,7 @@ export function batizar(f: Fase, c: Certificado, titulo: string, boato: string):
   const novo = (id: string) => ID[nome[id]];
   const plano = (p: Plano) => Object.fromEntries(Object.entries(p).map(([a, b]) => [novo(a), novo(b)]));
   return {
-    titulo, boato, giros: 0, setas: c.K + FOLGA, origens: [novo(f.origens![0])],
+    titulo, boato: vera ? boato.replace('O Seu Zé', 'A Vera') : boato, giros: 0, setas: c.K + FOLGA, origens: [novo(f.origens![0])],
     vizinhos: f.vizinhos.map((v) => ({ ...v, id: novo(v.id), nome: nome[v.id] })),
     amizades: f.amizades.map(([a, b]) => [novo(a), novo(b)] as [string, string]),
     solucao: plano(c.solucao),

@@ -23,6 +23,7 @@ const REGRAS: [string, (v: Vizinho) => boolean, (v: Vizinho) => Vizinho][] = [
   ['arnaldo', (v) => !!v.abafa, (v) => ({ ...v, abafa: undefined })],
   ['raquel', (v) => !!v.desconfia, (v) => ({ ...v, desconfia: undefined })],
   ['nando', (v) => v.tipo === 'apressado', (v) => (v.tipo === 'apressado' ? { ...v, tipo: 'comum' } : v)],
+  ['vera', (v) => !!v.vigia, (v) => ({ ...v, vigia: undefined })],
 ];
 
 // ⚠️ quem está na padaria muda o raciocínio: o Zé fora (a Fofoqueira colada nele pode falar), a estrela fora (chegar

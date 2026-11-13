@@ -498,8 +498,9 @@ export function Predio(props: {
         const selecionado = montando && trilho?.selecionado === v.id;
         const cls = [
           'morador', origem === v.id && 'origem', perdeu && 'culpado', clicavel && 'clicavel',
-          // ⚠️ a vítima NÃO ganha o tracejado de alvo: dá pra mandar seta pra ela, mas o tracejado parecia um convite
-          selecionado && 'selecionado', montando && trilho?.alvos.includes(v.id) && v.tipo !== 'assunto' && 'alvo',
+          // ⚠️ TODO destino possível acende igual, inclusive a vítima. Por um tempo ela ficou sem o destaque (parecia
+          // convite), mas aí o destaque virava dica: acendia tudo menos ela = "não vá por ali" (dono, 2026-11-12).
+          selecionado && 'selecionado', montando && trilho?.alvos.includes(v.id) && 'alvo',
         ];
         const pe = pes(v);
         return (

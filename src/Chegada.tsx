@@ -19,6 +19,12 @@ export interface Apresentacao {
 }
 
 export const APRESENTACOES: Record<string, Apresentacao> = {
+  V1: {
+    demo: 'fiscal', titulo: 'Fiscal nova!',
+    quem: (f) => f.vizinhos.find((v) => v.vigia),
+    fala: 'Eu não durmo. Eu escuto.',
+    regra: (v) => `${v.nome} escuta quando um vizinho dela conta algo. Ouvir e guardar do lado dela pode; contar, não. E o boato é sobre ela.`,
+  },
   T4: {
     demo: 'espalha', titulo: 'Moradora nova!',
     quem: (f) => f.vizinhos.find((v) => v.tipo === 'fofoqueira'),
@@ -65,12 +71,6 @@ export const CHEGADAS_DE_TESTE: Record<string, Apresentacao> = {
     quem: (f) => f.vizinhos.find((v) => v.tipo === 'docontra'),
     fala: 'Isso aí? Foi o contrário.',
     regra: (v) => `${v.nome} é do contra: conta tudo ao contrário. A estrela mostra se quer a versão certa ou a ao contrário.`,
-  },
-  V1: {
-    demo: 'fiscal', titulo: 'Fiscal nova!',
-    quem: (f) => f.vizinhos.find((v) => v.vigia),
-    fala: 'Eu não durmo. Eu escuto.',
-    regra: (v) => `${v.nome} escuta quando um vizinho dela conta algo. Ouvir e guardar do lado dela pode; contar, não. E o boato é sobre ela.`,
   },
   M1: {
     demo: 'fiscal', titulo: 'Fiscal nova!',

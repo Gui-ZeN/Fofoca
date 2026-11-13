@@ -15,17 +15,18 @@ describe('capítulos', () => {
     lista.forEach((c, i) => expect(c.numero).toBe(i + 1));
   });
 
-  it('os 4 primeiros são os feitos à mão, um por regra que estreia', () => {
-    expect(lista.slice(0, 4).map((c) => [c.inicio, c.fim])).toEqual([[0, 5], [5, 14], [14, 20], [20, 28]]);
+  it('os 5 primeiros são os feitos à mão, um por regra que estreia', () => {
+    expect(lista.slice(0, 5).map((c) => [c.inicio, c.fim])).toEqual([[0, 5], [5, 14], [14, 20], [20, 28], [28, 31]]);
     expect(CAMPANHA.slice(0, 5).map((a) => a.rotulo)).toEqual(['T1', 'T2', 'T3', 'T4', 'T5']);
     // cada estreia (NOVO) cai dentro do capítulo que tem o nome dela
     const estreia = (r: string) => CAMPANHA.findIndex((a) => a.rotulo === r);
     expect(capituloDe(lista, estreia('T8'))!.titulo).toBe('Vizinhos novos');
     expect(capituloDe(lista, estreia('O1'))!.titulo).toBe('Fila da fofoca');
+    expect(capituloDe(lista, estreia('V1'))!.titulo).toBe('A vigia do terceiro');
   });
 
   it('depois, um capítulo a cada 25 andares, e todos terminam num chefão', () => {
-    for (const c of lista.slice(4)) {
+    for (const c of lista.slice(5)) {
       expect(c.fim - c.inicio).toBe(POR_BLOCO);
       expect(pesos[(c.fim - 1 - FEITOS_A_MAO) % pesos.length], `capítulo ${c.numero}`).toBe('chefe');
     }
@@ -44,7 +45,7 @@ describe('capítulos', () => {
     const primeira = new Set(['T1', 'T3', 'T6', 'E1']);
     expect(estrelas(lista[0], rotulos, primeira)).toBe(2);
     expect(estrelas(lista[1], rotulos, primeira)).toBe(1);
-    expect(estrelas(lista[4], rotulos, primeira)).toBe(1);
+    expect(estrelas(lista[5], rotulos, primeira)).toBe(1);
   });
 });
 
@@ -65,7 +66,9 @@ describe('fofoca do dia', () => {
   });
 
   it('o compartilhar diz o dia e o resultado, nunca a solução', () => {
-    expect(textoDoDia('2026-11-11', 1, 'gui-zen.github.io/Fofoca')).toBe('Fofoca! do dia 11/11/2026: espalhei de primeira ★ sem a vítima descobrir. gui-zen.github.io/Fofoca');
-    expect(textoDoDia('2026-11-11', 3, 'x')).toContain('na 3ª tentativa');
+    expect(textoDoDia('2026-11-11', 1, 'gui-zen.github.io/Fofoca', true)).toBe('Fofoca! do dia 11/11/2026: espalhei de primeira ★ sem a vítima descobrir. gui-zen.github.io/Fofoca');
+    // ⚠️ de primeira, mas gastando a seta de folga: não ganhou a ★ (ganhaEstrela), então o texto não pode prometer uma
+    expect(textoDoDia('2026-11-11', 1, 'x', false)).toBe('Fofoca! do dia 11/11/2026: espalhei de primeira sem a vítima descobrir. x');
+    expect(textoDoDia('2026-11-11', 3, 'x', false)).toContain('na 3ª tentativa');
   });
 });

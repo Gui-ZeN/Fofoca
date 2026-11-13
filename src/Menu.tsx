@@ -201,7 +201,7 @@ function Andar({ i, n, estado, elevador, aoEscolher }: {
 export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar, capitulos, primeira, rotulos, dia }: {
   titulos: string[]; liberada: number; vidas?: Vidas; aoJogar: (andar: number) => void; aoApagar?: () => void;
   capitulos: Capitulo[]; primeira: Set<string>; rotulos: string[];
-  dia?: { feita: number; aoJogar: () => void }; // Fofoca do dia (feita = em quantas tentativas; 0 = ainda não)
+  dia?: { feita: number; estrela: boolean; aoJogar: () => void }; // Fofoca do dia (feita = em quantas tentativas; 0 = ainda não; estrela = ganhou a ★)
   pesquisa?: { participante: string; aoExportar: () => void };
 }) {
   const zerou = liberada >= titulos.length;
@@ -271,7 +271,7 @@ export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar, ca
         </button>
         {dia && (
           <button className={dia.feita ? 'dia feita' : 'dia'} onClick={dia.aoJogar}>
-            Fofoca do dia{dia.feita ? ` · feita${dia.feita === 1 ? ' de primeira ★' : ''}` : ''}
+            Fofoca do dia{dia.feita ? ` · feita${dia.estrela ? ' de primeira ★' : dia.feita === 1 ? ' de primeira' : ''}` : ''}
           </button>
         )}
         {pesquisa && (

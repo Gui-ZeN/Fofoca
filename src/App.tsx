@@ -15,6 +15,7 @@ import { fasesApressado } from './apressado';
 import { fasesAlvaro, fasesNorma, fasesVera } from './fiscais';
 import { fasesDuplas } from './duplas';
 import { fasesAlto } from './alto';
+import largo from './largo.json';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
 import { ESTOQUE, ESTOQUE_PESOS, PREDIO, TUTORIAL } from './campanha';
@@ -62,9 +63,11 @@ const BLOCOS = {
   alvaro: { nome: 'Dr. Álvaro', letra: 'L', fases: fasesAlvaro }, // lotação
   duplas: { nome: 'Duplas', letra: 'U', fases: fasesDuplas }, // duas regras na mesma fase
   alto: { nome: 'Prédio alto', letra: 'P', fases: fasesAlto }, // 5 e 6 andares: a rolagem vertical
+  // experimento de 2026-11-12 ("expandir o prédio pros lados?"): 4 colunas, gerados pela fábrica com `colunas: 4`
+  largo: { nome: 'Prédio largo', letra: 'W', fases: largo as unknown as FaseTrilho[] },
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|duplas|alto/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|duplas|alto|largo/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas
@@ -150,7 +153,7 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
         aoApagar={pesquisa ? undefined : () => { apagarProgresso(armazemDoNavegador, chave); setApagou(apagou + 1); }}
         capitulos={CAPITULOS} primeira={new Set(ler<string[]>(`${chave}.primeira`, []))} rotulos={ROTULOS}
         // na pesquisa, nada de Fofoca do dia: o teste mede a campanha
-        dia={pesquisa ? undefined : { feita: ler(`fofoca.dia.feita.${hoje}`, 0), aoJogar: () => setNoDia(true) }}
+        dia={pesquisa ? undefined : { feita: ler(`fofoca.dia.feita.${hoje}`, 0), estrela: ler(`fofoca.dia.estrela.${hoje}`, false), aoJogar: () => setNoDia(true) }}
         pesquisa={pesquisa ? { participante: registro.participante(), aoExportar: baixarRegistro } : undefined} />
     );
   }
@@ -224,7 +227,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   useEffect(() => {
     if (!terminou || !resultado?.vitoria) return;
     if (dePrimeira && !primeira.includes(item.rotulo)) { const p = [...primeira, item.rotulo]; setPrimeira(p); gravar(`${CHAVE}.primeira`, p); }
-    if (dia && !ler(`fofoca.dia.feita.${dia}`, 0)) gravar(`fofoca.dia.feita.${dia}`, tentativas[item.rotulo]);
+    if (dia && !ler(`fofoca.dia.feita.${dia}`, 0)) { gravar(`fofoca.dia.feita.${dia}`, tentativas[item.rotulo]); gravar(`fofoca.dia.estrela.${dia}`, dePrimeira); }
     // guarda até `total` (o menu mostra a última como feita); o estado daqui não passa da última fase
     if (idx + 1 > ler(`${CHAVE}.liberada`, 0)) gravar(`${CHAVE}.liberada`, idx + 1);
     if (idx + 1 > liberada && idx + 1 < total) setLiberada(idx + 1);
@@ -246,7 +249,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
     : undefined;
   const [copiado, setCopiado] = useState(false);
   const compartilhar = async () => {
-    const texto = textoDoDia(dia!, ler(`fofoca.dia.feita.${dia}`, tentativas[item.rotulo] ?? 1), 'gui-zen.github.io/Fofoca');
+    const texto = textoDoDia(dia!, ler(`fofoca.dia.feita.${dia}`, tentativas[item.rotulo] ?? 1), 'gui-zen.github.io/Fofoca', ler(`fofoca.dia.estrela.${dia}`, dePrimeira));
     try {
       if (navigator.share) await navigator.share({ text: texto });
       else { await navigator.clipboard.writeText(texto); setCopiado(true); }

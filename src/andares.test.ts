@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { alvosDe, amigosDe } from './motor';
-import { FOLGA } from './fabrica';
+import { FOLGA, papelDoZe } from './fabrica';
+import { formatoDe } from './planta';
 import { custo, jogar, resolverTrilho, type FaseTrilho } from './trilho';
 import estoque from './andares.json';
 import manifesto from '../public/arte/manifesto.json';
@@ -15,13 +16,31 @@ describe('estoque de andares gerados', () => {
     expect(fases.filter((a) => a.peso === 'chefe').map((a) => a.pos)).toEqual([24, 49, 74, 99, 124, 149]);
   });
 
-  it('o prédio cresce com o peso: leve 3 andares, média 4, pesada e chefão 5 (sem rolar; Consulta 7)', () => {
+  it('o prédio cresce com o peso: leve 3 andares, média 4, pesada e chefão 5 (sem rolar; Consulta 7), e nunca passa de 4 colunas', () => {
     const altura = { leve: 3, media: 4, pesada: 5, chefe: 5 } as Record<string, number>;
     // `saiu` = o peso que de fato saiu (se a fábrica não achar no prazo, ela desce um peso)
     for (const a of fases as unknown as { pos: number; saiu: string; fase: FaseTrilho }[]) {
       expect(Math.max(...a.fase.vizinhos.map((v) => v.pos[1])) + 1, `andar ${a.pos}`).toBeLessThanOrEqual(altura[a.saiu]);
     }
-    expect(fases.filter((a) => Math.max(...a.fase.vizinhos.map((v) => v.pos[1])) + 1 >= 5).length).toBeGreaterThan(20);
+    expect(fases.filter((a) => Math.max(...a.fase.vizinhos.map((v) => v.pos[1])) + 1 >= 5).length).toBeGreaterThan(15);
+    // ⚠️ 4 colunas é o teto: num celular de 390 de largura o cômodo cai pra ~93 e os selos ficam no limite de leitura
+    const colunas = fases.map((a) => Math.max(...a.fase.vizinhos.map((v) => v.pos[0])) + 1);
+    expect(Math.max(...colunas)).toBe(4);
+    expect(colunas.filter((c) => c === 3).length).toBeGreaterThan(20); // os dois formatos aparecem
+  });
+
+  it('o vazio é parede: fora o 3×4, todo prédio tem planta (L, U, poço, H ou degraus), e no estoque há 4 ou mais', () => {
+    // ⚠️ antes (2026-11-12) os vazios eram furos sorteados numa grade cheia. Só o 3×4 ainda pode ser a grade com furos
+    // (fabrica.ts, montar): ali, com o Zé pesando na jogada, só os degraus rendem.
+    const altos = fases.filter((a) => Math.max(...a.fase.vizinhos.map((v) => v.pos[1])) !== 3 || Math.max(...a.fase.vizinhos.map((v) => v.pos[0])) !== 2);
+    expect(altos.filter((a) => !formatoDe(a.fase)).map((a) => a.pos)).toEqual([]);
+    expect(new Set(fases.map((a) => formatoDe(a.fase)).filter(Boolean)).size).toBeGreaterThanOrEqual(4);
+  });
+
+  it('o Zé pesa em todo andar: sem a ameaça dele, a solução seria mais curta ou haveria outras', () => {
+    // ⚠️ antes (2026-11-12) ele era enfeite em 111 de 150: bastava não apontar pra ele
+    const enfeite = fases.filter((a) => !papelDoZe(a.fase, a.fase.setas - FOLGA, a.fase.solucao)).map((a) => a.pos);
+    expect(enfeite).toEqual([]);
   });
 
   it('todo morador tem desenho ilustrado e ninguém repete no mesmo prédio', () => {

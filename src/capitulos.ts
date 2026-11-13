@@ -20,8 +20,9 @@ const FEITOS: [string, string, number][] = [
   ['Vizinhos novos', 'MORADOR NOVO DEVE SE APRESENTAR NA PORTARIA.', 14], // Exagerado, padaria, celular
   ['Fila da fofoca', 'RESPEITEM A ORDEM DE CHEGADA.', 20], // ordem
   ['Reunião de condomínio', 'A REUNIÃO SERÁ BREVE.', 28], // prédio cheio
+  ['A vigia do terceiro', 'A VIGILÂNCIA É PARA A SEGURANÇA DE TODOS.', 31], // Vera
 ];
-export const FEITOS_A_MAO = 28;
+export const FEITOS_A_MAO = 31;
 export const POR_BLOCO = 25; // o estoque gerado: escada leve/média/pesada e um chefão no 25º
 
 // temas dos capítulos gerados (repetem com outra numeração): situações de condomínio, nunca piada de aparência
@@ -80,8 +81,10 @@ export function andarDoDia(d: Date, candidatos: number[]): number {
 }
 
 // O que vai no compartilhar: o dia e o resultado, nunca a solução.
-export function textoDoDia(data: string, tentativas: number, endereco: string): string {
+// ⚠️ `estrela` vem de `ganhaEstrela`, não das tentativas: de primeira mas gastando a seta de folga não ganha a ★, e o
+// texto prometia uma mesmo assim (achado do Astra, Consulta 9).
+export function textoDoDia(data: string, tentativas: number, endereco: string, estrela: boolean): string {
   const [a, m, d] = data.split('-');
-  const como = tentativas <= 1 ? 'de primeira ★' : `na ${tentativas}ª tentativa`;
+  const como = tentativas <= 1 ? (estrela ? 'de primeira ★' : 'de primeira') : `na ${tentativas}ª tentativa`;
   return `Fofoca! do dia ${d}/${m}/${a}: espalhei ${como} sem a vítima descobrir. ${endereco}`;
 }

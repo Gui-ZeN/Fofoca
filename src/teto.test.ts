@@ -53,11 +53,12 @@ describe('teto de leitura por andar', () => {
 
 describe('régua de raciocínio (assinatura)', () => {
   it('feitos à mão: só as repetições conhecidas (fora o tutorial) — a lista não pode crescer', () => {
-    // ⚠️ conhecidas: 6 e 8 repetem a Fofoqueira logo depois de ensinada (aceito, é fixação). O 24 ("Café da tarde")
+    // ⚠️ conhecidas: 6 e 8 repetem a Fofoqueira logo depois de ensinada (aceito, é fixação); o 30 repete a Vera logo
+    // depois da estreia dela no 29, pelo mesmo motivo. O 24 ("Café da tarde")
     // repetia a 22 e foi refeito em 2026-11-12 (padaria no meio do caminho, sem Fofoqueira).
     // Calibrada nas versões antigas (commit 2fe1333): lá ela reprovava também 18, 19, 20 e 24.
     const as = CAMPANHA.map((a) => assinatura(a.fase));
-    expect(repetidos(as).filter((i) => i >= 5).map((i) => i + 1)).toEqual([6, 8]);
+    expect(repetidos(as).filter((i) => i >= 5).map((i) => i + 1)).toEqual([6, 8, 30]);
   });
 
   it('a régua separa quem está na padaria: o Zé fora (H3) não é o mesmo raciocínio do meio do caminho (H4)', () => {

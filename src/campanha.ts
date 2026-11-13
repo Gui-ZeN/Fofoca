@@ -10,6 +10,7 @@ import estoque from './andares.json';
 import { fasesHora } from './horaCerta';
 import { fasesOrdem } from './ordem';
 import { fasesDificil } from './dificil';
+import { fasesVera } from './fiscais';
 
 export interface Andar { rotulo: string; fase: FaseTrilho }
 
@@ -18,6 +19,7 @@ const todas: Record<string, FaseTrilho> = Object.fromEntries([
   ...fasesHora.map((f, i) => [`H${i + 1}`, f]),
   ...fasesOrdem.map((f, i) => [`O${i + 1}`, f]),
   ...fasesDificil.map((f, i) => [`D${i + 1}`, f]),
+  ...fasesVera.map((f, i) => [`V${i + 1}`, f]),
 ]);
 
 export const ORDEM_CAMPANHA = [
@@ -25,6 +27,8 @@ export const ORDEM_CAMPANHA = [
   'T6', 'H1', 'T7', 'T8', 'H2', 'T9', 'H3', 'T10', 'H4',
   'O1', 'O2', 'H5', 'O3', 'H6', 'O4',
   'D1', 'O5', 'D2', 'O6', 'D3', 'D4', 'D5', 'D6',
+  // a Vera estreia antes do estoque gerado, que usa ela de vítima em 1 andar de cada 3 (2026-11-12)
+  'V1', 'V2', 'V3',
 ];
 
 export const TUTORIAL = 5; // as primeiras fases não custam advertência
