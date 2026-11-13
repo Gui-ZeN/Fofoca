@@ -440,3 +440,20 @@ footer > .acoes { flex-wrap: nowrap; }
 .cap-cena { display: flex; align-items: flex-end; gap: 6px; width: min(100%, 380px); }
 .cap-cena .cap-mural { flex: 1; min-width: 0; margin: 0 0 18px; }
 .cap-ze { width: 104px; height: auto; flex: none; overflow: visible; }
+
+/* ---- Tela limpa (?limpo, protótipo de 2026-11-13) ----
+   O topo fica só com a navegação e as fichas; título, fofoca e dica abrem a fase num cartão. No fim, o texto do desfecho
+   sobe do rodapé junto dos botões. ⚠️ O rodapé é ABSOLUTO aqui: crescendo por cima do palco, o prédio não pula. */
+main.limpo { position: relative; }
+.limpo header { padding-block: 6px 0; }
+.limpo header .nav { width: 38px; height: 38px; }
+.topo-limpo { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; min-width: 0; }
+.limpo .palco { margin-bottom: 80px; }
+.limpo footer { position: absolute; left: 0; right: 0; bottom: 0; }
+.fim-limpo { margin-bottom: 10px; text-align: left; }
+.fim-limpo .recolher { display: block; margin: 0 auto 8px; min-height: 32px; padding: 2px 12px; background: none; border: 0; color: var(--papel); font-size: 14px; font-weight: 700; }
+.fim-limpo .fim { box-shadow: none; }
+.abertura { position: absolute; inset: 0; z-index: 15; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(43, 33, 24, .5); }
+.abertura-cartao { width: min(100%, 340px); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 16px; background: var(--papel); border: 2.4px solid var(--tinta); border-radius: 10px; box-shadow: 0 6px 0 var(--tinta); text-align: center; animation: chega .35s cubic-bezier(.16, 1, .3, 1) both; }
+.abertura-cartao .boato { border-width: 0; background: none; padding: 0; white-space: normal; }
+.abertura-cartao .meta { margin: 0; font-size: 14.5px; color: var(--suave); }

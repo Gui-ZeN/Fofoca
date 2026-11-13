@@ -75,6 +75,9 @@ const TESTE = !!GRUPO || !!BLOCO;
 // 2026-11-11, Consulta 4: o teste mede o ciclo de jogo; não aprova as vidas). Progresso próprio, separado
 // da campanha normal do aparelho. `&zerar` apaga só os dados da pesquisa, pro próximo participante.
 const busca = new URLSearchParams(location.search);
+// Protótipo da TELA LIMPA (?limpo, ideia do dono em 2026-11-12): título, fofoca e dica saem do topo e abrem a fase num
+// cartão; o desfecho e seus botões viram um cartão que sobe do rodapé. Sobra altura pro prédio.
+const LIMPO = busca.has('limpo');
 const PESQUISA = !TESTE && (busca.has('pesquisa') || /pesquisa/i.test(location.hash));
 if (PESQUISA && busca.has('zerar')) {
   try { Object.keys(localStorage).filter((k) => k.startsWith('fofoca.pesquisa')).forEach((k) => localStorage.removeItem(k)); } catch { /* sem armazenamento */ }
@@ -235,6 +238,9 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
 
   // Cena de chegada: na campanha, na 1ª vez que algo novo estreia (uma vez só por aparelho).
   const apresentacao = chegadas ? APRESENTACOES[item.rotulo] ?? CHEGADAS_DE_TESTE[item.rotulo] : undefined;
+  const [cartao, setCartao] = useState(LIMPO); // tela limpa: o cartão que abre a fase
+  const [recolhido, setRecolhido] = useState(false); // tela limpa: o cartão do fim recolhido pra ver o prédio
+  useEffect(() => { setCartao(LIMPO); setRecolhido(false); }, [idx]);
   const [vendoChegada, setVendoChegada] = useState(false);
   useEffect(() => { setVendoChegada(!!apresentacao && !ler(`${CHAVE}.visto.${item.rotulo}`, false)); }, [idx]);
   // Abertura de capítulo: no 1º andar dele, uma vez por aparelho; vem ANTES da cena de chegada
@@ -371,30 +377,8 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
           ? `${sel.nome} guarda pra si. Toque num vizinho ou ligue pra alguém destacado.`
           : `${sel.nome} guarda pra si. Arraste ou toque em quem vai ouvir.`;
 
-  return (
-    <main>
-      <header>
-        {aoVoltar
-          ? <button className="nav" onClick={aoVoltar} aria-label="Voltar ao prédio"><Casa /></button>
-          : <button className="nav" disabled={idx === 0} onClick={() => setIdx(idx - 1)} aria-label="Fase anterior"><Seta lado="esq" /></button>}
-        <div className="titulo">
-          <div className="numero">{dia ? `Fofoca do dia · ${dia.slice(8)}/${dia.slice(5, 7)}` : aoVoltar ? `${idx + 1}º andar` : `Fase ${idx + 1} de ${total} · ${girando ? 'Girando as setas' : 'Desenhando o trilho'}`}</div>
-          <h1>{fase.titulo}</h1>
-        </div>
-        <button className="nav" disabled={idx >= liberada} onClick={() => setIdx(idx + 1)} aria-label="Próxima fase"><Seta lado="dir" /></button>
-      </header>
-
-      <section className="palco">
-        <Cena
-          fase={fase} origem={origem} setas={plano_} resultado={resultado} batida={revendo ?? batida} montando={montando} ritmo={ritmo}
-          aoTocar={() => {}} aoGirar={girar}
-          trilho={girando ? undefined : { selecionado, alvos, aoApertar: apertar, aoTocar: tocar, aoSoltar: soltar, aoApagar: (de) => ligar(de, plano[de]) }}
-        />
-        <div className="sobre-o-ceu">
-          <p className="boato"><OrigemMini /> {fase.boato}</p>
-          {/* setas, advertências e (onde o tamanho importa) a escadinha, numa linha só: o topo enxuto deixa o prédio
-              de 5 andares caber sem rolar. A escadinha fica só nos ícones; os nomes estão no aria-label e na
-              cena de chegada do Beto, que ensina os tamanhos. */}
+  const numero = dia ? `Fofoca do dia · ${dia.slice(8)}/${dia.slice(5, 7)}` : aoVoltar ? `${idx + 1}º andar` : `Fase ${idx + 1} de ${total} · ${girando ? 'Girando as setas' : 'Desenhando o trilho'}`;
+  const fichas = (
           <div className="fichas">
             <span className={cheio ? 'ficha setas cheio' : 'ficha setas'}>{girando ? 'Giros' : 'Setas'} {usadas}/{limite}</span>
             {/* Dr. Álvaro: quantos vão ficar sabendo com o plano de agora (sem isso era conta de cabeça a cada tentativa) */}
@@ -408,19 +392,8 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
               </span>
             )}
           </div>
-          {fase.novidade && montando && <p className="novidade"><b>NOVO</b> {fase.novidade}</p>}
-          {/* a dica da fase fica até a primeira seta; depois, o que o selecionado está fazendo — SÓ no tutorial.
-              Fora dele, a seleção já aparece nas cantoneiras e o contador treme quando as setas acabam: a frase
-              custava uma linha do prédio (Fable, 2026-11-11: o topo empurrava o prédio de 5 andares pra rolagem). */}
-          {montando && (fase.dica && !historico.length
-            ? <p className="dica">{fase.dica}</p>
-            : idx < TUTORIAL && status && <p className="dica status">{status}</p>)}
-        </div>
-        {/* ⚠️ O texto do desfecho fica no ALTO do palco, por cima dos avisos (que já não importam), e os botões no rodapé.
-            Antes o quadro inteiro flutuava sobre a rua e cobria o térreo — justo onde muitas vezes está quem perdeu a
-            fase (Fable, 2026-11-11). Crescer o rodapé continua proibido: o prédio pularia (Astra, Consulta 2). */}
-        {terminou && revendo === undefined && (
-          <div className="desfecho">
+  );
+  const fim = terminou && revendo === undefined ? (
             <Fim fase={fase} resultado={resultado!} aviso={aviso} falta={vidas?.falta} dePrimeira={!!CAPS && dePrimeira} fechou={fechou}
               dava={CAPS && venceuDePrimeira && !dePrimeira ? minimo : undefined}>
             {/* ⚠️ o fim do bloco e o resumo ficam DENTRO do quadro: no rodapé, a frase espremia "Repetir" e "Rever",
@@ -433,14 +406,72 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
               </>
             )}
             </Fim>
+  ) : null;
+  const vitima = fase.vizinhos.find((v) => v.tipo === 'assunto')?.nome;
+
+  return (
+    <main className={LIMPO ? 'limpo' : undefined}>
+      <header>
+        {aoVoltar
+          ? <button className="nav" onClick={aoVoltar} aria-label="Voltar ao prédio"><Casa /></button>
+          : <button className="nav" disabled={idx === 0} onClick={() => setIdx(idx - 1)} aria-label="Fase anterior"><Seta lado="esq" /></button>}
+        {LIMPO ? (
+          <div className="topo-limpo" role="button" tabIndex={0} aria-label="Ver a fofoca desta fase" onClick={() => setCartao(true)}>
+            <OrigemMini />{fichas}
+          </div>
+        ) : (
+          <div className="titulo">
+            <div className="numero">{numero}</div>
+            <h1>{fase.titulo}</h1>
           </div>
         )}
+        <button className="nav" disabled={idx >= liberada} onClick={() => setIdx(idx + 1)} aria-label="Próxima fase"><Seta lado="dir" /></button>
+      </header>
+
+      <section className="palco">
+        <Cena
+          fase={fase} origem={origem} setas={plano_} resultado={resultado} batida={revendo ?? batida} montando={montando} ritmo={ritmo}
+          aoTocar={() => {}} aoGirar={girar}
+          trilho={girando ? undefined : { selecionado, alvos, aoApertar: apertar, aoTocar: tocar, aoSoltar: soltar, aoApagar: (de) => ligar(de, plano[de]) }}
+        />
+        <div className="sobre-o-ceu">
+          {!LIMPO && <p className="boato"><OrigemMini /> {fase.boato}</p>}
+          {/* setas, advertências e (onde o tamanho importa) a escadinha, numa linha só: o topo enxuto deixa o prédio
+              de 5 andares caber sem rolar. A escadinha fica só nos ícones; os nomes estão no aria-label e na
+              cena de chegada do Beto, que ensina os tamanhos. */}
+          {!LIMPO && fichas}
+          {!LIMPO && fase.novidade && montando && <p className="novidade"><b>NOVO</b> {fase.novidade}</p>}
+          {/* a dica da fase fica até a primeira seta; depois, o que o selecionado está fazendo — SÓ no tutorial.
+              Fora dele, a seleção já aparece nas cantoneiras e o contador treme quando as setas acabam: a frase
+              custava uma linha do prédio (Fable, 2026-11-11: o topo empurrava o prédio de 5 andares pra rolagem). */}
+          {!LIMPO && montando && (fase.dica && !historico.length
+            ? <p className="dica">{fase.dica}</p>
+            : idx < TUTORIAL && status && <p className="dica status">{status}</p>)}
+        </div>
+        {/* ⚠️ O texto do desfecho fica no ALTO do palco, por cima dos avisos (que já não importam), e os botões no rodapé.
+            Antes o quadro inteiro flutuava sobre a rua e cobria o térreo — justo onde muitas vezes está quem perdeu a
+            fase (Fable, 2026-11-11). Crescer o rodapé continua proibido: o prédio pularia (Astra, Consulta 2). */}
+        {!LIMPO && fim && <div className="desfecho">{fim}</div>}
       </section>
 
       {vendoCapitulo && cap ? (
         <AberturaCapitulo cap={cap} aoFechar={() => { gravar(`${CHAVE}.visto.cap${cap.numero}`, true); setVendoCapitulo(false); }} />
       ) : vendoChegada && apresentacao && (
         <Chegada fase={fase} apresentacao={apresentacao} aoFechar={() => { gravar(`${CHAVE}.visto.${item.rotulo}`, true); setVendoChegada(false); }} />
+      )}
+
+      {LIMPO && cartao && montando && !vendoCapitulo && !(vendoChegada && apresentacao) && (
+        <div className="abertura" onClick={() => setCartao(false)}>
+          <div className="abertura-cartao">
+            <div className="numero">{numero}</div>
+            <h1>{fase.titulo}</h1>
+            <p className="boato"><OrigemMini /> {fase.boato}</p>
+            {fase.novidade && <p className="novidade"><b>NOVO</b> {fase.novidade}</p>}
+            {fase.dica && <p className="dica">{fase.dica}</p>}
+            <p className="meta">Faça chegar em quem tem a estrela{vitima ? `, sem ${o(vitima)} ${vitima} saber` : ''}. {limite} {girando ? 'giros' : 'setas'}.</p>
+            <button className="principal">Jogar</button>
+          </div>
+        </div>
       )}
 
       <footer>
@@ -468,6 +499,13 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
           </div>
         ) : terminou ? (
           // os botões do desfecho no lugar de Desfazer/Espalhar (o texto está no alto do palco)
+          <>
+          {LIMPO && fim && (
+            <div className="fim-limpo">
+              <button className="recolher" onClick={() => setRecolhido(!recolhido)} aria-expanded={!recolhido}>{recolhido ? 'Ver o resultado ▴' : 'Ver o prédio ▾'}</button>
+              {!recolhido && fim}
+            </div>
+          )}
           <div className="acoes fim-acoes">
             <button onClick={() => {
               if (resultado!.vitoria) { setEspelho(!espelho); setElenco(novoElenco()); } // repetir: outro prédio e outro elenco (no teste, a mesma fase de novo)
@@ -479,6 +517,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
             {resultado!.vitoria && dia && <button className="principal" onClick={compartilhar}>{copiado ? 'Copiado!' : 'Compartilhar'}</button>}
             {resultado!.vitoria && !dia && idx < total - 1 && <button className="principal" onClick={() => setIdx(idx + 1)}>{fechou ? 'Próximo capítulo' : 'Próxima fase'}</button>}
           </div>
+          </>
         ) : (
           <div className="acoes">
             <button className="principal" disabled>Espalhando… batida {Math.max(1, batida)}</button>
