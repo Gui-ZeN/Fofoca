@@ -15,19 +15,19 @@ const armazem = (inicial: Record<string, string> = {}): Armazem & { dados: Map<s
 
 describe('ajustes', () => {
   it('sem nada gravado: velocidade normal e animação normal', () => {
-    expect(lerAjustes(armazem())).toEqual({ rapido: false, reduzir: false });
+    expect(lerAjustes(armazem())).toEqual({ rapido: false, reduzir: false, som: true, musica: true, vibrar: true });
   });
 
   it('grava e lê de volta', () => {
     const a = armazem();
-    gravarAjustes(a, { rapido: true, reduzir: true });
-    expect(lerAjustes(a)).toEqual({ rapido: true, reduzir: true });
+    gravarAjustes(a, { rapido: true, reduzir: true, som: false, musica: false, vibrar: false });
+    expect(lerAjustes(a)).toEqual({ rapido: true, reduzir: true, som: false, musica: false, vibrar: false });
   });
 
   it('não confia no que está gravado: JSON quebrado ou tipo errado viram o padrão', () => {
-    expect(lerAjustes(armazem({ [CHAVE_AJUSTES]: '{quebrado' }))).toEqual({ rapido: false, reduzir: false });
-    expect(lerAjustes(armazem({ [CHAVE_AJUSTES]: '{"rapido":"sim","reduzir":1}' }))).toEqual({ rapido: false, reduzir: false });
-    expect(lerAjustes(armazem({ [CHAVE_AJUSTES]: 'null' }))).toEqual({ rapido: false, reduzir: false });
+    expect(lerAjustes(armazem({ [CHAVE_AJUSTES]: '{quebrado' }))).toEqual({ rapido: false, reduzir: false, som: true, musica: true, vibrar: true });
+    expect(lerAjustes(armazem({ [CHAVE_AJUSTES]: '{"rapido":"sim","reduzir":1}' }))).toEqual({ rapido: false, reduzir: false, som: true, musica: true, vibrar: true });
+    expect(lerAjustes(armazem({ [CHAVE_AJUSTES]: 'null' }))).toEqual({ rapido: false, reduzir: false, som: true, musica: true, vibrar: true });
   });
 });
 

@@ -8,3 +8,7 @@ PRODUCT.md
 .impeccable/hook.cache.json
 # folhas de pose originais (geradas por IA, ~40 MB): ficam só no computador; os recortes vão em public/arte
 arte-fonte/
+
+# gerado pelo tsc -b
+*.tsbuildinfo
+_busca/

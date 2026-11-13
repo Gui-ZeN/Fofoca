@@ -369,6 +369,30 @@ function Ajustes({ aoFechar, aoApagar }: { aoFechar: () => void; aoApagar?: () =
           <input type="checkbox" checked={a.reduzir} onChange={(e) => mudar({ ...a, reduzir: e.target.checked })} />
         </label>
 
+        <label className="ajuste alternar">
+          <span>
+            <span className="rotulo-ajuste">Som</span>
+            <span className="nota-ajuste">Uma nota a cada batida do boato.</span>
+          </span>
+          <input type="checkbox" checked={a.som} onChange={(e) => mudar({ ...a, som: e.target.checked })} />
+        </label>
+
+        <label className="ajuste alternar">
+          <span>
+            <span className="rotulo-ajuste">Música</span>
+            <span className="nota-ajuste">Uma batida calma de fundo.</span>
+          </span>
+          <input type="checkbox" checked={a.musica} onChange={(e) => mudar({ ...a, musica: e.target.checked })} />
+        </label>
+
+        <label className="ajuste alternar">
+          <span>
+            <span className="rotulo-ajuste">Vibração</span>
+            <span className="nota-ajuste">O celular treme quando a estrela ouve e quando a vítima descobre.</span>
+          </span>
+          <input type="checkbox" checked={a.vibrar} onChange={(e) => mudar({ ...a, vibrar: e.target.checked })} />
+        </label>
+
         {aoApagar && (
           <div className="ajuste">
             <span className="rotulo-ajuste">Progresso</span>

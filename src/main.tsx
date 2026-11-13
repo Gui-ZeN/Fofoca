@@ -9,8 +9,10 @@ import './estilo.css';
 import { ARTE, carregarArte } from './arte';
 import { Protecao } from './Protecao';
 import { aplicarMovimento, armazemDoNavegador, lerAjustes } from './ajustes';
+import { ligarMusicaNoPrimeiroToque } from './musica';
 
 aplicarMovimento(lerAjustes(armazemDoNavegador).reduzir);
+ligarMusicaNoPrimeiroToque();
 
 const raiz = createRoot(document.getElementById('root')!);
 // ?prova: prova estática da direção visual nova, carregada à parte (não entra no jogo)

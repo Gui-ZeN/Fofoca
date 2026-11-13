@@ -32,7 +32,8 @@ describe('regras do trilho', () => {
     const bia = f.vizinhos.find((v) => v.id === 'b')!;
     expect(amigosDe(f, 'b')).not.toContain('c');
     expect(alvosDe(f, bia)).toContain('c');
-    expect(jogar(f, { r: 'b', b: 'c' }).vitoria).toBe(true);
+    expect(jogar(f, f.solucao).vitoria).toBe(true); // Rita → Ana → Bia, e a Bia liga (a Bia saiu de baixo da Rita em 2026-11-13: Rita → Bia já não é porta)
+    expect(f.solucao).toMatchObject({ b: 'c' });
   });
 
   it('quem não é controlável não recebe seta', () => {

@@ -20,7 +20,12 @@ export interface Vizinho {
   pos: [coluna: number, andar: number]; // andar 0 = topo
   seta?: string; // melhor amigo (comum, exagerado, docontra)
   interesse?: Interesse; // presente = precisa ouvir
-  chega?: number; // fora de casa até esta batida: recado que chega antes se perde
+  chega?: number; // fora de casa até esta batida: recado que chega antes se perde (na própria batida N ainda vale)
+  // Padaria ao contrário (protótipo, ?bloco=saida): em casa até a batida N-1; da batida N em diante saiu. Simétrico ao
+  // `chega` (que ainda vale NA batida N): aqui a batida N já NÃO vale. Recado que chegaria nela na batida N ou depois se
+  // perde, e ela não conta mais nada a partir da batida N (o que ela contaria na N se perde junto). Quem ouviu antes
+  // continua "ouviu". ⚠️ Com `chega` na mesma pessoa o `sai` é IGNORADO (não há leitura de "volta e sai de novo").
+  sai?: number;
   celular?: string[]; // trilho: pode ligar pra um destes (sem passagem), em vez de contar pra um vizinho
   // Arnaldo, o fiscal do barulho (Consulta 6): quem está colado nele (por passagem) conta um tamanho menor.
   // Vale pro tamanho ENVIADO (Exagerado aumenta antes, ele reduz depois); cochicho continua cochicho.
@@ -88,6 +93,8 @@ export interface Resultado {
   // uma e outra); "não acreditou até o fim" = está aqui e NÃO está em `ouviu`.
   duvida?: Record<string, Ouvido>;
   calados?: { id: string; batida: number; norma: string }[]; // quem ia contar e foi calado pelo toque de recolher da Dona Norma
+  // quem já tinha saído (`sai`): na batida `batida` o recado chegaria nele (contando: false) ou ele ia contar (contando: true)
+  saidas?: { id: string; batida: number; contando: boolean }[];
 }
 
 export const amigosDe = (fase: Fase, id: string): string[] =>
@@ -100,6 +107,9 @@ export const colados = (fase: Fase, regra: 'recolhe' | 'vigia'): Set<string> =>
 // Quem está colado em alguém que abafa (Arnaldo): conta um tamanho menor.
 export const abafados = (fase: Fase): Set<string> =>
   new Set(fase.vizinhos.filter((w) => w.abafa).flatMap((w) => amigosDe(fase, w.id)));
+
+// Já tinha saído (padaria ao contrário) na batida `batida`? `sai: N` vale da batida N em diante; com `chega` é ignorado.
+export const saiu = (v: Vizinho, batida: number) => v.sai !== undefined && v.chega === undefined && batida >= v.sai;
 
 const temSeta = (t: Tipo) => t === 'comum' || t === 'exagerado' || t === 'docontra';
 
@@ -148,6 +158,7 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
   const duvida: Record<string, Ouvido> = {};
   const atrapalhados = new Set<string>();
   const calados: { id: string; batida: number; norma: string }[] = [];
+  const saidas: { id: string; batida: number; contando: boolean }[] = [];
   const batidas: Mensagem[][] = [];
   let fronteira = [jogada.origem];
   const baixo = abafados(fase);
@@ -164,6 +175,7 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       const v = porId.get(id)!;
       const { tamanho, versao } = ouviu[id];
       const seta = jogada.setas[id] ?? v.seta;
+      const jaSaidas = saindo.length;
       if (v.tipo === 'fofoqueira') {
         for (const para of amigosDe(fase, id)) saindo.push({ de: id, para, tamanho: enviado(id, tamanho), versao });
       } else if (v.tipo === 'apressado') {
@@ -178,6 +190,8 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
         });
       }
       // túmulo e assunto não contam pra ninguém
+      // já saiu de casa: o que ele contaria nesta batida se perde (só registra se ia mesmo contar algo)
+      if (saiu(v, batida) && saindo.length > jaSaidas) { saindo.length = jaSaidas; saidas.push({ id, batida, contando: true }); }
     }
     // Dona Norma: passou da hora, quem mora colado nela não conta mais nada
     for (const w of normas) if (batida > w.recolhe!) {
@@ -199,6 +213,10 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       if (ouviu[m.para]) continue; // cada um ouve uma vez só
       const quem = porId.get(m.para)!;
       if ((quem.chega ?? 0) > batida) continue; // ninguém em casa: o recado se perde
+      if (saiu(quem, batida)) { // já saiu: o recado se perde (uma vez por pessoa e batida)
+        if (!saidas.some((s) => s.id === m.para && s.batida === batida && !s.contando)) saidas.push({ id: m.para, batida, contando: false });
+        continue;
+      }
       if (quem.desconfia) fontes.set(m.para, (fontes.get(m.para) ?? new Set()).add(m.de));
       if (quem.tipo === 'apressado') pressa.set(m.para, (pressa.get(m.para) ?? new Set()).add(m.de));
       const atual = chegou.get(m.para);
@@ -225,7 +243,7 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
     fronteira = [...chegou.keys()];
   }
 
-  return { batidas, ouviu, ...(Object.keys(duvida).length ? { duvida } : {}), ...(calados.length ? { calados } : {}), ...avaliar(fase, ouviu) };
+  return { batidas, ouviu, ...(Object.keys(duvida).length ? { duvida } : {}), ...(calados.length ? { calados } : {}), ...(saidas.length ? { saidas } : {}), ...avaliar(fase, ouviu) };
 }
 
 function avaliar(fase: Fase, ouviu: Record<string, Ouvido>): Pick<Resultado, 'vitoria' | 'motivo' | 'culpado' | 'antes'> {
@@ -290,4 +308,20 @@ export function resolver(fase: Fase): Jogada[] {
       if (minima) solucoes.push(j);
     }
   return solucoes;
+}
+
+// A cena PARA quando a vítima ouve: o que viria depois não é mostrado nem contado.
+// ⚠️ O motor simula tudo até o fim (o resolvedor e a fábrica precisam disso); quem corta é a TELA, com esta função.
+// Sem o corte, depois do "QUÊ?!" o boato seguia andando pelo prédio — a derrota já estava decidida e a atenção saía
+// de onde o erro aconteceu (dono jogando a Vera, 2026-11-13: "o jogo não deveria interromper quando chega na Vera?").
+export function ateAVitima(r: Resultado): Resultado {
+  const k = r.motivo === 'assunto_ouviu' && r.culpado ? r.ouviu[r.culpado]?.batida : undefined;
+  if (!k) return r;
+  return {
+    ...r,
+    batidas: r.batidas.slice(0, k),
+    ouviu: Object.fromEntries(Object.entries(r.ouviu).filter(([, o]) => o.batida <= k)),
+    ...(r.calados ? { calados: r.calados.filter((c) => c.batida <= k) } : {}),
+    ...(r.saidas ? { saidas: r.saidas.filter((x) => x.batida <= k) } : {}),
+  };
 }

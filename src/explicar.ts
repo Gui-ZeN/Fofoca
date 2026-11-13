@@ -10,6 +10,7 @@ export type Explicacao =
   | { tipo: 'versao'; id: string; queria: Versao; veio: Versao }
   | { tipo: 'ordem'; antes: string; depois: string; batidaAntes: number; batidaDepois: number }
   | { tipo: 'padaria'; id: string; chegou: number; volta: number }
+  | { tipo: 'saiu'; id: string; batida: number; sai: number; contando: boolean } // `sai`: ele já tinha saído quando o recado chegou (ou quando ia contar)
   | { tipo: 'duvida'; id: string; de: string }
   | { tipo: 'reto'; id: string; motivo: 'sem saida' | 'atrapalhou' }
   | { tipo: 'toque'; id: string; batida: number; hora: number; norma: string }
@@ -45,6 +46,14 @@ export function explicar(fase: Fase, r: Resultado): Explicacao | undefined {
         const perdidos = r.batidas.flatMap((ms, i) => (ms.some((m) => m.para === v.id) && v.chega! > i + 1 ? [i + 1] : []));
         if (perdidos.length) return { tipo: 'padaria', id: v.id, chegou: perdidos[perdidos.length - 1], volta: v.chega };
       }
+    }
+    // já tinha saído (`sai`): a estrela primeiro, depois quem estava no meio do caminho; o Zé não entra (ele sair é bom)
+    for (const soEstrela of [true, false]) {
+      const s = r.saidas?.find((x) => {
+        const v = fase.vizinhos.find((w) => w.id === x.id)!;
+        return v.tipo !== 'assunto' && !!v.interesse === soEstrela;
+      });
+      if (s) return { tipo: 'saiu', id: s.id, batida: s.batida, sai: fase.vizinhos.find((w) => w.id === s.id)!.sai!, contando: s.contando };
     }
     // alguém no meio do caminho ficou em dúvida (Raquel) ou foi calado pelo toque de recolher (Dona Norma)
     for (const v of fase.vizinhos) if (!r.ouviu[v.id] && r.duvida?.[v.id]) return { tipo: 'duvida', id: v.id, de: r.duvida[v.id].de! };

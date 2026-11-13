@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { amigosDe, espalhar, quemContou, resolver, type Fase } from './motor';
+import { amigosDe, ateAVitima, espalhar, quemContou, resolver, type Fase } from './motor';
+import { fasesVera } from './fiscais';
+import { jogar } from './trilho';
 import { fases } from './fases';
 
 const predio = fases[8]; // "O prédio da Dona Cida", a fase exemplo do plano
@@ -191,5 +193,30 @@ describe('procedência: de quem cada um ouviu de fato', () => {
     const r = espalhar(f, { origem: 'r', setas: { r: 'a', a: 'b', b: 'r' } });
     expect(r.ouviu.r.de).toBeNull();
     expect(r.ouviu.b.de).toBe('a');
+  });
+});
+
+describe('a cena para quando a vítima ouve', () => {
+  // "De olho no corredor": na armadilha a Vera escuta o Davi contando na batida 2, e o boato ainda andaria até a Ana
+  const f = fasesVera[0];
+  const inteiro = jogar(f, f.armadilha!);
+  const cortado = ateAVitima(inteiro);
+
+  it('corta na batida em que a vítima ouviu, e some com quem só ouviria depois', () => {
+    const k = inteiro.ouviu.z.batida;
+    expect(inteiro.batidas.length).toBeGreaterThan(k); // sem o corte, a cena continuava
+    expect(cortado.batidas).toHaveLength(k);
+    expect(Object.values(cortado.ouviu).every((o) => o.batida <= k)).toBe(true);
+    expect(Object.keys(cortado.ouviu).length).toBeLessThan(Object.keys(inteiro.ouviu).length);
+    expect(cortado.ouviu.z).toEqual(inteiro.ouviu.z);
+    expect(cortado.motivo).toBe('assunto_ouviu');
+  });
+
+  it('não mexe em vitória nem em derrota por outro motivo', () => {
+    const venceu = jogar(f, f.solucao);
+    expect(ateAVitima(venceu)).toBe(venceu);
+    const nada = jogar(f, {});
+    expect(nada.motivo).not.toBe('assunto_ouviu');
+    expect(ateAVitima(nada)).toBe(nada);
   });
 });

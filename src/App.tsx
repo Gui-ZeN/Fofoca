@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { alvosDe, amigosDe, controlavel, espalhar, girosUsados, porCelular, quemContou, type Fase, type Resultado, type Vizinho } from './motor';
+import { alvosDe, amigosDe, ateAVitima, controlavel, espalhar, girosUsados, porCelular, quemContou, type Fase, type Resultado, type Vizinho } from './motor';
 import { NOME_TAMANHO, TAMANHO } from './Predio';
 import { Cena } from './Cena';
 import { BoatoMini, Derrota, OrigemMini, Seta, Vitoria } from './Icones';
@@ -14,6 +14,7 @@ import { fasesRaquel } from './raquel';
 import { fasesApressado } from './apressado';
 import { fasesAlvaro, fasesNorma, fasesVera } from './fiscais';
 import { fasesDuplas } from './duplas';
+import { fasesSaida } from './saida';
 import { fasesAlto } from './alto';
 import largo from './largo.json';
 import { dele, ele, o, pro, vestir } from './elenco';
@@ -26,6 +27,7 @@ import { CartoesAdvertencia, Menu, type Vidas } from './Menu';
 import { Casa } from './Icones';
 import { APRESENTACOES, CHEGADAS_DE_TESTE, Chegada } from './Chegada';
 import { explicar } from './explicar';
+import { tocar as tocarSom } from './som'; // `tocar` aqui dentro já é o toque do dedo no morador
 import { citados } from './Predio';
 import { baixarRegistro, registro } from './registro';
 import { apagarProgresso, armazemDoNavegador, gravarAjustes, lerAjustes } from './ajustes';
@@ -63,12 +65,13 @@ const BLOCOS = {
   norma: { nome: 'Dona Norma', letra: 'M', fases: fasesNorma }, // toque de recolher
   alvaro: { nome: 'Dr. Álvaro', letra: 'L', fases: fasesAlvaro }, // lotação
   duplas: { nome: 'Duplas', letra: 'U', fases: fasesDuplas }, // duas regras na mesma fase
+  saida: { nome: 'Saída', letra: 'S', fases: fasesSaida }, // a padaria ao contrário: alguém sai de casa na batida N (2026-11-13)
   alto: { nome: 'Prédio alto', letra: 'P', fases: fasesAlto }, // 5 e 6 andares: a rolagem vertical
   // experimento de 2026-11-12 ("expandir o prédio pros lados?"): 4 colunas, gerados pela fábrica com `colunas: 4`
   largo: { nome: 'Prédio largo', letra: 'W', fases: largo as unknown as FaseTrilho[] },
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|duplas|alto|largo/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|duplas|saida|alto|largo/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas
@@ -221,6 +224,19 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   }, [resultado, batida]);
   const terminou = resultado !== undefined && batida > resultado.batidas.length;
   const montando = resultado === undefined;
+  // O ritmo (som.ts): uma nota por batida, subindo; a estrela tem um brilho, a vítima despenca, e o fim fecha a frase.
+  useEffect(() => {
+    if (!resultado || batida < 1) return;
+    if (batida > resultado.batidas.length) {
+      if (resultado.vitoria) tocarSom('vitoria');
+      else if (resultado.motivo !== 'assunto_ouviu') tocarSom('derrota'); // a vítima já teve o som dela na batida em que ouviu
+      return;
+    }
+    const ouviuAgora = fase.vizinhos.filter((v) => resultado.ouviu[v.id]?.batida === batida);
+    if (ouviuAgora.some((v) => v.tipo === 'assunto')) tocarSom('vitima');
+    else if (ouviuAgora.some((v) => v.interesse)) tocarSom('estrela', batida - 1);
+    else if (resultado.batidas[batida - 1]?.length) tocarSom('recado', batida - 1);
+  }, [resultado, batida]);
 
   // ★ de primeira: o desafio opcional (andar vencido na primeira tentativa, sem gastar seta além do mínimo).
   // ⚠️ Os andares gerados dão uma seta de folga (fabrica.ts, FOLGA): sem a exigência do mínimo, a folga
@@ -247,7 +263,9 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   // vale no prédio (começa a seta). Um modal no meio obrigava a tocar em "Jogar" a cada fase.
   useEffect(() => {
     if (!cartao) return;
-    const fechar = (e: PointerEvent) => { if (!(e.target as Element).closest?.('.abre-limpo, .topo-limpo')) setCartao(false); };
+    const fechar = (e: PointerEvent) => { // ⚠️ toque na cena de chegada ou na abertura de capítulo NÃO fecha o cartão: ele está por baixo e ainda nem foi visto
+      // (auditor, 2026-11-13: nos andares com cena, título e fofoca nunca apareciam)
+      if (!(e.target as Element).closest?.('.abre-limpo, .topo-limpo, .chegada')) setCartao(false); };
     window.addEventListener('pointerdown', fechar);
     return () => window.removeEventListener('pointerdown', fechar);
   }, [cartao]);
@@ -325,6 +343,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const ligar = (de: string, para: string) => {
     if (!alvosDe(fase, porId[de]).includes(para)) return;
     if (plano[de] === para) {
+      tocarSom('apaga');
       setHistorico([...historico, plano]);
       const { [de]: _, ...sem } = plano;
       setPlano(sem);
@@ -335,6 +354,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
       setTimeout(() => setCheio(false), 600);
       return;
     }
+    tocarSom('seta');
     setHistorico([...historico, plano]);
     setPlano({ ...plano, [de]: para });
     setSelecionado(controlavel(porId[para]) && !plano[para] ? para : undefined);
@@ -368,7 +388,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
     setTentativas(novas);
     gravar(`${CHAVE}.tentativas`, novas);
     setSelecionado(undefined);
-    const r = girando ? espalhar(fase, { origem, setas: plano }) : jogar(fase, plano);
+    const r = ateAVitima(girando ? espalhar(fase, { origem, setas: plano }) : jogar(fase, plano)); // a cena para quando a vítima ouve
     setResultado(r);
     setBatida(0);
     registro.registrar('attempt_submit', {
@@ -433,7 +453,9 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
                 <h1>{fase.titulo}</h1>
                 <p className="boato"><OrigemMini /> {fase.boato}</p>
                 {fase.novidade && <p className="novidade"><b>NOVO</b> {fase.novidade}</p>}
-                {/* no tutorial a dica da fase já diz o objetivo, logo abaixo */}
+                {/* ⚠️ fora do tutorial a dica da fase só tem este lugar (as fases de giros do teste em grupo têm dica nos
+                    índices 6, 9, 10 e 12; sem isto elas sumiam — auditor, 2026-11-13). No tutorial ela fica logo abaixo. */}
+                {fase.dica && idx >= TUTORIAL && <p className="dica">{fase.dica}</p>}
                 {!fase.dica && <p className="meta">Faça chegar em quem tem a estrela{vitima ? `, sem ${o(vitima)} ${vitima} saber` : ''}.</p>}
               </div>
   ) : null;
@@ -527,7 +549,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
           <div className="acoes fim-acoes">
             <button onClick={() => {
               if (resultado!.vitoria) { setEspelho(!espelho); setElenco(novoElenco()); } // repetir: outro prédio e outro elenco (no teste, a mesma fase de novo)
-              else { setResultado(undefined); setBatida(0); setPlano({}); setHistorico([]); setSelecionado(girando ? undefined : origem); } // ⚠️ tentar de novo ZERA as setas (pedido do dono, 2026-11-12; antes o plano ficava) e a origem volta selecionada
+              else { setResultado(undefined); setBatida(0); setPlano({}); setHistorico([]); setSelecionado(girando ? undefined : origem); setRecolhido(false); } // ⚠️ tentar de novo ZERA as setas (pedido do dono, 2026-11-12; antes o plano ficava) e a origem volta selecionada
             }}>{resultado!.vitoria ? 'Repetir' : 'Tentar de novo'}</button>
             {/* reassistir uma batida por vez: ver onde o plano saiu do esperado */}
             {/* ⚠️ rótulo curto: "Passo a passo" quebrava os botões em duas linhas */}
@@ -587,7 +609,9 @@ function Fim(props: {
     const e = explicar(fase, resultado);
     texto = e?.tipo === 'padaria'
       ? `O recado chegou na batida ${e.chegou}, mas ${o(nome(e.id))} ${nome(e.id)} só voltava da padaria na ${e.volta}.`
-      : e?.tipo === 'duvida'
+      : e?.tipo === 'saiu'
+        ? (e.contando ? `${nome(e.id)} ouviu na batida ${e.batida - 1}, mas já tinha saído na ${e.sai} e não chegou a contar.` : `${nome(e.id)} já tinha saído quando o recado chegou (batida ${e.batida}, saiu na ${e.sai}).`)
+        : e?.tipo === 'duvida'
         ? `${nome(e.id)} só ouviu ${o(nome(e.de)) === 'a' ? 'da' : 'do'} ${nome(e.de)} e não acreditou.`
         : e?.tipo === 'reto'
         ? (e.motivo === 'atrapalhou' ? `Dois contaram juntos pro ${nome(e.id)}: ele se atrapalhou e guardou.` : `${nome(e.id)} ouviu, mas não tinha ninguém do outro lado pra passar.`)

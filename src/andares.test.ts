@@ -37,6 +37,18 @@ describe('estoque de andares gerados', () => {
     expect(new Set(fases.map((a) => formatoDe(a.fase)).filter(Boolean)).size).toBeGreaterThanOrEqual(4);
   });
 
+  it('o prédio não tem coluna vazia nem buraco no térreo (fora o 3×4, que pode ser a grade com furos)', () => {
+    // ⚠️ o auditor achou 5 andares assim em 2026-11-13 (42, 51, 54, 98 e 145): tinham sido gerados antes de a fábrica
+    // barrar esses casos, e o teste da planta deixava passar porque aceita 1 cômodo sobrando em qualquer lugar.
+    const ruins = fases.filter((a) => {
+      const v = a.fase.vizinhos, W = Math.max(...v.map((x) => x.pos[0])) + 1, H = Math.max(...v.map((x) => x.pos[1])) + 1;
+      const colunaVazia = Array.from({ length: W }, (_, c) => c).some((c) => !v.some((x) => x.pos[0] === c));
+      const terreo = v.filter((x) => x.pos[1] === H - 1).length;
+      return colunaVazia || (terreo < W && !(W === 3 && H === 4));
+    }).map((a) => a.pos);
+    expect(ruins).toEqual([]);
+  });
+
   it('o Zé pesa em todo andar: sem a ameaça dele, a solução seria mais curta ou haveria outras', () => {
     // ⚠️ antes (2026-11-12) ele era enfeite em 111 de 150: bastava não apontar pra ele
     const enfeite = fases.filter((a) => !papelDoZe(a.fase, a.fase.setas - FOLGA, a.fase.solucao)).map((a) => a.pos);

@@ -147,11 +147,13 @@ export const fasesTrilho: FaseTrilho[] = [
     boato: 'O Seu Zé dança forró escondido',
     novidade: 'Exagerado: aumenta o boato um tamanho',
     giros: 0, setas: 3, origens: ['r'],
+    // ⚠️ o Zé entrou (2026-11-13, "o nosso vilão é um pedaço de nada"): antes o andar nem tinha vítima. Ele mora entre a Rita
+    // e a Lúcia: pelo Zé (Rita → Zé → Lúcia → Cida) o boato chegaria no tamanho certo com as mesmas 3 setas. Só o Zé tapa esse caminho.
     vizinhos: [
-      v('r', 'Rita', 'comum', [0, 0]), v('e', 'Beto', 'exagerado', [1, 0]), v('l', 'Lúcia', 'exagerado', [2, 0]),
-      v('a', 'Ana', 'comum', [0, 1]), v('d', 'Davi', 'comum', [1, 1]), v('c', 'Cida', 'comum', [2, 1], { interesse: { tamanho: 2 } }),
+      v('r', 'Rita', 'comum', [0, 0]), v('e', 'Beto', 'exagerado', [1, 0]), v('l', 'Lúcia', 'exagerado', [1, 1]),
+      ze([0, 1]), v('d', 'Davi', 'comum', [2, 0]), v('c', 'Cida', 'comum', [2, 1], { interesse: { tamanho: 2 } }),
     ],
-    amizades: [['r', 'e'], ['e', 'l'], ['l', 'c'], ['r', 'a'], ['a', 'd'], ['d', 'c'], ['e', 'd']],
+    amizades: [['r', 'e'], ['e', 'l'], ['l', 'c'], ['r', 'z'], ['z', 'l'], ['d', 'c'], ['e', 'd']],
     solucao: { r: 'e', e: 'd', d: 'c' },
     armadilha: { r: 'e', e: 'l', l: 'c' }, // dois exagerados viram escândalo
   },
@@ -164,7 +166,9 @@ export const fasesTrilho: FaseTrilho[] = [
       v('a', 'Ana', 'comum', [0, 1]), v('l', 'Lúcia', 'exagerado', [1, 1]), ze([2, 1]),
       v('d', 'Davi', 'comum', [0, 2]), v('u', 'Rui', 'comum', [1, 2]), v('c', 'Cida', 'comum', [2, 2], { interesse: { tamanho: 3 } }),
     ],
-    amizades: [['r', 'e'], ['e', 'n'], ['n', 'z'], ['e', 'l'], ['r', 'a'], ['a', 'l'], ['l', 'u'], ['a', 'd'], ['d', 'u'], ['u', 'c']],
+    // ⚠️ o Zé ganhou porta pra Lúcia e pra Cida (2026-11-13): antes ele só tinha a Neide, e a Neide nem entrava na jogada. Agora
+    // Rita → Beto → Lúcia → Zé → Cida chegaria no mesmo tamanho e nas mesmas 4 setas; é ele que fecha esse caminho.
+    amizades: [['r', 'e'], ['e', 'n'], ['n', 'z'], ['e', 'l'], ['r', 'a'], ['a', 'l'], ['l', 'u'], ['a', 'd'], ['d', 'u'], ['u', 'c'], ['l', 'z'], ['z', 'c']],
     solucao: { r: 'e', e: 'l', l: 'u', u: 'c' },
     armadilha: { r: 'a', a: 'l', l: 'u', u: 'c' }, // um exagerado só: chega boato, não escândalo
   },
@@ -172,13 +176,15 @@ export const fasesTrilho: FaseTrilho[] = [
     titulo: 'Liga pra ela',
     boato: 'O Seu Zé tem uma tartaruga chamada Dona Flor',
     novidade: 'Celular: liga pra alguém longe, no lugar de contar pro vizinho',
-    giros: 0, setas: 2, origens: ['r'],
+    // ⚠️ a Bia saiu de baixo da Rita e foi pra baixo da Ana (2026-11-13): antes a Rita contava pra ela e o Zé ficava de enfeite. Agora o caminho
+    // pela porta (Rita → Ana → Zé → Cida) também tem 3 setas, mas passa pelo Zé; a volta é a Ana ligar pra Bia, e a Bia, pra Cida.
+    giros: 0, setas: 3, origens: ['r'],
     vizinhos: [
       v('r', 'Rita', 'comum', [0, 0]), v('a', 'Ana', 'comum', [1, 0]), ze([2, 0]),
-      v('b', 'Bia', 'comum', [0, 1], { celular: ['c', 'z'] }), v('c', 'Cida', 'comum', [2, 1], quer),
+      v('b', 'Bia', 'comum', [1, 1], { celular: ['c', 'z'] }), v('c', 'Cida', 'comum', [2, 1], quer),
     ],
-    amizades: [['r', 'a'], ['a', 'z'], ['z', 'c'], ['r', 'b']],
-    solucao: { r: 'b', b: 'c' },
+    amizades: [['r', 'a'], ['a', 'z'], ['z', 'c'], ['a', 'b']],
+    solucao: { r: 'a', a: 'b', b: 'c' },
     armadilha: { r: 'a', a: 'z' },
   },
 ];

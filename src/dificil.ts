@@ -79,7 +79,9 @@ export const fasesDificil: FaseTrilho[] = [
       v('c', 'Cida', 'comum', [1, 2], { interesse: {ordem:2} }),
       v('i', 'Lia', 'comum', [0, 3]),
     ],
-    amizades: [['z','n'], ['z','d'], ['z','c'], ['a','d'], ['b','n'], ['b','c'], ['b','i'], ['r','l'], ['l','e'], ['y','e'], ['y','c'], ['y','i']],
+    // ⚠️ o Zé ganhou porta pra Rita (2026-11-13, "o vilão é um pedaço de nada"): Rita → Zé → Neide (que espalha pra Bia) → Cida seria o atalho de
+    // 3 setas, e as 5 de agora só existem porque ele fecha esse caminho. Ele já tinha a Neide ao lado; faltava a Rita poder tentar contar pra ele.
+    amizades: [['z','n'], ['z','d'], ['z','c'], ['a','d'], ['b','n'], ['b','c'], ['b','i'], ['r','l'], ['l','e'], ['y','e'], ['y','c'], ['y','i'], ['z','r']],
     solucao: { r: 'l', e: 'y', y: 'i', i: 'b', b: 'c' },
     armadilha: { r: 'l', e: 'y', y: 'c', c: 'b' }, // ordem_errada
   },

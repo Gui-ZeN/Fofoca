@@ -125,6 +125,13 @@ function useLargura(texto: string, chute: number) {
 
 // Plaquinha com o nome (e o que a pessoa exige para acreditar), no canto de cima.
 // No trilho o tamanho é exato e aparece com "=" ("quer exatamente um boato"); na mecânica antiga é mínimo.
+// A orelha da Vera: no selo dela e no de quem mora colado nela. ⚠️ Eram as palavras "ouve" e "psiu" em vermelho sobre
+// branco, do protótipo dos fiscais; num jogo que fala por símbolo e usa plaquinha de madeira, destoavam (dono, 2026-11-13).
+const Orelha = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
+  <path className="orelha" transform={`translate(${x} ${y}) scale(${s})`}
+    d="M-1.5,5.6 q-3.1,-1.2 -3.1,-5.6 a4.6,4.6 0 0 1 9.2,0 q0,2.6 -2.4,4.2 q-1.2,2.5 -3.7,1.4 M-2,0.7 a2.4,2.4 0 0 1 4.6,-0.9 q0,1.2 -1.4,2" />
+);
+
 function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizinho; x0: number; y0: number; contou?: boolean; menos?: boolean; perto?: string; comNome?: boolean }) {
   const exato = v.interesse?.tamanho;
   const versao = v.interesse?.versao; // quer a versão certa ou a ao contrário: o balão mostra qual
@@ -145,6 +152,9 @@ function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizi
   const passa = v.tipo === 'apressado';
   // fiscais: a regra dele(a) em duas palavras, na própria plaquinha (Vera "ouve", Dona Norma "até 2", Dr. Álvaro "máx 4")
   const fiscal = v.vigia ? 'ouve' : v.recolhe ? `até ${v.recolhe}` : v.teto ? `máx ${v.teto}` : undefined;
+  // selo "sai na N" (padaria ao contrário): pãozinho + seta saindo + o texto, na mesma linha de baixo do nome do fiscal.
+  // ⚠️ Diferente do "volta na N": aquele é a placa pendurada com pão e número, de quem JÁ está fora; este é a seta saindo.
+  const sai = v.sai !== undefined && v.chega === undefined ? v.sai : undefined;
   // ⚠️ o selo do fiscal fica numa etiqueta própria, EMBAIXO do nome: do lado, "Dona Norma" + "até 3" passava do cômodo
   // e a plaquinha inteira encolhia até não dar pra ler — justo onde está a regra do vilão (achado jogando, 2026-11-12)
   const fim = fimNome + (duas ? 26 : 0) + (passa ? 26 : 0);
@@ -152,7 +162,7 @@ function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizi
   // "−1": mora colado no Arnaldo e fala um tamanho menor (o efeito no tabuleiro, não só no personagem)
   const xMenos = fim + (mais ? 26 : 0);
   const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (perto ? 34 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 27 : 0);
-  if (!comNome && w < 10 && !fiscal) return null; // morador comum sem papel nem regra: nada
+  if (!comNome && w < 10 && !fiscal && sai === undefined) return null; // morador comum sem papel nem regra: nada
   return (
     // ⚠️ plaquinha mais larga que o cômodo (estrela + nome comprido + "=" + tamanho, ou +1/−1/⇄) invadia o vizinho:
     // encolhe inteira, a partir da ponta esquerda, até caber (L − 10)
@@ -174,15 +184,24 @@ function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizi
       )}
       {fiscal && (
         <g className="fiscal" aria-label={v.vigia ? 'escuta quando um vizinho dela conta algo' : v.recolhe ? `depois da batida ${v.recolhe}, quem mora colado nela não conta mais nada` : `no máximo ${v.teto} pessoas podem ficar sabendo`}>
-          <rect x={x0 + 8} y={y0 + 31} width={46} height={16} rx={3} />
-          <text x={x0 + 31} y={y0 + 43}>{fiscal}</text>
+          <rect x={x0 + 8} y={y0 + 31} width={v.vigia ? 24 : 46} height={16} rx={3} />
+          {v.vigia ? <Orelha x={x0 + 20} y={y0 + 38.5} /> : <text x={x0 + 31} y={y0 + 43}>{fiscal}</text>}
+        </g>
+      )}
+      {sai !== undefined && (
+        <g className="saida" aria-label={`sai de casa na batida ${sai}: recado que chegar nela na ${sai} ou depois se perde`}>
+          <rect x={x0 + 8} y={y0 + 31} width={48} height={16} rx={3} />
+          <ellipse cx={x0 + 19} cy={y0 + 39.5} rx={6} ry={3.6} className="pao" transform={`rotate(-18 ${x0 + 19} ${y0 + 39.5})`} />
+          <path d={`M${x0 + 29},${y0 + 39} h9 m-3.2,-3.4 l3.4,3.4 l-3.4,3.4`} />
+          {/* só o número: pão + seta saindo + a batida (sem palavras, como os outros selos) */}
+          <text x={x0 + 43} y={y0 + 43.5}>{sai}</text>
         </g>
       )}
       {perto && (
         // mora colado (por porta ou escada) na Vera ("psiu": não pode contar) ou na Dona Norma ("até N")
         <g className="perto" aria-label={perto === 'psiu' ? 'mora colado na Vera: se contar, ela escuta' : `mora colado na Dona Norma: só conta ${perto}`}>
-          <rect x={xPerto} y={y0 + 12} width={30} height={14} rx={3} />
-          <text x={xPerto + 15} y={y0 + 23}>{perto}</text>
+          <rect x={xPerto} y={y0 + 11} width={perto === 'psiu' ? 20 : 30} height={16} rx={3} />
+          {perto === 'psiu' ? <Orelha x={xPerto + 10} y={y0 + 18.5} s={0.9} /> : <text x={xPerto + 15} y={y0 + 23}>{perto}</text>}
         </g>
       )}
       {passa && (
@@ -217,15 +236,18 @@ function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizi
 }
 
 // Placa pendurada de quem foi na padaria: um pão e quantas batidas faltam para voltar.
-export function Padaria({ x, y, faltam, batendo }: { x: number; y: number; faltam: number; batendo: boolean }) {
+// Sem `faltam`: quem SAIU de casa (`sai`) — a mesma placa, sem número (já foi e não volta nesta fase).
+export function Padaria({ x, y, faltam, batendo }: { x: number; y: number; faltam?: number; batendo: boolean }) {
   return (
-    <g className="padaria" aria-label={`Volta em ${faltam} batida${faltam > 1 ? 's' : ''}`}>
+    <g className="padaria" aria-label={faltam === undefined ? 'Saiu de casa' : `Volta em ${faltam} batida${faltam > 1 ? 's' : ''}`}>
       <path d={`M${x - 12},${y - 20} L${x},${y - 30} L${x + 12},${y - 20}`} fill="none" stroke="#283C36" strokeWidth={1.8} />
       <rect x={x - 26} y={y - 20} width={52} height={40} rx={4} className="placa" />
       {/* pão francês */}
-      <ellipse cx={x - 9} cy={y} rx={11} ry={6.5} fill="#D9A04E" stroke="#283C36" strokeWidth={1.8} transform={`rotate(-18 ${x - 9} ${y})`} />
-      <path d={`M${x - 15},${y + 1} l3,-4 M${x - 10},${y + 2} l3,-5 M${x - 5},${y} l3,-4`} stroke="#8A5A22" strokeWidth={1.6} strokeLinecap="round" />
-      <text x={x + 13} y={y + 1} className="faltam">{faltam}</text>
+      <g transform={faltam === undefined ? "translate(9 0)" : undefined}>
+        <ellipse cx={x - 9} cy={y} rx={11} ry={6.5} fill="#D9A04E" stroke="#283C36" strokeWidth={1.8} transform={`rotate(-18 ${x - 9} ${y})`} />
+        <path d={`M${x - 15},${y + 1} l3,-4 M${x - 10},${y + 2} l3,-5 M${x - 5},${y} l3,-4`} stroke="#8A5A22" strokeWidth={1.6} strokeLinecap="round" />
+      </g>
+      {faltam !== undefined && <text x={x + 13} y={y + 1} className="faltam">{faltam}</text>}
       {batendo && <text x={x + 30} y={y - 34} className="toc">toc toc</text>}
     </g>
   );
@@ -312,7 +334,9 @@ export function Predio(props: {
 
   // Arrasto: no toque, o navegador entrega o soltar pro elemento onde o dedo começou,
   // então o destino é achado pelo ponto onde o dedo saiu.
-  const [arrasto, setArrasto] = useState<{ de: string; x: number; y: number }>();
+  // ⚠️ `dedo`: só o dedo que começou o arrasto move e solta a seta. Sem isso, um segundo dedo encostando na tela soltava
+  // a seta do primeiro no meio do caminho (auditor, 2026-11-13).
+  const [arrasto, setArrasto] = useState<{ de: string; x: number; y: number; dedo: number }>();
   // ⚠️ a linha que segue o dedo e o destino que acende debaixo dele são mexidos DIRETO no desenho, sem estado: com
   // estado, cada movimento redesenhava o prédio inteiro. Antes não havia nada disso — o dedo arrastava no vazio e a seta
   // só aparecia ao soltar, o que o dono sentiu como "meio travado" no celular (2026-11-13).
@@ -321,6 +345,7 @@ export function Predio(props: {
     if (!arrasto || !trilho) return;
     const limpar = () => { guia.current?.classList.remove('viva'); mira.current?.classList.remove('mira'); mira.current = null; };
     const mover = (e: PointerEvent) => {
+      if (e.pointerId !== arrasto.dedo) return;
       const m = raiz.current?.getScreenCTM(), g = guia.current, de = porId[arrasto.de];
       if (!m || !g || !de || Math.hypot(e.clientX - arrasto.x, e.clientY - arrasto.y) <= 14) return;
       const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
@@ -332,6 +357,7 @@ export function Predio(props: {
       if (novo !== mira.current) { mira.current?.classList.remove('mira'); novo?.classList.add('mira'); mira.current = novo; }
     };
     const soltar = (e: PointerEvent) => {
+      if (e.pointerId !== arrasto.dedo) return;
       limpar();
       const alvo = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-morador]')?.getAttribute('data-morador');
       const andou = Math.hypot(e.clientX - arrasto.x, e.clientY - arrasto.y) > 14;
@@ -340,7 +366,7 @@ export function Predio(props: {
       setArrasto(undefined);
     };
     // se o navegador tomar o gesto (pointercancel), o arrasto morre; senão o próximo toque desenhava uma seta fantasma
-    const cancelar = () => { limpar(); setArrasto(undefined); };
+    const cancelar = (e: PointerEvent) => { if (e.pointerId === arrasto.dedo) { limpar(); setArrasto(undefined); } };
     window.addEventListener('pointermove', mover);
     window.addEventListener('pointerup', soltar);
     window.addEventListener('pointercancel', cancelar);
@@ -368,6 +394,8 @@ export function Predio(props: {
   const semGiro = girosUsados(fase, setas) >= fase.giros;
   // Fora de casa enquanto não deu a batida da volta (no fim, todo mundo já voltou).
   const fora = (v: Vizinho) => !!v.chega && !fim && (montando || batida < v.chega);
+  // Já saiu de casa (`sai`): da batida N em diante, até o fim (quem saiu não volta). Montando, ainda está em casa.
+  const saiuJa = (v: Vizinho) => v.sai !== undefined && v.chega === undefined && !montando && batida >= v.sai;
   // a cor do cômodo (as duas metades da porta usam a mesma, pra parede sumir de verdade)
   const comodo = (c: number, r: number) => {
     const v = naCelula(c, r);
@@ -524,7 +552,7 @@ export function Predio(props: {
         return (
           <g key={v.id} data-morador={v.id} className={cls.filter(Boolean).join(' ')}
             onClick={trilho ? undefined : () => props.aoTocar(v)}
-            onPointerDown={trilho && montando ? (e) => { setArrasto({ de: v.id, x: e.clientX, y: e.clientY }); trilho.aoApertar(v); } : undefined}>
+            onPointerDown={trilho && montando ? (e) => { if (arrasto && !e.isPrimary) return; /* 2º dedo não começa outra seta; um toque novo de verdade (primário) sempre vale, pra um soltar perdido não travar o jogo */ setArrasto({ de: v.id, x: e.clientX, y: e.clientY, dedo: e.pointerId }); trilho.aoApertar(v); } : undefined}>
             <rect x={x0 + 9} y={y0 + 9} width={L - 18} height={A - 18} className="toque" />
             {/* ⚠️ as cantoneiras vêm ANTES do morador e da plaquinha: por cima, a de cima cortava o nome */}
             {selecionado && (
@@ -537,8 +565,8 @@ export function Predio(props: {
                 ))}
               </g>
             )}
-            {fora(v)
-              ? <Padaria x={pe.x} y={y0 + 84 + D} faltam={montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
+            {fora(v) || saiuJa(v)
+              ? <Padaria x={pe.x} y={y0 + 84 + D} faltam={saiuJa(v) ? undefined : montando ? v.chega! : v.chega! - batida} batendo={falando.some((m) => m.para === v.id)} />
               : <Personagem v={v} expressao={expressao(v)} x={pe.x} y={pe.y} olha={olharPara(v)} escala={ESCALA} />}
             {/* ⚠️ a plaquinha sobe 11 e fica meio em cima da laje: no lugar de antes (y0+8…30) ela tapava a testa
                 e às vezes o olho — a cabeça do desenho começa em ~y0+9. Assim ela encosta só no alto do cabelo. */}

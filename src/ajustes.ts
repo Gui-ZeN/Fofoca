@@ -1,11 +1,14 @@
 // Ajustes do jogador, guardados no aparelho (`fofoca.ajustes`). Puro e testado; a tela fica no Menu.
 // - rapido: o "Espalhar!" já começa em ×2 (o botão ×2 da fase também grava aqui);
 // - reduzir: menos animação, mesmo com o sistema pedindo movimento normal (o "movimento reduzido" do
-//   sistema continua valendo sozinho, pelo CSS).
+//   sistema continua valendo sozinho, pelo CSS);
+// - som: as notas de ritmo do espalhar (som.ts). Ligado por padrão;
+// - musica: a musiquinha de fundo (musica.ts). Ligada por padrão;
+// - vibrar: o celular treme quando a estrela ouve, quando a vítima descobre e na vitória. Ligado por padrão.
 
-export interface Ajustes { rapido: boolean; reduzir: boolean }
+export interface Ajustes { rapido: boolean; reduzir: boolean; som: boolean; musica: boolean; vibrar: boolean }
 export const CHAVE_AJUSTES = 'fofoca.ajustes';
-const PADRAO: Ajustes = { rapido: false, reduzir: false };
+const PADRAO: Ajustes = { rapido: false, reduzir: false, som: true, musica: true, vibrar: true };
 
 export interface Armazem { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void; key(i: number): string | null; readonly length: number }
 
@@ -16,6 +19,9 @@ export function lerAjustes(armazem: Armazem): Ajustes {
     return {
       rapido: typeof bruto?.rapido === 'boolean' ? bruto.rapido : PADRAO.rapido,
       reduzir: typeof bruto?.reduzir === 'boolean' ? bruto.reduzir : PADRAO.reduzir,
+      som: typeof bruto?.som === 'boolean' ? bruto.som : PADRAO.som,
+      musica: typeof bruto?.musica === 'boolean' ? bruto.musica : PADRAO.musica,
+      vibrar: typeof bruto?.vibrar === 'boolean' ? bruto.vibrar : PADRAO.vibrar,
     };
   } catch {
     return { ...PADRAO };
