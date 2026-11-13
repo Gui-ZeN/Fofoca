@@ -26,6 +26,7 @@ import { CartoesAdvertencia, Menu, type Vidas } from './Menu';
 import { Casa } from './Icones';
 import { APRESENTACOES, CHEGADAS_DE_TESTE, Chegada } from './Chegada';
 import { explicar } from './explicar';
+import { citados } from './Predio';
 import { baixarRegistro, registro } from './registro';
 import { apagarProgresso, armazemDoNavegador, gravarAjustes, lerAjustes } from './ajustes';
 
@@ -75,9 +76,10 @@ const TESTE = !!GRUPO || !!BLOCO;
 // 2026-11-11, Consulta 4: o teste mede o ciclo de jogo; não aprova as vidas). Progresso próprio, separado
 // da campanha normal do aparelho. `&zerar` apaga só os dados da pesquisa, pro próximo participante.
 const busca = new URLSearchParams(location.search);
-// Protótipo da TELA LIMPA (?limpo, ideia do dono em 2026-11-12): título, fofoca e dica saem do topo e abrem a fase num
-// cartão; o desfecho e seus botões viram um cartão que sobe do rodapé. Sobra altura pro prédio.
-const LIMPO = busca.has('limpo');
+// TELA LIMPA (ideia do dono em 2026-11-12, padrão desde 2026-11-13: "gostei dela limpa"): título, fofoca e dica saem do
+// topo e abrem a fase num cartão que sobe do rodapé; o desfecho também. Sobra altura pro prédio (o cômodo do 3×5 vai de
+// 85×79 pra 99×92 num celular de 390×760). `?classico` volta à tela antiga, pra comparar.
+const LIMPO = !busca.has('classico');
 const PESQUISA = !TESTE && (busca.has('pesquisa') || /pesquisa/i.test(location.hash));
 if (PESQUISA && busca.has('zerar')) {
   try { Object.keys(localStorage).filter((k) => k.startsWith('fofoca.pesquisa')).forEach((k) => localStorage.removeItem(k)); } catch { /* sem armazenamento */ }
@@ -241,6 +243,14 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const [cartao, setCartao] = useState(LIMPO); // tela limpa: o cartão que abre a fase
   const [recolhido, setRecolhido] = useState(false); // tela limpa: o cartão do fim recolhido pra ver o prédio
   useEffect(() => { setCartao(LIMPO); setRecolhido(false); }, [idx]);
+  // ⚠️ o cartão de abertura NÃO custa um toque: ele some no primeiro toque em qualquer lugar fora dele, e esse toque já
+  // vale no prédio (começa a seta). Um modal no meio obrigava a tocar em "Jogar" a cada fase.
+  useEffect(() => {
+    if (!cartao) return;
+    const fechar = (e: PointerEvent) => { if (!(e.target as Element).closest?.('.abre-limpo, .topo-limpo')) setCartao(false); };
+    window.addEventListener('pointerdown', fechar);
+    return () => window.removeEventListener('pointerdown', fechar);
+  }, [cartao]);
   const [vendoChegada, setVendoChegada] = useState(false);
   useEffect(() => { setVendoChegada(!!apresentacao && !ler(`${CHAVE}.visto.${item.rotulo}`, false)); }, [idx]);
   // Abertura de capítulo: no 1º andar dele, uma vez por aparelho; vem ANTES da cena de chegada
@@ -408,6 +418,25 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
             </Fim>
   ) : null;
   const vitima = fase.vizinhos.find((v) => v.tipo === 'assunto')?.nome;
+  // ⚠️ o cartão do fim sobe do rodapé e cobre o térreo; se quem errou mora no térreo (o culpado, a estrela que não ouviu),
+  // o texto vai pro alto do palco, como na tela antiga — senão a prova da derrota ficava escondida atrás da explicação.
+  const terreo = Math.max(...fase.vizinhos.map((v) => v.pos[1]));
+  const porque = resultado && terminou ? explicar(fase, resultado) : undefined;
+  const apontados = [resultado?.culpado, ...(porque ? citados(porque) : [])];
+  // ⚠️ prédio baixo (até 3 andares) fica no pé do palco e sobra céu: ali os dois cartões vão pro ALTO. Subindo do rodapé,
+  // o do fim cobria o prédio inteiro no andar 1 e o de abertura escondia a primeira fase do jogo (visto em 2026-11-13).
+  const predioAlto = terreo >= 3;
+  const fimEmCima = LIMPO && (!predioAlto || fase.vizinhos.some((v) => v.pos[1] === terreo && apontados.includes(v.id)));
+  const abertura = LIMPO && cartao && montando && !vendoCapitulo && !(vendoChegada && apresentacao) ? (
+              <div className="abre-limpo" onClick={() => setCartao(false)}>
+                <div className="numero">{numero}</div>
+                <h1>{fase.titulo}</h1>
+                <p className="boato"><OrigemMini /> {fase.boato}</p>
+                {fase.novidade && <p className="novidade"><b>NOVO</b> {fase.novidade}</p>}
+                {/* no tutorial a dica da fase já diz o objetivo, logo abaixo */}
+                {!fase.dica && <p className="meta">Faça chegar em quem tem a estrela{vitima ? `, sem ${o(vitima)} ${vitima} saber` : ''}.</p>}
+              </div>
+  ) : null;
 
   return (
     <main className={LIMPO ? 'limpo' : undefined}>
@@ -436,6 +465,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
         />
         <div className="sobre-o-ceu">
           {!LIMPO && <p className="boato"><OrigemMini /> {fase.boato}</p>}
+          {!predioAlto && abertura}
           {/* setas, advertências e (onde o tamanho importa) a escadinha, numa linha só: o topo enxuto deixa o prédio
               de 5 andares caber sem rolar. A escadinha fica só nos ícones; os nomes estão no aria-label e na
               cena de chegada do Beto, que ensina os tamanhos. */}
@@ -444,14 +474,15 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
           {/* a dica da fase fica até a primeira seta; depois, o que o selecionado está fazendo — SÓ no tutorial.
               Fora dele, a seleção já aparece nas cantoneiras e o contador treme quando as setas acabam: a frase
               custava uma linha do prédio (Fable, 2026-11-11: o topo empurrava o prédio de 5 andares pra rolagem). */}
-          {!LIMPO && montando && (fase.dica && !historico.length
+          {/* tela limpa: a frase de ajuda fica só no tutorial, onde o prédio é pequeno e sobra céu */}
+          {(!LIMPO || idx < TUTORIAL) && montando && (fase.dica && !historico.length
             ? <p className="dica">{fase.dica}</p>
             : idx < TUTORIAL && status && <p className="dica status">{status}</p>)}
         </div>
         {/* ⚠️ O texto do desfecho fica no ALTO do palco, por cima dos avisos (que já não importam), e os botões no rodapé.
             Antes o quadro inteiro flutuava sobre a rua e cobria o térreo — justo onde muitas vezes está quem perdeu a
             fase (Fable, 2026-11-11). Crescer o rodapé continua proibido: o prédio pularia (Astra, Consulta 2). */}
-        {!LIMPO && fim && <div className="desfecho">{fim}</div>}
+        {(!LIMPO || fimEmCima) && fim && <div className="desfecho">{fim}</div>}
       </section>
 
       {vendoCapitulo && cap ? (
@@ -460,23 +491,10 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
         <Chegada fase={fase} apresentacao={apresentacao} aoFechar={() => { gravar(`${CHAVE}.visto.${item.rotulo}`, true); setVendoChegada(false); }} />
       )}
 
-      {LIMPO && cartao && montando && !vendoCapitulo && !(vendoChegada && apresentacao) && (
-        <div className="abertura" onClick={() => setCartao(false)}>
-          <div className="abertura-cartao">
-            <div className="numero">{numero}</div>
-            <h1>{fase.titulo}</h1>
-            <p className="boato"><OrigemMini /> {fase.boato}</p>
-            {fase.novidade && <p className="novidade"><b>NOVO</b> {fase.novidade}</p>}
-            {fase.dica && <p className="dica">{fase.dica}</p>}
-            <p className="meta">Faça chegar em quem tem a estrela{vitima ? `, sem ${o(vitima)} ${vitima} saber` : ''}. {limite} {girando ? 'giros' : 'setas'}.</p>
-            <button className="principal">Jogar</button>
-          </div>
-        </div>
-      )}
-
       <footer>
         {montando ? (
           <>
+            {predioAlto && abertura}
             <div className="acoes">
               <button onClick={desfazer} disabled={!historico.length}>Desfazer</button>
               {/* com 3 advertências, dá pra montar o trilho mas não espalhar até o síndico tirar uma */}
@@ -500,7 +518,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
         ) : terminou ? (
           // os botões do desfecho no lugar de Desfazer/Espalhar (o texto está no alto do palco)
           <>
-          {LIMPO && fim && (
+          {LIMPO && !fimEmCima && fim && (
             <div className="fim-limpo">
               <button className="recolher" onClick={() => setRecolhido(!recolhido)} aria-expanded={!recolhido}>{recolhido ? 'Ver o resultado ▴' : 'Ver o prédio ▾'}</button>
               {!recolhido && fim}

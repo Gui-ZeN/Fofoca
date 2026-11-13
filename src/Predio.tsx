@@ -37,7 +37,7 @@ export const NOME_TAMANHO: Record<Tamanho, string> = { 1: 'cochicho', 2: 'fofoca
 // ⚠️ Até 2026-11-12 cada um ganhava uma PLAQUINHA com texto em cima do personagem ("veio na 3 · volta na 4", "ouviu de
 // 1 só"…). O dono pediu pra tirar: tapava o personagem, o texto curto virava enigma e era poluição visual. A
 // explicação por extenso fica só no quadro do desfecho, embaixo do título.
-function citados(e: Explicacao): string[] {
+export function citados(e: Explicacao): string[] {
   if (e.tipo === 'ordem') return [e.antes, e.depois];
   if (e.tipo === 'vitima') return [];
   return [e.id];
