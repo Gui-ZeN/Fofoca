@@ -57,35 +57,8 @@ export const andares: AndarDesenhado[] = [
       armadilha: { r: 'e', e: 'n', n: 'c' },
     },
   },
-  {
-    // MÉDIO 1 — 3×4, o Arnaldo no meio. Cida quer escândalo (3) e só ouve pela parede do Beto (muro fino, sem porta).
-    //   Ana    Rui*    Cida(3)       * = colado no Arnaldo (abafa): Rui e Davi
-    //   Rita   Arnaldo Beto  ~muro~ Cida
-    //   Lúcia  Davi*   Marlene
-    //   Edu    Íris    Kátia
-    // Por cima: Rita → Ana → Rui → Cida (3 setas): o Rui abafa e chega cochicho. Pelo meio: Rita → Lúcia → Davi → Marlene → Beto
-    // (5 setas): Lúcia 2, mas o Davi, colado, derruba pra 1 DEPOIS dela. A certa é dar a volta por baixo (Edu, Íris, Kátia):
-    // Lúcia 2 → Beto 3, e o Beto conta de volta pra Marlene: o escândalo vaza pro quarto da Cida.
-    dificuldade: 'medio',
-    referencia: 'Baba Is You: duas regras que se enfrentam (aumentar × abafar), e a ordem em que o boato encosta nelas decide.',
-    ideia: 'Abafar antes de aumentar não custa nada; abafar depois desfaz. O atalho pelo Davi vem depois da Lúcia: tem que dar a volta.',
-    vilao: 'O Arnaldo tem um colado em cada rota: o Rui na de cima e o Davi na do meio, que é o atalho de 5 setas — a volta custa 7.',
-    fase: {
-      titulo: 'A volta por baixo',
-      boato: 'O Arnaldo rega as plantas da vizinha às escondidas',
-      giros: 0, setas: 7, origens: ['r'],
-      vizinhos: [
-        v('a', 'Ana', 'comum', [0, 0]), v('u', 'Rui', 'comum', [1, 0]), v('c', 'Cida', 'comum', [2, 0], { interesse: { tamanho: 3 } }),
-        v('r', 'Rita', 'comum', [0, 1]), arnaldo('z', [1, 1]), v('d', 'Beto', 'exagerado', [2, 1]),
-        v('l', 'Lúcia', 'exagerado', [0, 2]), v('w', 'Davi', 'comum', [1, 2]), v('f', 'Marlene', 'comum', [2, 2]),
-        v('g', 'Edu', 'comum', [0, 3]), v('h', 'Íris', 'comum', [1, 3]), v('i', 'Kátia', 'comum', [2, 3]),
-      ],
-      amizades: [['a', 'u'], ['u', 'c'], ['r', 'a'], ['r', 'l'], ['l', 'w'], ['w', 'f'], ['f', 'd'], ['z', 'u'], ['z', 'w'], ['l', 'g'], ['g', 'h'], ['h', 'i'], ['i', 'f']],
-      murosFinos: [['d', 'c']],
-      solucao: { r: 'l', l: 'g', g: 'h', h: 'i', i: 'f', f: 'd', d: 'f' },
-      armadilha: { r: 'l', l: 'w', w: 'f', f: 'd', d: 'f' },
-    },
-  },
+  // ⚠️ "A volta por baixo" (médio, muro fino) saiu em 2026-11-17: a última seta da solução voltava pra quem já sabia, só pra o
+  // escândalo vazar pelo muro — o dono travou ("esse não tem como"), e o conferidor agora reprova seta pra quem já sabe.
   {
     // MÉDIO 2 — 3×4. Cida quer boato (2) E invertido. O Nonato mora colado no Arnaldo: inverte, mas fala baixo (tira 1).
     //   Ana    Rui     Cida(2, avesso)     * = colado no Arnaldo: só o Nonato

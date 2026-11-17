@@ -38,7 +38,6 @@ export const MIX: AndarDesenhado[] = [
   pega(d3, 'Dois fios, uma Vera'), // difícil — dois seguidos (Designer 3)
   pega(d3, 'Duas linhas pra Cida'), // fácil (respiro)
   pega(d5, 'Duas vezes pra acreditar'), // médio
-  pega(d4, 'A volta por baixo'), // médio
   pega(d2, 'A Bia volta às cinco'), // médio
   pega(d1, 'O compasso da Soneca'), // difícil
   pega(d1, 'A guarda de cinco batidas'), // difícil — dois seguidos (Designer 1)

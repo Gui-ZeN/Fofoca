@@ -74,6 +74,20 @@ function conferir(a: AndarDesenhado): { ok: boolean; linhas: string[]; K: number
   if (f.setas === K + 1 && resolverTrilho(f, K + 1).length > 2) erro(`com a seta de folga há ${resolverTrilho(f, K + 1).length} soluções (máx 2)`);
   if (!jogar(f, f.solucao).vitoria) erro('a solução gravada não vence');
   if (K < L.K[0] || K > L.K[1]) nota(`atenção: K=${K} fora da faixa de ${a.dificuldade} (${L.K[0]}–${L.K[1]})`);
+  // ⚠️ seta pra quem JÁ SABE (2026-11-17, o dono travou em "A volta por baixo": "esse não tem como"). A última seta voltava pro
+  // vizinho que já tinha ouvido, só pra quem conta vazar o escândalo pelo muro — ninguém pensa nisso. Seta da solução tem que
+  // levar o boato a alguém que ainda não sabia.
+  {
+    const r = jogar(f, f.solucao);
+    for (const [de, para] of Object.entries(f.solucao)) {
+      const i = r.batidas.findIndex((ms) => ms.some((m) => m.de === de && m.para === para && !m.escuta && !m.vazou));
+      const ja = r.ouviu[para];
+      if (i >= 0 && ja && ja.batida < i + 1) {
+        const n = (id: string) => f.vizinhos.find((v) => v.id === id)?.nome ?? id;
+        erro(`a solução manda ${n(de)} contar pra ${n(para)}, que já sabia (batida ${ja.batida}): seta que não leva o boato a ninguém novo`);
+      }
+    }
+  }
   // armadilha
   if (!f.armadilha) erro('falta a armadilha (o caminho tentador que perde)');
   else {
