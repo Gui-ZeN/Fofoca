@@ -32,6 +32,22 @@ describe('mira do arrasto (escolherAlvo)', () => {
     expect(escolherAlvo(rita, alvos, { x: o.x + 20, y: o.y })).toBeUndefined();
     expect(escolherAlvo(rita, alvos, { x: o.x + 40, y: o.y - 40 })).toBeUndefined(); // entre o Davi e a Cida
   });
+  it('soltar DENTRO do cômodo de um destino vale ele, mesmo com outro destino colado (a folga não rouba)', () => {
+    // ⚠️ achado do auditor (2026-11-17): a folga de 14 do vizinho cobria a beira do cômodo do destino do interfone, e quem
+    // vinha primeiro na lista ganhava. O resultado dependia da ordem.
+    const viz = v('v', 'Vera', [1, 1]), longe = v('l', 'Lia', [2, 1]), de = v('o', 'Otávio', [0, 1]);
+    expect(escolherAlvo(de, [viz, longe], { x: 2 * L + 3, y: A + 50 })).toBe('l');
+    expect(escolherAlvo(de, [longe, viz], { x: 2 * L + 3, y: A + 50 })).toBe('l');
+    expect(escolherAlvo(de, [viz, longe], { x: 2 * L - 3, y: A + 50 })).toBe('v');
+  });
+  it('na folga, fora dos dois cômodos, fica com o mais perto; na linha que divide os dois, não chuta', () => {
+    const cima = v('a', 'Ana', [1, 0]), baixo = v('b', 'Bia', [1, 1]), de = v('o', 'Otávio', [0, 1]);
+    const fora = 2 * L + 8; // 8 depois da parede direita da coluna dos dois
+    expect(escolherAlvo(de, [cima, baixo], { x: fora, y: A + 3 })).toBe('b'); // 3 abaixo da laje: mais perto da Bia
+    expect(escolherAlvo(de, [baixo, cima], { x: fora, y: A - 3 })).toBe('a');
+    expect(escolherAlvo(de, [cima, baixo], { x: fora, y: A })).toBeUndefined(); // em cima da laje: empate
+  });
+
   it('quem não é destino possível não é escolhido nem com o dedo em cima', () => {
     expect(escolherAlvo(rita, [cima], centro(2, 1))).toBeUndefined();
   });

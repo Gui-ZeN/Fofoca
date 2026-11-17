@@ -524,9 +524,10 @@ main.limpo { position: relative; }
 .seta .contorno { fill: none; stroke: #2B1E16; stroke-width: 13; stroke-linejoin: round; }
 .seta .miolo { fill: none; stroke: #FBF4E5; stroke-width: 8.5; stroke-linejoin: round; }
 .seta .cabeca-seta { fill: #FBF4E5; stroke: #2B1E16; stroke-width: 2.4; stroke-linejoin: round; }
-/* seta pronta da fase (não foi o jogador que desenhou): papel azulado */
-.seta:not(.girada):not(.prevista):not(.elo-fatal):not(.guia) .miolo { stroke: #CFE1EA; }
-.seta:not(.girada):not(.prevista):not(.elo-fatal):not(.guia) .cabeca-seta { fill: #CFE1EA; }
+/* seta pronta da fase (não foi o jogador que desenhou): papel azulado. ⚠️ :not(.ativa): sem isso esta regra (6 classes) vencia
+   a do "falando agora" e a ligação de celular e as setas prontas nunca ficavam amarelas (auditor, 2026-11-17) */
+.seta:not(.girada):not(.prevista):not(.elo-fatal):not(.guia):not(.ativa) .miolo { stroke: #CFE1EA; }
+.seta:not(.girada):not(.prevista):not(.elo-fatal):not(.guia):not(.ativa) .cabeca-seta { fill: #CFE1EA; }
 /* falando agora: miolo amarelo */
 .seta.ativa .miolo { stroke: var(--botao); }
 .seta.ativa .cabeca-seta { fill: var(--botao); }

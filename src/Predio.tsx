@@ -113,9 +113,13 @@ function Fita({ d, rumo, pega, apagar }: { d: string; rumo: string; pega?: boole
 // Agora: dentro (ou quase) do cômodo de um destino possível vale ele; senão vale o destino na DIREÇÃO do puxão, se só um
 // estiver bem alinhado. Pura e exportada pra testar sem tela.
 export function escolherAlvo(de: Vizinho, alvos: Vizinho[], p: { x: number; y: number }): string | undefined {
+  // ⚠️ distância do dedo até o cômodo (0 = dentro). Antes era "o primeiro cuja caixa com folga contém o dedo": a folga de um
+  // vizinho cobria a beira do cômodo de outro destino, e a ordem da lista decidia (auditor, 2026-11-17). Agora quem contém o
+  // dedo de verdade ganha; na folga, o mais perto; empate (o dedo em cima da parede ou laje entre os dois) não chuta.
   const folga = 14;
-  const dentro = alvos.find((v) => p.x >= v.pos[0] * L - folga && p.x <= v.pos[0] * L + L + folga && p.y >= v.pos[1] * A - folga && p.y <= v.pos[1] * A + A + folga);
-  if (dentro) return dentro.id;
+  const dist = (v: Vizinho) => Math.hypot(Math.max(v.pos[0] * L - p.x, 0, p.x - (v.pos[0] + 1) * L), Math.max(v.pos[1] * A - p.y, 0, p.y - (v.pos[1] + 1) * A));
+  const perto = alvos.map((v) => ({ id: v.id, d: dist(v) })).filter((x) => x.d <= folga).sort((a, b) => a.d - b.d);
+  if (perto.length) return perto.length > 1 && perto[1].d - perto[0].d < 1e-9 ? undefined : perto[0].id;
   const ox = de.pos[0] * L + L / 2, oy = de.pos[1] * A + A / 2, vx = p.x - ox, vy = p.y - oy, n = Math.hypot(vx, vy);
   if (n < 30) return undefined; // puxão curto demais pra dizer o rumo
   const nota = alvos.map((v) => {
