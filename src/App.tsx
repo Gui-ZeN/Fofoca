@@ -24,6 +24,7 @@ import { fasesAlto } from './alto';
 import largo from './largo.json';
 import pesadelo from './pesadelo.json';
 import { FASES_DESENHADAS } from './desenhados';
+import { fasesAmostra } from './amostra';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
 import { aposVencer, CANDIDATOS_DIA, diaLiberado, estadoDoAndar, ESTOQUE, PREDIO, proximoAndar, SEGMENTOS, TUTORIAL } from './campanha';
@@ -113,6 +114,10 @@ if (PESQUISA && busca.has('zerar')) {
   history.replaceState(null, '', `${location.pathname}?${busca}${location.hash}`);
   registro.novoParticipante(); // o registro das jogadas NÃO é apagado: só passa a contar outra pessoa
 }
+// `?pesquisa=dificeis`: o kit do playtest dos andares desenhados (src/amostra.ts), na MESMA pesquisa — mesmo participante, mesmo
+// registro (exporta-se pelo menu do `?pesquisa`). Abrir SEM `&zerar` depois da sessão da campanha, pra não trocar o código.
+const DIFICEIS = PESQUISA && busca.get('pesquisa') === 'dificeis';
+const SEQ_DIFICEIS: Item[] = fasesAmostra.map((fase, i) => ({ modo: 'trilho', fase, rotulo: `D${i + 1}` }));
 const sementeDe = (rotulo: string) => [...rotulo].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const TRILHO: Item[] = fasesTrilho.map((fase, i) => ({ modo: 'trilho', fase, rotulo: `T${i + 1}` }));
 const GIROS: Item[] = fasesGiros.map((fase, i) => ({ modo: 'giros', fase, rotulo: `G${i}` }));
@@ -126,7 +131,26 @@ export function App() {
   // ⚠️ bloco ainda sem fases (as cinco mecânicas novas nasceram vazias): sem isto o Jogo lia `SEQUENCIA[0]` e quebrava
   if (TESTE && SEQ_TESTE.length === 0) return <main><p>Este bloco ainda não tem fases.</p></main>;
   if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={['arnaldo', 'nonato', 'raquel', 'apressado', 'vera', 'norma', 'alvaro'].includes(pedido)} />;
+  if (DIFICEIS) return <Dificeis />;
   return <Campanha pesquisa={PESQUISA} />;
+}
+
+// Pesquisa: registro das jogadas (sessão, telas, tentativas, resultado visto, app em segundo plano). `config` vai no cabeçalho.
+// ⚠️ A sessão abre NO PRIMEIRO RENDER, não num efeito: os efeitos do filho rodam antes dos do pai, e no `?pesquisa=dificeis`
+// o Jogo abre direto (sem menu) — a entrada no 1º andar era registrada antes de a sessão existir e se perdia.
+function useRegistroPesquisa(config: Record<string, unknown> | undefined) {
+  useState(() => { if (config) registro.iniciar(config, { largura: innerWidth, altura: innerHeight }); });
+  useEffect(() => {
+    if (!config) return;
+    const mudou = () => registro.registrar('visibility_change', { visivel: document.visibilityState === 'visible' });
+    document.addEventListener('visibilitychange', mudou);
+    return () => document.removeEventListener('visibilitychange', mudou);
+  }, []);
+}
+
+function Dificeis() {
+  useRegistroPesquisa({ modo: 'pesquisa-dificeis', fases: SEQ_DIFICEIS.map((i) => `${i.rotulo} ${i.fase.titulo}`), passo_ms: PASSO_MS, advertencias: false, fixo: true });
+  return <Jogo sequencia={SEQ_DIFICEIS} chave="fofoca.pesquisa.dificeis" nome="Pesquisa · difíceis" fixo livre />;
 }
 
 // Advertências guardadas no aparelho; o relógio só corre enquanto falta alguma.
@@ -160,17 +184,7 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
   const [apagou, setApagou] = useState(0); // remonta o menu depois de apagar o progresso
   const [noDia, setNoDia] = useState(false); // jogando a Fofoca do dia
   const hoje = dataLocal(new Date());
-  // Pesquisa: registro das jogadas (sessão, telas, tentativas, resultado visto, app em segundo plano)
-  useEffect(() => {
-    if (!pesquisa) return;
-    registro.iniciar(
-      { modo: 'pesquisa', campanha: `${ANDARES.length} andares`, passo_ms: PASSO_MS, chegadas: true, advertencias: false, fixo: true },
-      { largura: innerWidth, altura: innerHeight },
-    );
-    const mudou = () => registro.registrar('visibility_change', { visivel: document.visibilityState === 'visible' });
-    document.addEventListener('visibilitychange', mudou);
-    return () => document.removeEventListener('visibilitychange', mudou);
-  }, []);
+  useRegistroPesquisa(pesquisa ? { modo: 'pesquisa', campanha: `${ANDARES.length} andares`, passo_ms: PASSO_MS, chegadas: true, advertencias: false, fixo: true } : undefined);
   useEffect(() => { if (andar === undefined) registro.registrar('view_change', { vista: 'menu', liberada: proximoAndar(ROTULOS, lerVencidos(chave)) }); }, [andar]); // `liberada` do registro = o andar da vez (derivado)
   if (noDia) {
     // Fofoca do dia: um andar leve/médio do estoque, o mesmo pra todo mundo hoje (elenco fixo pela data), sem advertência
@@ -196,9 +210,11 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
 // ⚠️ São separados de propósito: antes as cenas dependiam de `vidas`, e desligar as vidas desligava o ensino.
 // `fixo`: cada fase abre sempre igual (teste e pesquisa).
 // `capitulos`: abertura, ★ e fechamento de capítulo (campanha). `dia`: a data da Fofoca do dia (compartilhar).
-function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVoltar, vidas, chegadas = false, fixo = false, capitulos: CAPS, dia }: {
+// `livre`: as setas ◀ ▶ andam sem precisar vencer (kit dos difíceis: quem travar no 2º ainda chega nos difíceis; sair sem
+// vencer fica no registro e o resumo marca "pulou").
+function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVoltar, vidas, chegadas = false, fixo = false, capitulos: CAPS, dia, livre = false }: {
   sequencia: Item[]; chave: string; nome: string; inicio?: number; aoVoltar?: () => void; vidas?: Vidas; chegadas?: boolean; fixo?: boolean;
-  capitulos?: Capitulo[]; dia?: string;
+  capitulos?: Capitulo[]; dia?: string; livre?: boolean;
 }) {
   const total = SEQUENCIA.length;
   const rotulos = useMemo(() => SEQUENCIA.map((it) => it.rotulo), [SEQUENCIA]);
@@ -506,7 +522,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
             <h1>{fase.titulo}</h1>
           </div>
         )}
-        <button className="nav" disabled={idx + 1 >= total || estadoDoAndar(vencidos, rotulos[idx + 1], idx + 1, proximo) === 'trancado'} onClick={() => setIdx(idx + 1)} aria-label="Próxima fase"><Seta lado="dir" /></button>
+        <button className="nav" disabled={idx + 1 >= total || (!livre && estadoDoAndar(vencidos, rotulos[idx + 1], idx + 1, proximo) === 'trancado')} onClick={() => setIdx(idx + 1)} aria-label="Próxima fase"><Seta lado="dir" /></button>
       </header>
 
       <section className="palco">
