@@ -21,6 +21,16 @@ describe('bloco Muro fino', () => {
     expect(vazou).toEqual(['4:n>a']);
   });
 
+  it('ronda passando no muro: a vítima escuta o vazamento como RONDA, não como se tivesse vazado pra ela', () => {
+    // ⚠️ achado do auditor (2026-11-17): a mensagem da ronda copiava `vazou: true` do vazamento que escutou, e `explicar`
+    // dizia "vazou pela parede pro Zé" quando ele estava visitando o Edu. Nenhuma fase combina ronda e muro hoje.
+    const f = { ...fasesMuro[2], murosFinos: [['n', 'a']] as [string, string][],
+      vizinhos: fasesMuro[2].vizinhos.map((x) => (x.id === 'z' ? { ...x, ronda: ['z', 'z', 'z', 'a'] } : x)) };
+    const r = jogar(f, { r: 'e', e: 'l', l: 'n' });
+    expect(r.batidas.flat().filter((m) => m.ronda).map((m) => [m.de, m.para, !!m.vazou])).toEqual([['n', 'z', false]]);
+    expect(explicar(f, r)).toMatchObject({ tipo: 'ronda', id: 'a', vitima: 'z', batida: 4 });
+  });
+
   it('são três: estreia (perigo), atalho e as duas paredes juntas', () => {
     expect(fasesMuro).toHaveLength(3);
     expect(fasesMuro.map((f) => f.murosFinos!.length)).toEqual([1, 1, 2]);

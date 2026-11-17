@@ -273,7 +273,9 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       const x = ondeEsta(w, batida);
       if (x === w.id) continue;
       const m = saindo.find((s) => s.de === x || s.para === x);
-      if (m) saindo.push({ ...m, para: w.id, escuta: true, ronda: true });
+      // ⚠️ `vazou: undefined`: escutando um vazamento, a mensagem copiava `vazou: true` e `explicar` dizia que vazou pela
+      // parede pra vítima, quando ela estava visitando (auditor, 2026-11-17)
+      if (m) saindo.push({ ...m, para: w.id, escuta: true, ronda: true, vazou: undefined });
     }
     const chegou = new Map<string, Mensagem>();
     const fontes = new Map<string, Set<string>>(); // desconfiados: de quem ouviram nesta batida
