@@ -95,7 +95,7 @@ export function Menu({ titulos, vencidos, vidas, aoJogar, pesquisa, aoApagar, ca
   titulos: string[]; vencidos: ReadonlySet<string>; vidas?: Vidas; aoJogar: (andar: number) => void; aoApagar?: () => void;
   capitulos: Capitulo[]; primeira: Set<string>; rotulos: string[];
   dia?: { feita: number; estrela: boolean; aoJogar: () => void }; // Fofoca do dia (feita = em quantas tentativas; 0 = ainda não; estrela = ganhou a ★)
-  pesquisa?: { participante: string; aoExportar: () => void; aoDificeis?: () => void }; // aoDificeis: o kit dos 5 desenhados (src/amostra.ts)
+  pesquisa?: { participante: string; aoExportar: () => void };
 }) {
   // o andar da vez = o primeiro do prédio ainda não vencido (não um índice guardado): ver campanha.ts, proximoAndar
   const proximo = proximoAndar(rotulos, vencidos);
@@ -168,7 +168,6 @@ export function Menu({ titulos, vencidos, vidas, aoJogar, pesquisa, aoApagar, ca
             </button>
           )}
           <button className="ver-andares" onClick={() => setIndice(true)}>Ver andares</button>
-          {pesquisa?.aoDificeis && <button className="ver-andares" onClick={pesquisa.aoDificeis}>Andares difíceis</button>}
         </div>
         {pesquisa && (
           <button className="exportar" onClick={pesquisa.aoExportar}>

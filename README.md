@@ -66,30 +66,24 @@ Roteiro fechado na Consulta 4 (Sol + Astra, vault). A pergunta da rodada: **prev
 
 **Como ler:** não entenderam → corrigir ensino ou leitura; entenderam mas corrigem por adivinhação → olhar o retorno da derrota e as fases; entenderam, corrigiram com intenção e quiseram continuar → próxima rodada; entenderam e não quiseram continuar → investigar o interesse antes de criar qualquer conteúdo.
 
-### Kit dos difíceis (mesma pessoa, depois da campanha)
-A segunda pergunta da rodada (2026-11-17): **os andares desenhados são difíceis *e* bons?** Só faz sentido com quem já entendeu o núcleo na campanha.
+### Os 5 desenhados, no meio da campanha (sem aviso)
+A segunda pergunta da rodada (2026-11-17): **os andares desenhados são difíceis *e* bons?** Decisão do dono: **juntar tudo, sem dizer que é difícil**, e olhar no registro o que a pessoa fez.
 
-**Onde:** no mesmo link da pesquisa — botão **Andares difíceis** no menu (só no `?pesquisa`). Mesma sessão, mesmo participante, mesmo registro (andares D1–D5). Cinco andares desenhados, numa trilha em que cada um estreia só o que os anteriores não mostraram (linha NOVO), e o último junta tudo:
+**Onde:** na própria sequência do `?pesquisa`, **logo depois do tutorial**: andares 1–5 do tutorial, **6–10 = os 5 desenhados** (D1–D5 no registro), e do 11 em diante a campanha segue do 6º andar de sempre. Eles ficam dentro do capítulo 2 (nenhuma abertura nova). Só na pesquisa; a campanha normal não muda. Trilha em que cada um estreia só o que os anteriores não mostraram (linha NOVO), e o último junta tudo:
 
-| | Andar | Dificuldade | Estreia |
-|---|---|---|---|
-| D1 | Quem fala, ela ouve | fácil | Vera |
-| D2 | Depois das dez | fácil | Soneca, Dona Norma |
-| D3 | A Bia volta às cinco | médio | padaria, ordem |
-| D4 | O telefone do 402 | difícil | interfone |
-| D5 | A volta da Neide | difícil | nada (junta tudo) |
+| Andar | | Nome | Dificuldade | Estreia |
+|---|---|---|---|---|
+| 6º | D1 | Quem fala, ela ouve | fácil | Vera |
+| 7º | D2 | Depois das dez | fácil | Soneca, Dona Norma |
+| 8º | D3 | A Bia volta às cinco | médio | padaria, ordem |
+| 9º | D4 | O telefone do 402 | difícil | interfone |
+| 10º | D5 | A volta da Neide | difícil | nada (junta tudo) |
 
-As setas ◀ ▶ **não trancam**: quem travar no D2 ainda pode ir aos difíceis, e sair sem vencer fica no registro. Mesma regra de travar do roteiro acima (2 min sem hipótese nova → "ajuda ou encerrar?"); se encerrar o andar, **o observador** toca ▶.
-
-1. Ao fim da sessão da campanha, pergunte: "Quer tentar uns andares mais difíceis?" e anote a resposta. **Não** insista.
-2. Volte ao menu (casinha) e toque em **Andares difíceis**. Mesma observação, sem explicar a regra nova: a linha NOVO é o ensino.
-3. Depois de cada difícil (D4, D5), vencendo ou não: "Por que não dava pelo caminho mais curto?" — se a pessoa explica o motivo (ordem, recolher, fio), o andar é difícil **e** legível; se diz "tentei até dar", é adivinhação.
-4. No fim: "Algum desses foi injusto? Qual foi o mais gostoso de resolver?"
-5. A casinha volta ao menu; exporte por lá, como sempre.
+Como na campanha, o próximo andar só abre vencendo. Vale a regra de travar do roteiro acima (2 min sem hipótese nova → "ajuda ou encerrar?"). **Não** diga que esses andares são diferentes. Depois da sessão, na entrevista, sobre o 9º e o 10º (vencendo ou não): "Por que não dava pelo caminho mais curto?" — se a pessoa explica o motivo (ordem, recolher, fio), o andar é difícil **e** legível; se diz "tentei até dar", é adivinhação. E: "Algum andar foi injusto? Qual foi o mais gostoso de resolver?"
 
 **Resumo do registro:** `npx vite-node scripts/resumoRegistro.ts fofoca-registro-*.json` imprime uma linha por pessoa e andar: tentativas, desfecho (**venceu** · **pulou** = saiu sem vencer · **parou** = a sessão acabou ali), tempo, maior pausa sem tentar, "travou?" (pausa ≥ 2 min — **indício**, o registro não vê toque; vale a folha) e por que perdeu.
 
-**Como ler:** venceu com várias tentativas e explicou o porquê → difícil e bom; venceu e não sabe explicar → adivinhação (o andar não comunica a regra); travou no andar que estreia regra → ensino, não dificuldade; pulou os difíceis sem tentar → interesse. 3 de 5 explicando o D4/D5 é o sinal pra pôr os desenhados na campanha.
+**Como ler:** venceu com várias tentativas e explicou o porquê → difícil e bom; venceu e não sabe explicar → adivinhação (o andar não comunica a regra); travou no andar que estreia regra → ensino, não dificuldade; largou num desenhado (parou ali) → olhar a folha: dificuldade ou interesse. 3 de 5 explicando o 9º/10º (D4/D5) é o sinal pra pôr os desenhados na campanha.
 
 ### Links antigos (diagnóstico, não o teste principal)
 - `?grupo=A` / `?grupo=B`: as 10 fases do trilho × 4 de giros (setas prontas, só gira; `src/comparacao.ts`). Útil se alguém entende a regra mas sofre pra montar o trilho.
