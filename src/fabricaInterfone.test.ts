@@ -106,6 +106,65 @@ describe('papéis do fio (Consulta 10)', () => {
     expect(revalidar({ ...comEnfeite, setas: K(i2) + FOLGA }).some((e) => e.startsWith('fio sem papel'))).toBe(true);
   });
 
+  // Prédios de bolso pros dois casos que o auditor pediu (2026-11-17). Porta = amizade; o fio liga apartamentos a 2+ passos.
+  const viz = (id: string, tipo: Vizinho['tipo'], pos: [number, number], extra: Partial<Vizinho> = {}): Vizinho => ({ id, nome: id, tipo, pos, ...extra });
+  const pelaFiacao = (f: Fase, p: Record<string, string>, [a, b]: [string, string]) =>
+    jogar(f, p).batidas.flat().some((m) => !m.escuta && !m.vazou && ((m.de === a && m.para === b) || (m.de === b && m.para === a)));
+
+  it('fio que a solução usa SEM precisar dele fica sem papel (não é útil nem armadilha a evitar)', () => {
+    //   o — b — s★      portas o-b, b-s, s-x, x-z; fio o–s (x é Fofoqueira). Com o fio: 1 seta (o→s). Sem o fio: 2 setas
+    //   .   z — x       (o→b→s), dentro de K + folga. Pelo fio também se perde (o→s, s→x: a Fofoqueira conta pro Zé) — sem a
+    //                   regra "a solução usa o fio", esse fio passaria por armadilha a evitar, e o andar se diria limpo.
+    const f: Fase = {
+      titulo: '', boato: 'O Seu Zé x', giros: 0, origens: ['o'],
+      vizinhos: [viz('o', 'comum', [0, 0]), viz('b', 'comum', [1, 0]), viz('s', 'comum', [2, 0], { interesse: {} }), viz('z', 'assunto', [1, 1]), viz('x', 'fofoqueira', [2, 1])],
+      amizades: [['o', 'b'], ['b', 's'], ['s', 'x'], ['x', 'z']],
+      interfones: [['o', 's']],
+    };
+    const sol = { o: 's' };
+    expect(jogar(f, sol).vitoria).toBe(true);
+    expect(pelaFiacao(f, sol, ['o', 's'])).toBe(true); // a solução passa pelo fio
+    expect(resolverTrilho({ ...f, interfones: undefined }, 2 + FOLGA).length).toBeGreaterThan(0); // e sem ele ainda dá
+    expect(jogar(f, { o: 's', s: 'x' }).vitoria).toBe(false); // existe derrota pelo fio
+    expect(papeisDosFios(f, sol, 2)['o-s']).toBeUndefined();
+    // contraprova: sem a porta b-s, o caminho a pé some e o mesmo fio vira útil
+    const semAtalho: Fase = { ...f, amizades: f.amizades.filter(([a, b]) => !(a === 'b' && b === 's')) };
+    expect(papeisDosFios(semAtalho, sol, 2)['o-s']).toBe('util');
+  });
+
+  it('atalho pelo fio que perde PELO MESMO motivo com e sem o fio não é armadilha (o fio não é a causa)', () => {
+    //   o   y   w   .       portas o-s, s-b, b-c, c-f, f-z, o-y, y-w; fio w–f (f é Fofoqueira).
+    //   s★  b   c   f       A solução: o→s. O "atalho" o→s→b→c→f (4 setas) leva o boato até a Fofoqueira, que espalha pelas
+    //   .   .   .   z       portas (Zé) e pelo fio (w): perde porque o Zé ouviu — com ou sem o fio. Usar o fio NA SETA (w→f)
+    //                       custaria 5 (o→y→w→f, mais b→s), acima do K = 4: nenhuma jogada tentadora depende do fio.
+    const f: Fase = {
+      titulo: '', boato: 'O Seu Zé x', giros: 0, origens: ['o'],
+      vizinhos: [
+        viz('o', 'comum', [0, 0]), viz('y', 'comum', [1, 0]), viz('w', 'comum', [2, 0]),
+        viz('s', 'comum', [0, 1], { interesse: {} }), viz('b', 'comum', [1, 1]), viz('c', 'comum', [2, 1]), viz('f', 'fofoqueira', [3, 1]),
+        viz('z', 'assunto', [3, 2]),
+      ],
+      amizades: [['o', 's'], ['s', 'b'], ['b', 'c'], ['c', 'f'], ['f', 'z'], ['o', 'y'], ['y', 'w']],
+      interfones: [['w', 'f']],
+    };
+    const atalho = { o: 's', s: 'b', b: 'c', c: 'f' };
+    const com = jogar(f, atalho), sem = jogar({ ...f, interfones: undefined }, atalho);
+    expect(pelaFiacao(f, atalho, ['w', 'f'])).toBe(true); // o atalho passa pelo fio (a Fofoqueira espalha por ele)
+    expect(com.vitoria).toBe(false);
+    expect(com.ouviu.s).toBeTruthy(); // a estrela ouviu: é uma derrota "tentadora"
+    expect(sem.vitoria).toBe(false);
+    expect(sem.motivo).toBe(com.motivo); // mesmo motivo: o Zé ouviu pela Fofoqueira, com fio ou sem
+    expect(papeisDosFios(f, { o: 's' }, 4)['w-f']).toBeUndefined();
+    // contraprova: o Zé mora do outro lado do fio — porta só com o w, também Fofoqueira — e o fio vira a causa da derrota
+    const causa: Fase = {
+      ...f,
+      vizinhos: f.vizinhos.map((v) => (v.id === 'z' ? { ...v, pos: [2, -1] as [number, number] } : v.id === 'w' ? { ...v, tipo: 'fofoqueira' as const } : v)),
+      amizades: [...f.amizades.filter(([a, b]) => !(a === 'f' && b === 'z')), ['w', 'z']],
+    };
+    expect(jogar({ ...causa, interfones: undefined }, atalho).vitoria).toBe(true); // sem o fio, o atalho venceria
+    expect(papeisDosFios(causa, { o: 's' }, 4)['w-f']).toBe('armadilha');
+  });
+
   it('o papel principal: útil > impede > armadilha', () => {
     expect(principal({ a: 'armadilha', b: 'util' })).toBe('util');
     expect(principal({ a: 'armadilha', b: 'impede' })).toBe('impede');

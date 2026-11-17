@@ -196,6 +196,14 @@ describe('migrar: recuperável e idempotente', () => {
     }
   });
 
+  it('cópia de segurança estragada (chaves em lista): ignora a cópia e migra pelo progresso de verdade (auditor, 2026-11-17)', () => {
+    const a = armazem({ [`${C}.liberada`]: '60', [`${C}.v3.backup`]: JSON.stringify({ versao: 3, chaves: ['lixo'] }) });
+    const limpa = armazem({ [`${C}.liberada`]: '60' });
+    migrar(a); migrar(limpa);
+    expect(vencidosDepois(a)).toHaveLength(63); // sem a guarda: a cópia vazia zerava o progresso
+    expect(vencidosDepois(a)).toEqual(vencidosDepois(limpa));
+  });
+
   it('armazém que lança em tudo: não quebra', () => {
     const quebrado: Armazem = {
       getItem: () => { throw new Error('bloqueado'); }, setItem: () => { throw new Error('bloqueado'); },

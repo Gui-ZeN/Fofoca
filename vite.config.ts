@@ -1,4 +1,6 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 // versão que vai no registro da pesquisa: o commit, quando o build roda no GitHub; "local" no computador
@@ -6,4 +8,5 @@ const env = (globalThis as { process?: { env?: Record<string, string | undefined
 const versao = env.GITHUB_SHA ? env.GITHUB_SHA.slice(0, 7) : 'local';
 
 // base relativa: a pasta dist/ abre em qualquer hospedagem estática.
-export default defineConfig({ plugins: [react()], base: './', define: { __VERSAO__: JSON.stringify(versao) } });
+// os testes de rascunho das buscas (_busca/, fora do git) não contam na suíte: um deles passava sem conferir nada (auditor, 2026-11-17)
+export default defineConfig({ plugins: [react()], base: './', define: { __VERSAO__: JSON.stringify(versao) }, test: { exclude: [...configDefaults.exclude, '_busca/**'] } });

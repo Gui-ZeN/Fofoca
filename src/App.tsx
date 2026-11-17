@@ -241,6 +241,10 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const recomecar = () => { setPlano({}); setHistorico([]); setSelecionado(girando ? undefined : origem); setResultado(undefined); setBatida(0); setRevendo(undefined); };
   useEffect(() => { setEspelho(Math.random() < 0.5); setElenco(novoElenco()); }, [idx]);
   useEffect(recomecar, [fase]); // fase nova (ou espelhada): plano zerado, origem selecionada
+  // ⚠️ O efeito acima só roda DEPOIS de a fase nova ser desenhada uma vez com o resultado da anterior: a ronda e a moldura do
+  // "citado" apontavam pra moradores que não moram aqui ("O elevador travou", auditor 2026-11-17). Zerar no próprio render da troca.
+  const [faseDoPlacar, setFaseDoPlacar] = useState(fase);
+  if (faseDoPlacar !== fase) { setFaseDoPlacar(fase); recomecar(); }
 
   // Anima o espalhamento: uma batida por vez.
   useEffect(() => {

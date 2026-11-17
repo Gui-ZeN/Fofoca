@@ -7,6 +7,7 @@ import { espalhar, type Fase, type Vizinho } from './motor';
 import { FichaValidade } from './Icones';
 import { A, Predio, geometriaFio, geometriaMuro, ondeDaRonda, paradasDaRonda, tracoDoFio } from './Predio';
 import { fasesInterfone } from './interfone';
+import { jogar } from './trilho';
 
 const v = (id: string, nome: string, tipo: Vizinho['tipo'], pos: [number, number], extra: Partial<Vizinho> = {}): Vizinho => ({ id, nome, tipo, pos, ...extra });
 const base = (extra: Partial<Fase>, vizinhos: Vizinho[], amizades: [string, string][]): Fase => ({ titulo: 't', boato: 'b', giros: 0, vizinhos, amizades, ...extra });
@@ -196,5 +197,15 @@ describe('ronda com resultado de outra fase', () => {
       v('c', 'Cida', 'comum', [1, 1], { interesse: {} })], [['z', 'b'], ['a', 'c'], ['b', 'c']]);
     const deOutraFase = { batidas: [[]], ouviu: {}, vitoria: false, rondas: [{ batida: 1, onde: 'Q' }] } as unknown as Parameters<typeof espalhar>[0] extends never ? never : ReturnType<typeof espalhar>;
     expect(() => desenhar(props(f, { resultado: deOutraFase, batida: 1, montando: false }))).not.toThrow();
+  });
+
+  // ⚠️ achado do auditor (2026-11-17), mesma família fora da ronda: perder um andar e apertar ◀/▶ — a derrota da fase anterior
+  // cita um morador (quem não ouviu) que não mora no prédio novo, e a moldura do "citado" lia `porId[id].pos` → "O elevador travou".
+  it('não quebra: a derrota de outra fase cita alguém que não mora aqui', () => {
+    const f = base({ origens: ['a'] }, [v('z', 'Seu Zé', 'assunto', [0, 0]), v('a', 'Rita', 'comum', [1, 0]), v('c', 'Cida', 'comum', [1, 1], { interesse: {} })], [['a', 'c']]);
+    const outra = base({ origens: ['a'] }, [v('z', 'Seu Zé', 'assunto', [0, 0]), v('a', 'Rita', 'comum', [1, 0]), v('Q', 'Davi', 'comum', [0, 1], { interesse: {} })], [['a', 'z']]);
+    const derrota = jogar(outra, {}); // ninguém conta: o Davi (Q) fica sem saber
+    expect(derrota).toMatchObject({ vitoria: false, motivo: 'interessado_nao_ouviu', culpado: 'Q' });
+    expect(() => desenhar(props(f, { resultado: derrota, batida: derrota.batidas.length + 1, montando: false }))).not.toThrow();
   });
 });

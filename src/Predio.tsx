@@ -1042,6 +1042,7 @@ export function Predio(props: {
       {/* derrota: só uma moldura em volta do apartamento de quem a explicação cita (o texto está no desfecho) */}
       {fim && explicacao && citados(explicacao).map((id) => {
         const v = porId[id];
+        if (!v) return null; // ⚠️ derrota de outra fase (◀/▶ logo depois de perder) cita quem não mora aqui
         return <rect key={'cita' + id} x={v.pos[0] * L + 5} y={v.pos[1] * A + 5} width={L - 10} height={A - 10} rx={3} className="citado" aria-hidden="true" />;
       })}
 

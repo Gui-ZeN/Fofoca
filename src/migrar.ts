@@ -61,7 +61,7 @@ export const marcarVersao = (armazem: Armazem, campanha = CAMPANHA) => {
 
 // a cópia de segurança: a versão que estava gravada (null = nenhuma) e todas as chaves da campanha, como texto
 interface Copia { versao: number | null; chaves: Record<string, string> }
-const ehCopia = (x: unknown): x is Copia => !!x && typeof x === 'object' && 'chaves' in x && typeof (x as Copia).chaves === 'object' && (x as Copia).chaves !== null;
+const ehCopia = (x: unknown): x is Copia => !!x && typeof x === 'object' && 'chaves' in x && typeof (x as Copia).chaves === 'object' && (x as Copia).chaves !== null && !Array.isArray((x as Copia).chaves);
 
 function copiar(armazem: Armazem, campanha: string): Copia {
   const versao = Number(armazem.getItem(`${campanha}.versao`));
