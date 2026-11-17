@@ -16,7 +16,6 @@ npm run build    # gera dist/, que abre em qualquer hospedagem estática
 ## Publicado
 - Jogo: https://gui-zen.github.io/Fofoca/
 - Teste com participante novo: https://gui-zen.github.io/Fofoca/?pesquisa&zerar
-- Kit dos difíceis (mesmo participante, depois): https://gui-zen.github.io/Fofoca/?pesquisa=dificeis
 
 Cada push no `main` roda testes → build → publicação (`.github/workflows/pages.yml`); teste falhando não publica. O site é estático: o progresso fica no aparelho de quem joga. `PRODUCT.md` (metas e estratégia) não vai pro repositório.
 
@@ -70,7 +69,7 @@ Roteiro fechado na Consulta 4 (Sol + Astra, vault). A pergunta da rodada: **prev
 ### Kit dos difíceis (mesma pessoa, depois da campanha)
 A segunda pergunta da rodada (2026-11-17): **os andares desenhados são difíceis *e* bons?** Só faz sentido com quem já entendeu o núcleo na campanha.
 
-**Link:** `?pesquisa=dificeis` — **sem `&zerar`** (o código do participante continua o mesmo). Cinco andares desenhados, numa trilha em que cada um estreia só o que os anteriores não mostraram (linha NOVO), e o último junta tudo:
+**Onde:** no mesmo link da pesquisa — botão **Andares difíceis** no menu (só no `?pesquisa`). Mesma sessão, mesmo participante, mesmo registro (andares D1–D5). Cinco andares desenhados, numa trilha em que cada um estreia só o que os anteriores não mostraram (linha NOVO), e o último junta tudo:
 
 | | Andar | Dificuldade | Estreia |
 |---|---|---|---|
@@ -83,10 +82,10 @@ A segunda pergunta da rodada (2026-11-17): **os andares desenhados são difícei
 As setas ◀ ▶ **não trancam**: quem travar no D2 ainda pode ir aos difíceis, e sair sem vencer fica no registro. Mesma regra de travar do roteiro acima (2 min sem hipótese nova → "ajuda ou encerrar?"); se encerrar o andar, **o observador** toca ▶.
 
 1. Ao fim da sessão da campanha, pergunte: "Quer tentar uns andares mais difíceis?" e anote a resposta. **Não** insista.
-2. Abra `?pesquisa=dificeis`. Mesma observação, sem explicar a regra nova: a linha NOVO é o ensino.
+2. Volte ao menu (casinha) e toque em **Andares difíceis**. Mesma observação, sem explicar a regra nova: a linha NOVO é o ensino.
 3. Depois de cada difícil (D4, D5), vencendo ou não: "Por que não dava pelo caminho mais curto?" — se a pessoa explica o motivo (ordem, recolher, fio), o andar é difícil **e** legível; se diz "tentei até dar", é adivinhação.
 4. No fim: "Algum desses foi injusto? Qual foi o mais gostoso de resolver?"
-5. Exporte pelo menu do `?pesquisa` (o registro é o mesmo).
+5. A casinha volta ao menu; exporte por lá, como sempre.
 
 **Resumo do registro:** `npx vite-node scripts/resumoRegistro.ts fofoca-registro-*.json` imprime uma linha por pessoa e andar: tentativas, desfecho (**venceu** · **pulou** = saiu sem vencer · **parou** = a sessão acabou ali), tempo, maior pausa sem tentar, "travou?" (pausa ≥ 2 min — **indício**, o registro não vê toque; vale a folha) e por que perdeu.
 

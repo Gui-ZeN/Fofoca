@@ -114,9 +114,8 @@ if (PESQUISA && busca.has('zerar')) {
   history.replaceState(null, '', `${location.pathname}?${busca}${location.hash}`);
   registro.novoParticipante(); // o registro das jogadas NÃO é apagado: só passa a contar outra pessoa
 }
-// `?pesquisa=dificeis`: o kit do playtest dos andares desenhados (src/amostra.ts), na MESMA pesquisa — mesmo participante, mesmo
-// registro (exporta-se pelo menu do `?pesquisa`). Abrir SEM `&zerar` depois da sessão da campanha, pra não trocar o código.
-const DIFICEIS = PESQUISA && busca.get('pesquisa') === 'dificeis';
+// Kit do playtest dos andares desenhados (src/amostra.ts): botão "Andares difíceis" no menu do `?pesquisa` — um link só (pedido do
+// dono, 2026-11-17; antes era `?pesquisa=dificeis`, à parte). Mesma sessão, mesmo participante, mesmo registro (rótulos D1–D5).
 const SEQ_DIFICEIS: Item[] = fasesAmostra.map((fase, i) => ({ modo: 'trilho', fase, rotulo: `D${i + 1}` }));
 const sementeDe = (rotulo: string) => [...rotulo].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const TRILHO: Item[] = fasesTrilho.map((fase, i) => ({ modo: 'trilho', fase, rotulo: `T${i + 1}` }));
@@ -131,13 +130,12 @@ export function App() {
   // ⚠️ bloco ainda sem fases (as cinco mecânicas novas nasceram vazias): sem isto o Jogo lia `SEQUENCIA[0]` e quebrava
   if (TESTE && SEQ_TESTE.length === 0) return <main><p>Este bloco ainda não tem fases.</p></main>;
   if (TESTE) return <Jogo sequencia={SEQ_TESTE} chave={BLOCO ? `fofoca.${pedido}` : `fofoca.teste.${GRUPO}`} nome={BLOCO ? BLOCO.nome : `Grupo ${GRUPO}`} fixo chegadas={['arnaldo', 'nonato', 'raquel', 'apressado', 'vera', 'norma', 'alvaro'].includes(pedido)} />;
-  if (DIFICEIS) return <Dificeis />;
   return <Campanha pesquisa={PESQUISA} />;
 }
 
 // Pesquisa: registro das jogadas (sessão, telas, tentativas, resultado visto, app em segundo plano). `config` vai no cabeçalho.
-// ⚠️ A sessão abre NO PRIMEIRO RENDER, não num efeito: os efeitos do filho rodam antes dos do pai, e no `?pesquisa=dificeis`
-// o Jogo abre direto (sem menu) — a entrada no 1º andar era registrada antes de a sessão existir e se perdia.
+// ⚠️ A sessão abre NO PRIMEIRO RENDER, não num efeito: os efeitos do filho rodam antes dos do pai — quando o Jogo abria direto
+// (sem menu), a entrada no 1º andar era registrada antes de a sessão existir e se perdia.
 function useRegistroPesquisa(config: Record<string, unknown> | undefined) {
   useState(() => { if (config) registro.iniciar(config, { largura: innerWidth, altura: innerHeight }); });
   useEffect(() => {
@@ -146,11 +144,6 @@ function useRegistroPesquisa(config: Record<string, unknown> | undefined) {
     document.addEventListener('visibilitychange', mudou);
     return () => document.removeEventListener('visibilitychange', mudou);
   }, []);
-}
-
-function Dificeis() {
-  useRegistroPesquisa({ modo: 'pesquisa-dificeis', fases: SEQ_DIFICEIS.map((i) => `${i.rotulo} ${i.fase.titulo}`), passo_ms: PASSO_MS, advertencias: false, fixo: true });
-  return <Jogo sequencia={SEQ_DIFICEIS} chave="fofoca.pesquisa.dificeis" nome="Pesquisa · difíceis" fixo livre />;
 }
 
 // Advertências guardadas no aparelho; o relógio só corre enquanto falta alguma.
@@ -183,9 +176,13 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
   const [andar, setAndar] = useState<number>();
   const [apagou, setApagou] = useState(0); // remonta o menu depois de apagar o progresso
   const [noDia, setNoDia] = useState(false); // jogando a Fofoca do dia
+  const [nosDificeis, setNosDificeis] = useState(false); // pesquisa: jogando o kit dos difíceis
   const hoje = dataLocal(new Date());
-  useRegistroPesquisa(pesquisa ? { modo: 'pesquisa', campanha: `${ANDARES.length} andares`, passo_ms: PASSO_MS, chegadas: true, advertencias: false, fixo: true } : undefined);
-  useEffect(() => { if (andar === undefined) registro.registrar('view_change', { vista: 'menu', liberada: proximoAndar(ROTULOS, lerVencidos(chave)) }); }, [andar]); // `liberada` do registro = o andar da vez (derivado)
+  useRegistroPesquisa(pesquisa ? { modo: 'pesquisa', campanha: `${ANDARES.length} andares`, dificeis: SEQ_DIFICEIS.map((i) => `${i.rotulo} ${i.fase.titulo}`), passo_ms: PASSO_MS, chegadas: true, advertencias: false, fixo: true } : undefined);
+  // `nosDificeis` nas dependências: voltar dos difíceis pro menu também é registrado (senão o resumo achava que a pessoa seguia no D5)
+  useEffect(() => { if (andar === undefined && !nosDificeis) registro.registrar('view_change', { vista: 'menu', liberada: proximoAndar(ROTULOS, lerVencidos(chave)) }); }, [andar, nosDificeis]); // `liberada` do registro = o andar da vez (derivado)
+  // setas livres: quem travar no D2 ainda chega nos difíceis; sair sem vencer fica no registro (o resumo marca "pulou")
+  if (pesquisa && nosDificeis) return <Jogo sequencia={SEQ_DIFICEIS} chave="fofoca.pesquisa.dificeis" nome="Andares difíceis" fixo livre aoVoltar={() => setNosDificeis(false)} />;
   if (noDia) {
     // Fofoca do dia: um andar leve/médio do estoque, o mesmo pra todo mundo hoje (elenco fixo pela data), sem advertência
     const item: Item = { modo: 'trilho', fase: ESTOQUE[andarDoDia(new Date(), CANDIDATOS_DIA)], rotulo: `F${hoje}` };
@@ -200,7 +197,7 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
         capitulos={CAPITULOS} primeira={new Set(ler<string[]>(`${chave}.primeira`, []))} rotulos={ROTULOS}
         // na pesquisa, nada de Fofoca do dia: o teste mede a campanha. E só depois dos 31 feitos à mão (diaLiberado)
         dia={pesquisa || !diaLiberado(vencidos) ? undefined : { feita: ler(`fofoca.dia.feita.${hoje}`, 0), estrela: ler(`fofoca.dia.estrela.${hoje}`, false), aoJogar: () => setNoDia(true) }}
-        pesquisa={pesquisa ? { participante: registro.participante(), aoExportar: baixarRegistro } : undefined} />
+        pesquisa={pesquisa ? { participante: registro.participante(), aoExportar: baixarRegistro, aoDificeis: () => setNosDificeis(true) } : undefined} />
     );
   }
   return <Jogo key={andar} sequencia={ANDARES} chave={chave} nome={pesquisa ? 'Pesquisa' : 'Campanha'} inicio={andar} aoVoltar={() => setAndar(undefined)} vidas={vidas} chegadas fixo={pesquisa} capitulos={CAPITULOS} />;

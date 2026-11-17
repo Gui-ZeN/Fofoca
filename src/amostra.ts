@@ -1,6 +1,6 @@
 // Kit do playtest dos difíceis (2026-11-17, a partir de uma consulta colada pelo dono: o teste com 5 pessoas pergunta também
-// se os andares desenhados são "difíceis E bons"). Link: `?pesquisa=dificeis`, na mesma sessão de pesquisa (o registro das
-// jogadas é o mesmo; exporta-se pelo menu do `?pesquisa`).
+// se os andares desenhados são "difíceis E bons"). Botão "Andares difíceis" no menu do `?pesquisa` (um link só, pedido do dono):
+// mesma sessão, mesmo registro das jogadas.
 // ⚠️ A escolha evita o teste virar de LEITURA: quase nenhuma regra dos desenhados aparece no começo da campanha que o
 // participante joga antes. Então é uma trilha: cada andar estreia no máximo o que os anteriores não mostraram (com a linha
 // NOVO), e o último não estreia nada — junta tudo. "Dois fiscais, uma Raquel" ficou de fora: 3 regras inéditas num andar só.

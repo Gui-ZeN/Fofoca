@@ -425,7 +425,7 @@ Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** co
 | `?bloco=largo` | oito prédios largos: **4 colunas** (4×3, 4×4, 4×4 com a Vera — o experimento que virou formato do estoque) e **5 colunas** (5×3, 5×4, 5×4 com a Vera, 5×5, 5×6 — aprovado pelo dono no celular em 2026-11-13, ainda fora da campanha) |
 | `?bloco=ronda` / `soneca` / `interfone` / `muro` / `esfria` | as cinco mecânicas de prédio grande (3 fases cada) |
 | `?bloco=desenhados` | os 30 andares desenhados à mão, na ordem do mix (7.6) |
-| `?pesquisa=dificeis` | kit do playtest: 5 desenhados numa trilha (D1–D5, `src/amostra.ts`), mesmo registro da pesquisa; roteiro no README |
+| `?pesquisa` → **Andares difíceis** | kit do playtest: botão no menu da pesquisa, 5 desenhados numa trilha (D1–D5, `src/amostra.ts`), mesmo registro; roteiro no README |
 | `?bloco=pesadelo` | os "pesadelos" rejeitados pelo dono, só registro |
 | `?bloco=hora` / `ordem` / `dificil` | blocos de 6 fases (diagnóstico) |
 | `?grupo=A` / `?grupo=B` | o antigo teste trilho × giros (diagnóstico) |
