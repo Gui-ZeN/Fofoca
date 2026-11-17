@@ -8,6 +8,7 @@ import { andares as d2 } from './designer2';
 import { andares as d3 } from './designer3';
 import { andares as d4 } from './designer4';
 import { andares as d5 } from './designer5';
+import { andares as chefe } from './chefe';
 
 const pega = (lista: AndarDesenhado[], titulo: string) => {
   const a = lista.find((x) => x.fase.titulo === titulo);
@@ -45,5 +46,6 @@ export const MIX: AndarDesenhado[] = [
   pega(d5, 'Dois fiscais, uma Raquel'), // difícil — dois seguidos, o 2º com dois vilões (Designer 5)
   pega(d2, 'A volta da Neide'), // difícil
   pega(d2, 'Ponto de ronda'), // difícil — o fechamento, três relógios
+  pega(chefe, 'O telefone do 402'), // difícil — proposta do dono, montada pelo Chefe (2026-11-17)
 ];
 export const FASES_DESENHADAS: FaseTrilho[] = MIX.map((a) => a.fase);

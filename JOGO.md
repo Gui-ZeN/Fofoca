@@ -333,6 +333,8 @@ Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (
 
 Pedido do dono: "a campanha terá que ser um mix — pode ter 2 difíceis em sequência, não só andares chefões; as mecânicas misturadas, os vilões têm que ter impacto". Cinco designers (agentes) desenharam com referência de outros jogos de puzzle; ficaram **29 andares** em `src/desenhados/designer1..5.ts` (`AndarDesenhado`: fase, dificuldade, referência, ideia, vilão), na ordem do `MIX` (`src/desenhados/index.ts`), jogáveis em `?bloco=desenhados`. **Ainda não estão na campanha**: falta o dono decidir onde entram.
 
+O 30º, **"O telefone do 402"** (`src/desenhados/chefe.ts`, difícil, K=9), veio de uma proposta colada pelo dono e foi montado pelo Chefe com um buscador. A proposta tinha o Seu Zé de vítima e a Dona Norma como "fiscal" à parte, mas no motor a Norma **é** a vítima; e o fio gasta uma batida, como a porta. Ficou: o fio leva o boato até a Neide a tempo de o Rui (vizinho da Norma) ainda falar, e a Ana só pode ouvir depois da Cida, então o caminho dela é o comprido. Duas armadilhas: a Bia contar direto pra Ana (ordem) e descer pela Cida (chega tarde, o Rui já está calado). A 3ª da proposta (a Norma ouvir sem ninguém contar direto) não saiu com uma Fofoqueira só.
+
 **O conferidor** (`scripts/conferirAndar.ts`, `npx vite-node scripts/conferirAndar.ts <arquivo>`) é a régua única — um andar só entra se passar em tudo:
 - solução única no mínimo K; setas = K ou K+1 (com no máximo 2 soluções); nada com K−1;
 - a armadilha é legal e perde;
@@ -422,7 +424,7 @@ Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** co
 | `?bloco=alto` | dois prédios de 5 e 6 andares feitos pela fábrica, pra ver a rolagem |
 | `?bloco=largo` | oito prédios largos: **4 colunas** (4×3, 4×4, 4×4 com a Vera — o experimento que virou formato do estoque) e **5 colunas** (5×3, 5×4, 5×4 com a Vera, 5×5, 5×6 — aprovado pelo dono no celular em 2026-11-13, ainda fora da campanha) |
 | `?bloco=ronda` / `soneca` / `interfone` / `muro` / `esfria` | as cinco mecânicas de prédio grande (3 fases cada) |
-| `?bloco=desenhados` | os 29 andares desenhados à mão, na ordem do mix (7.6) |
+| `?bloco=desenhados` | os 30 andares desenhados à mão, na ordem do mix (7.6) |
 | `?bloco=pesadelo` | os "pesadelos" rejeitados pelo dono, só registro |
 | `?bloco=hora` / `ordem` / `dificil` | blocos de 6 fases (diagnóstico) |
 | `?grupo=A` / `?grupo=B` | o antigo teste trilho × giros (diagnóstico) |
