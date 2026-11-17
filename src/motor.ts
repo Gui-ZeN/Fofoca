@@ -256,13 +256,14 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
       if (m) saindo.push({ ...m, para: w.id, escuta: true });
     }
     // Muro fino: o escândalo (tamanho 3 já enviado, com Exagerado e Arnaldo aplicados) vaza pro outro lado da parede, na mesma batida.
-    // ⚠️ só mensagens "de verdade" vazam (não a escuta da Vera/ronda nem outro vazamento), e se o outro já é o destinatário não duplica.
+    // ⚠️ só mensagens "de verdade" vazam (não a escuta da Vera/ronda nem outro vazamento), e se o outro já recebe de `de` nesta
+    // batida (contado de verdade ou já vazado) não duplica: uma Fofoqueira contando pra 4 vizinhos vazava 4 vezes (auditor, 2026-11-17).
     if (fase.murosFinos) {
       for (const m of [...saindo]) {
         if (m.tamanho !== 3 || m.escuta || m.vazou) continue;
         for (const [a, b] of fase.murosFinos) {
           const outro = a === m.de ? b : b === m.de ? a : undefined;
-          if (outro && outro !== m.para) saindo.push({ de: m.de, para: outro, tamanho: 3, versao: m.versao, vazou: true });
+          if (outro && !saindo.some((x) => x.de === m.de && x.para === outro && !x.escuta)) saindo.push({ de: m.de, para: outro, tamanho: 3, versao: m.versao, vazou: true });
         }
       }
     }

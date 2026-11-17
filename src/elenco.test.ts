@@ -37,6 +37,19 @@ describe.each(fasesTrilho.map((f, i) => [i + 1, f.titulo, f] as const))('elenco 
 });
 
 describe('sorteio do elenco', () => {
+  it('troca no texto também nome que começa ou termina com acento (Íris, Tetê)', () => {
+    // ⚠️ achado do auditor (2026-11-17): o \b do regex não vê Í nem ê como letra, e "A Íris e a Tetê" ficava igual
+    // enquanto as moradoras eram renomeadas. Nenhum texto atual cita esses nomes; quebraria no primeiro que citasse.
+    const base = fasesTrilho.find((f) => f.vizinhos.some((v) => v.nome === 'Rita') && f.vizinhos.some((v) => v.nome === 'Ana'))!;
+    const f0 = { ...base, vizinhos: base.vizinhos.map((v) => v.nome === 'Rita' ? { ...v, nome: 'Íris' } : v.nome === 'Ana' ? { ...v, nome: 'Tetê' } : v),
+      titulo: 'A Íris e a Tetê' };
+    for (const s of SEMENTES) {
+      const f = vestir(f0, aleatorio(s), 0);
+      const nomes = ['Íris', 'Tetê'].map((n) => f.vizinhos.find((v) => v.id === f0.vizinhos.find((x) => x.nome === n)!.id)!.nome);
+      expect(f.titulo).toBe(`A ${nomes[0]} e a ${nomes[1]}`);
+    }
+  });
+
   const comZe = fasesTrilho.filter((f) => f.vizinhos.some((v) => v.tipo === 'assunto'));
 
   it('às vezes a vítima é outra pessoa, e o boato passa a falar dela', () => {

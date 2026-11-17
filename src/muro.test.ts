@@ -12,6 +12,15 @@ describe('bloco Muro fino', () => {
     a.length === 1 && JSON.stringify(Object.entries(a[0]).sort()) === JSON.stringify(Object.entries(b).sort());
   const dim = (f: Fase) => [Math.max(...f.vizinhos.map((x) => x.pos[0])) + 1, Math.max(...f.vizinhos.map((x) => x.pos[1])) + 1];
 
+  it('Fofoqueira no muro: o escândalo vaza UMA vez, não uma por vizinho pra quem ela contou', () => {
+    // ⚠️ achado do auditor (2026-11-17): a Neide contando pra 4 vizinhos gerava 4 vazamentos iguais pro outro lado da
+    // parede (o desfecho era o mesmo, mas a cena e o "Rever" mostravam 4 balões). Nenhuma fase combina os dois hoje.
+    const f = { ...fasesMuro[2], murosFinos: [['n', 'a']] as [string, string][] };
+    const r = jogar(f, { r: 'e', e: 'l', l: 'n' });
+    const vazou = r.batidas.flatMap((b, i) => b.filter((m) => m.vazou).map((m) => `${i + 1}:${m.de}>${m.para}`));
+    expect(vazou).toEqual(['4:n>a']);
+  });
+
   it('são três: estreia (perigo), atalho e as duas paredes juntas', () => {
     expect(fasesMuro).toHaveLength(3);
     expect(fasesMuro.map((f) => f.murosFinos!.length)).toEqual([1, 1, 2]);

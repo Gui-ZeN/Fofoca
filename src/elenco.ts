@@ -63,7 +63,8 @@ export function vestir<F extends Fase>(fase: F, sorte: () => number, chanceVitim
   const texto = (s?: string) => {
     if (!s) return s;
     // uma passada só, pra Rita→Ana e Ana→Rita não se desfazerem
-    let t = nomes.length ? s.replace(new RegExp(`\\b(${nomes.join('|')})\\b`, 'g'), (n) => troca.get(n) ?? n) : s;
+    // ⚠️ borda de palavra com acento, não `\b`: o `\b` não vê Í nem ê como letra, e "Íris"/"Tetê" não eram trocados (auditor, 2026-11-17)
+    let t = nomes.length ? s.replace(new RegExp(`(?<![A-Za-zÀ-ú])(${nomes.join('|')})(?![A-Za-zÀ-ú])`, 'g'), (n) => troca.get(n) ?? n) : s;
     // ⚠️ a vítima entra depois das trocas: ela pode ter o nome antigo de alguém que foi trocado,
     // e se entrasse antes a troca a renomearia ("A Cida dorme de touca" com a Rita de vítima)
     if (vitima !== SEU_ZE) {

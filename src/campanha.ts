@@ -45,6 +45,11 @@ export const CAMPANHA: Andar[] = ORDEM_CAMPANHA.map((rotulo) => ({ rotulo, fase:
 // prédio não termina. Mais andares únicos: rodar o script de novo.
 export const ESTOQUE = (estoque as unknown as { pos: number; fase: FaseTrilho }[]).map((a) => a.fase);
 export const ESTOQUE_PESOS = (estoque as unknown as { saiu: string }[]).map((a) => a.saiu); // o peso que de fato saiu
+// Fofoca do dia: andar leve/médio do estoque SEM personagem que o jogador pode nunca ter conhecido (Nando, Raquel, saída,
+// Arnaldo, Norma). ⚠️ O dia não tem cena de chegada: quem abre o jogo e toca nele pegaria uma regra sem apresentação
+// (auditor, 2026-11-17: 36 dos 114 candidatos, 18 dos 60 dias seguintes). Básico e Vera (estreia no andar 29) ficam.
+const comRegraDeEstreia = (f: FaseTrilho) => f.vizinhos.some((v) => v.tipo === 'apressado' || v.desconfia || v.abafa || v.recolhe || v.sai !== undefined);
+export const CANDIDATOS_DIA = ESTOQUE_PESOS.flatMap((p, i) => ((p === 'leve' || p === 'media') && !comRegraDeEstreia(ESTOQUE[i]) ? [i] : []));
 export const VOLTAS = 20;
 export const POR_BLOCO = 25; // o estoque gerado: escada leve/média/pesada e um chefão no 25º
 export const FEITOS_A_MAO = CAMPANHA.length;

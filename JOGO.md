@@ -315,7 +315,7 @@ Ficam fora: Nonato e Dr. Álvaro (só nos blocos de teste). **A fábrica gera co
 Regerado em 2026-11-11 com **prédios maiores** e só nomes com arte ilustrada (antes havia Gil, Tião e Juca, sem desenho, e um teto de 7 moradores comuns). Regerado de novo em 2026-11-12 (folga e variedade, abaixo): 60 leves de 3 andares, 54 médias de 4, 30 pesadas de 5, 6 chefões de 6 — nenhum precisou descer de peso. Os 150 saem em ~3 min com 6 processos em paralelo.
 
 - Temas sorteados: corrente de Fofoqueiras, padaria, ordem, tamanho, padaria+ordem.
-- Acabou o estoque, **recomeça** — espelhado numa volta sim, outra não. O prédio vai até o andar **3.028**.
+- Acabou o estoque, **recomeça** — espelhado numa volta sim, outra não. O prédio vai até o andar **3.049** (31 feitos à mão + 3.000 + 18 de estreia).
 
 ### 7.5 Capítulos, ★ e Fofoca do dia
 

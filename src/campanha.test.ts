@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FaseTrilho } from './trilho';
-import { BLOCOS_DO_ESTOQUE, CAMPANHA, ESTOQUE, ESTREIAS, ORDEM_CAMPANHA, POR_BLOCO, PREDIO, SEGMENTOS, TUTORIAL, VOLTAS } from './campanha';
+import { BLOCOS_DO_ESTOQUE, CAMPANHA, CANDIDATOS_DIA, ESTOQUE_PESOS, ESTOQUE, ESTREIAS, ORDEM_CAMPANHA, POR_BLOCO, PREDIO, SEGMENTOS, TUTORIAL, VOLTAS } from './campanha';
 import { jogar } from './trilho';
 
 // o que cada regra precisa ter sido apresentada antes de aparecer
@@ -10,6 +10,16 @@ const usa: Record<string, (f: FaseTrilho) => boolean> = {
   celular: (f) => f.vizinhos.some((v) => !!v.celular),
   ordem: (f) => f.vizinhos.some((v) => !!v.interesse?.ordem),
 };
+
+describe('Fofoca do dia', () => {
+  it('só sorteia andar sem regra de estreia (Nando, Raquel, saída, Arnaldo, Norma): o dia não tem cena de chegada', () => {
+    // ⚠️ achado do auditor (2026-11-17): antes eram 36 dos 114 candidatos leves/médios com uma dessas regras
+    const regra = (i: number) => ESTOQUE[i].vizinhos.some((v) => v.tipo === 'apressado' || v.desconfia || v.abafa || v.recolhe || v.sai !== undefined);
+    expect(CANDIDATOS_DIA.filter(regra)).toEqual([]);
+    expect(CANDIDATOS_DIA.every((i) => ESTOQUE_PESOS[i] === 'leve' || ESTOQUE_PESOS[i] === 'media')).toBe(true);
+    expect(CANDIDATOS_DIA.length).toBeGreaterThan(40); // sobra variedade pra meses de dias diferentes
+  });
+});
 
 describe('campanha', () => {
   it('tem as 31 fases do trilho, de cada bloco, uma vez só', () => {

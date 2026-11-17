@@ -24,7 +24,7 @@ import { fasesAlto } from './alto';
 import largo from './largo.json';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
-import { ESTOQUE, ESTOQUE_PESOS, PREDIO, SEGMENTOS, TUTORIAL } from './campanha';
+import { CANDIDATOS_DIA, ESTOQUE, PREDIO, SEGMENTOS, TUTORIAL } from './campanha';
 import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, ganhaEstrela, textoDoDia, type Capitulo } from './capitulos';
 import { AberturaCapitulo } from './Capitulo';
 import { MAX, atualizar, cheias, falta, gastar, relogio, type Advertencias } from './advertencias';
@@ -110,8 +110,6 @@ const SEQ_TESTE: Item[] = BLOCO ? DO_BLOCO : GRUPO === 'A' ? [...TRILHO, ...GIRO
 const ANDARES: Item[] = PREDIO.map(({ rotulo, fase }) => ({ modo: 'trilho', fase, rotulo }));
 const ROTULOS = ANDARES.map((a) => a.rotulo);
 const CAPITULOS = capitulos(SEGMENTOS);
-// Fofoca do dia: só andares leves e médios (rápidos pra um desafio diário)
-const CANDIDATOS_DIA = ESTOQUE_PESOS.flatMap((p, i) => (p === 'leve' || p === 'media' ? [i] : []));
 
 export function App() {
   // ⚠️ bloco ainda sem fases (as cinco mecânicas novas nasceram vazias): sem isto o Jogo lia `SEQUENCIA[0]` e quebrava
