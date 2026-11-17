@@ -1,10 +1,37 @@
 import { describe, expect, it } from 'vitest';
-import type { Fase } from './motor';
+import type { Fase, Vizinho } from './motor';
 import { explicar } from './explicar';
 import { fasesMuro } from './muro';
 import { fasesInterfone } from './interfone';
 import { fasesEsfria } from './esfria';
-import { jogar, resolverTrilho } from './trilho';
+import { jogar, resolverTrilho, type FaseTrilho } from './trilho';
+
+
+// A M3 antiga (até 2026-11-17), mantida aqui só como cenário dos testes do MOTOR abaixo (Fofoqueira no muro, ronda passando no
+// muro): a fase de verdade foi refeita (src/muro.ts), mas esses defeitos foram achados e provados neste prédio.
+const vv = (id: string, nome: string, tipo: Vizinho['tipo'], pos: [number, number], extra: Partial<Vizinho> = {}): Vizinho => ({ id, nome, tipo, pos, ...extra });
+const escandaloT = { interesse: { tamanho: 3 as const } };
+const M3_ANTIGA: FaseTrilho = {
+    // Dois muros: o do Rui (colado no Zé) entrega a vítima, o do Caio (colado na Cida) leva o escândalo até ela. A Neide espalha o
+    // boato pro prédio todo sem custar seta. O tentador é o Beto contar pro Rui, que mora na porta da Cida: o escândalo vaza pro Zé.
+    // O Caio, que não toca no Zé, é quem conta o escândalo pro Beto de volta, e a Cida ouve pela parede dele.
+    titulo: 'Duas paredes',
+    boato: 'O Seu Zé aluga a vaga da garagem em dobro',
+    // ⚠️ tinha a Lu de segunda Fofoqueira (achado do auditor, 2026-11-17): com ela comum a solução é a mesma e única, e o muro
+    // continua decidindo. Uma regra a menos pra ler. (No esfria as duas ficam: lá o par é o que faz o prazo pesar.)
+    giros: 0, setas: 4, origens: ['r'],
+    vizinhos: [
+      vv('b', 'Otávio', 'comum', [0, 0]), vv('f', 'Ana', 'comum', [1, 0]), vv('m', 'Jandira', 'comum', [2, 0]),
+      vv('z', 'Seu Zé', 'assunto', [0, 1]), vv('r', 'Rita', 'comum', [1, 1]), vv('n', 'Neide', 'fofoqueira', [2, 1]), vv('d', 'Marlene', 'comum', [3, 1]),
+      vv('g', 'Rui', 'comum', [0, 2]), vv('e', 'Beto', 'exagerado', [1, 2]), vv('l', 'Lúcia', 'exagerado', [2, 2]), vv('h', 'Solange', 'comum', [3, 2]),
+      vv('s', 'Cida', 'comum', [0, 3], escandaloT), vv('c', 'Caio', 'comum', [1, 3]), vv('a', 'Edu', 'comum', [3, 3]),
+    ],
+    // ⚠️ o Edu tinha zero portas (achado do auditor, 2026-11-17); a porta pra Solange não muda a solução.
+    amizades: [['r', 'e'], ['r', 'n'], ['r', 'f'], ['e', 'l'], ['e', 'c'], ['e', 'g'], ['l', 'n'], ['l', 'h'], ['s', 'g'], ['z', 'b'], ['n', 'm'], ['n', 'd'], ['m', 'f'], ['a', 'h']],
+    murosFinos: [['z', 'g'], ['s', 'c']],
+    solucao: { r: 'n', l: 'e', e: 'c', c: 'e' },
+    armadilha: { r: 'n', l: 'e', e: 'g', g: 's' }, // o Rui conta escândalo pra Cida e o Zé, colado nele, ouve junto
+  };
 
 describe('bloco Muro fino', () => {
   const rotulos = fasesMuro.map((f, i) => [`M${i + 1}`, f.titulo, f] as const);
@@ -17,7 +44,7 @@ describe('bloco Muro fino', () => {
   it('Fofoqueira no muro: o escândalo vaza UMA vez, não uma por vizinho pra quem ela contou', () => {
     // ⚠️ achado do auditor (2026-11-17): a Neide contando pra 4 vizinhos gerava 4 vazamentos iguais pro outro lado da
     // parede (o desfecho era o mesmo, mas a cena e o "Rever" mostravam 4 balões). Nenhuma fase combina os dois hoje.
-    const f = { ...fasesMuro[2], murosFinos: [['n', 'a']] as [string, string][] };
+    const f = { ...M3_ANTIGA, murosFinos: [['n', 'a']] as [string, string][] };
     const r = jogar(f, { r: 'e', e: 'l', l: 'n' });
     const vazou = r.batidas.flatMap((b, i) => b.filter((m) => m.vazou).map((m) => `${i + 1}:${m.de}>${m.para}`));
     expect(vazou).toEqual(['4:n>a']);
@@ -26,8 +53,8 @@ describe('bloco Muro fino', () => {
   it('ronda passando no muro: a vítima escuta o vazamento como RONDA, não como se tivesse vazado pra ela', () => {
     // ⚠️ achado do auditor (2026-11-17): a mensagem da ronda copiava `vazou: true` do vazamento que escutou, e `explicar`
     // dizia "vazou pela parede pro Zé" quando ele estava visitando o Edu. Nenhuma fase combina ronda e muro hoje.
-    const f = { ...fasesMuro[2], murosFinos: [['n', 'a']] as [string, string][],
-      vizinhos: fasesMuro[2].vizinhos.map((x) => (x.id === 'z' ? { ...x, ronda: ['z', 'z', 'z', 'a'] } : x)) };
+    const f = { ...M3_ANTIGA, murosFinos: [['n', 'a']] as [string, string][],
+      vizinhos: M3_ANTIGA.vizinhos.map((x) => (x.id === 'z' ? { ...x, ronda: ['z', 'z', 'z', 'a'] } : x)) };
     const r = jogar(f, { r: 'e', e: 'l', l: 'n' });
     expect(r.batidas.flat().filter((m) => m.ronda).map((m) => [m.de, m.para, !!m.vazou])).toEqual([['n', 'z', false]]);
     expect(explicar(f, r)).toMatchObject({ tipo: 'ronda', id: 'a', vitima: 'z', batida: 4 });
@@ -47,8 +74,10 @@ describe('bloco Muro fino', () => {
 
   it.each(rotulos)('%s (%s): solução única dentro das setas, e nenhuma com uma a menos', (_n, _t, f) => {
     expect(mesma(resolverTrilho(f), f.solucao)).toBe(true);
-    expect(Object.keys(f.solucao).length).toBe(f.setas);
-    expect(resolverTrilho(f, f.setas - 1)).toEqual([]);
+    // setas = K (justo) ou K+1 (folga, como a M3 refeita: deixa a armadilha caber na mão), igual ao conferidor
+    const K = Object.keys(f.solucao).length;
+    expect([K, K + 1]).toContain(f.setas);
+    expect(resolverTrilho(f, K - 1)).toEqual([]);
     expect(jogar(f, f.solucao).vitoria).toBe(true);
   });
 
@@ -94,25 +123,44 @@ describe('bloco Muro fino', () => {
     expect(fasesMuro[0].vizinhos.filter((x) => x.tipo === 'exagerado')).toHaveLength(2);
   });
 
-  it('M2 (atalho): sem o muro não há solução, e a Cida ouve por uma mensagem que vazou', () => {
-    const f = fasesMuro[1];
-    expect(resolverTrilho(semMuros(f), f.setas + 1)).toEqual([]);
-    expect(resolverTrilho(semMuros(f))).toEqual([]);
+  // achados por papel: os ids das fases refeitas saíram da busca (a Neide pode ser `z`)
+  const papel = (f: FaseTrilho) => ({
+    ze: f.vizinhos.find((x) => x.tipo === 'assunto')!.id,
+    escandalo: f.vizinhos.find((x) => x.interesse?.tamanho === 3)!.id,
+    outra: f.vizinhos.find((x) => x.interesse && !x.interesse.tamanho)?.id,
+  });
+  const quemJaSabia = (f: FaseTrilho) => {
     const r = jogar(f, f.solucao);
-    expect(r.batidas.flat().some((m) => m.vazou && m.para === 's')).toBe(true);
-    expect(r.ouviu.s.de).toBe('l');
-    expect(r.ouviu.s.tamanho).toBe(3);
-    expect(r.ouviu.z).toBeUndefined();
-    expect(f.vizinhos.find((x) => x.id === 's')!.interesse).toEqual({ tamanho: 3 });
-    expect(explicar(f, jogar(f, f.armadilha!))).toMatchObject({ tipo: 'tamanho', id: 's', queria: 3, veio: 1 });
+    return Object.entries(f.solucao).filter(([de, para]) => {
+      const i = r.batidas.findIndex((ms) => ms.some((m) => m.de === de && m.para === para && !m.vazou && !m.escuta));
+      return i >= 0 && r.ouviu[para] && r.ouviu[para].batida < i + 1;
+    });
+  };
+
+  it.each(rotulos)('%s (%s): nenhuma seta da solução vai pra quem já sabia (o vício das antigas M2 e M3)', (_n, _t, f) => {
+    expect(quemJaSabia(f)).toEqual([]);
   });
 
-  it('M3 (dois muros): cada um é necessário; um entrega a vítima e o outro leva a estrela', () => {
-    const f = fasesMuro[2];
+  it('M2 (atalho): sem o muro não há solução; a estrela sem tamanho ouve pela parede, e a armadilha é o atalho pela Neide', () => {
+    const f = fasesMuro[1], { ze, outra } = papel(f);
+    expect(resolverTrilho(semMuros(f))).toEqual([]);
+    const r = jogar(f, f.solucao);
+    expect(r.batidas.flat().some((m) => m.vazou && m.para === outra)).toBe(true);
+    expect(r.ouviu[ze]).toBeUndefined();
+    const ra = jogar(f, f.armadilha!);
+    expect(ra.motivo).toBe('assunto_ouviu');
+    expect(f.vizinhos.find((x) => x.id === Object.values(f.armadilha!)[0])!.tipo).toBe('fofoqueira'); // a 1ª seta da armadilha vai pra Neide
+  });
+
+  it('M3 (dois muros): cada um é necessário; o da porta da Cida vaza pro Zé, o da Neide leva a estrela', () => {
+    const f = fasesMuro[2], { ze, escandalo } = papel(f);
     f.murosFinos!.forEach((_, i) => expect(mesma(resolverTrilho(semUm(f, i)), f.solucao)).toBe(false));
-    expect(f.murosFinos!.some((m) => m.includes('z'))).toBe(true);
-    expect(f.murosFinos!.some((m) => m.includes('s'))).toBe(true);
-    expect(jogar(f, f.solucao).batidas.flat().some((m) => m.vazou && m.para === 's')).toBe(true);
+    expect(f.murosFinos!.some((m) => m.includes(ze))).toBe(true);
+    expect(f.murosFinos!.some((m) => m.includes(escandalo))).toBe(true);
+    expect(jogar(f, f.solucao).batidas.flat().some((m) => m.vazou && m.para === escandalo)).toBe(true);
+    const ra = jogar(f, f.armadilha!);
+    expect(ra.motivo).toBe('assunto_ouviu');
+    expect(ra.batidas.flat().some((m) => m.vazou && m.para === ze)).toBe(true); // perde PELO muro
     expect(f.vizinhos.filter((x) => x.tipo === 'fofoqueira').length).toBeGreaterThan(0);
   });
 

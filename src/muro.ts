@@ -3,10 +3,11 @@
 // (mensagem extra com `vazou`). Vale nos dois sentidos; vítima ouvindo pelo muro = derrota. Só escândalo vaza, e o vazamento não vaza de novo.
 // Três fases, achadas com um buscador sobre o motor (_busca/muro, fora do git). A pergunta de todas: ONDE o boato vira escândalo?
 //   1. o muro como PERIGO: o caminho curto deixa o escândalo nascer ANTES de passar pelo Beto, colado no Zé;
-//   2. o muro como ATALHO: a Cida só tem uma porta (que entrega cochicho); o escândalo contado pela Lúcia vaza pra ela pela parede;
-//   3. os dois juntos: um muro entrega a vítima (o Rui), o outro leva a estrela (o Caio).
-// ⚠️ Nas fases 2 e 3 a última seta (Lúcia → Beto, Caio → Beto) é pra alguém que JÁ sabe: não leva o boato a ninguém, só faz quem está
-// colado no muro CONTAR o escândalo. É o jeito de usar o muro; a tela mostra o vazamento, não precisa de regra a mais.
+//   2. o muro como ATALHO: o escândalo nasce a caminho da Cida, e a outra estrela (Davi) só ouve pela parede do Beto;
+//   3. os dois juntos: a porta da Cida passa pelo Rui, colado no Zé pela parede (perigo); a Neide, colada na Cida, leva a estrela.
+// ⚠️ Até 2026-11-17 as fases 2 e 3 terminavam com uma seta pra quem JÁ sabia, só pra quem mora no muro contar o escândalo — o dono
+// travou nesse vício ("esse não tem como"). Refeitas: o vazamento acontece no caminho natural, e scripts/conferirAndar.ts reprova
+// seta pra quem já sabe. As três passam no conferidor.
 
 import type { Vizinho } from './motor';
 import type { FaseTrilho } from './trilho';
@@ -36,41 +37,47 @@ export const fasesMuro: FaseTrilho[] = [
     armadilha: { r: 'l', l: 'e', e: 's' }, // o Beto conta escândalo e o Zé ouve pela parede
   },
   {
-    // A Cida só tem uma porta (a Solange), e por ali o boato chega pequeno. A Lúcia mora colada nela, sem passagem: quando ela
-    // conta o escândalo (Rita → Bia → Beto → Lúcia, e a Lúcia conta de volta pro Beto), a Cida ouve pela parede. Sem o muro não tem jeito.
+    // REFEITA em 2026-11-17: a antiga mandava a última seta pra quem já sabia, só pro escândalo vazar (o dono travou no mesmo vício
+    // em "A volta por baixo"). Agora o escândalo nasce no caminho natural: o Beto, já com dois aumentos, conta pro Ivo (alguém novo) a
+    // caminho da Cida, e o Davi — a outra estrela, sem porta que chegue nele a tempo — ouve pela parede. Tentação: o atalho pela Neide
+    // (economiza a volta pelo Otávio), mas a Neide conta pro Zé. Desenho (* origem, | muro entre Beto e Davi):
+    // Rita*         Otávio        Davi★         Celina
+    // Neide(fof)    Bia           Beto+1        Ivo
+    // Seu Zé(!)     Lúcia+1       Solange       Cida★3
     titulo: 'Pela parede',
     boato: 'O Seu Zé coleciona tampinhas de garrafa',
-    giros: 0, setas: 4, origens: ['r'],
+    giros: 0, setas: 7, origens: ['g'],
     vizinhos: [
-      v('g', 'Ana', 'comum', [0, 0]), v('b', 'Ivo', 'comum', [1, 0]), v('r', 'Rita', 'comum', [2, 0]), v('f', 'Solange', 'comum', [3, 0]),
-      ze([0, 1]), v('c', 'Bia', 'comum', [2, 1]), v('s', 'Cida', 'comum', [3, 1], escandalo),
-      v('a', 'Otávio', 'comum', [0, 2]), v('d', 'Celina', 'comum', [1, 2]), v('e', 'Beto', 'exagerado', [2, 2]), v('l', 'Lúcia', 'exagerado', [3, 2]),
+      v('g', 'Rita', 'comum', [0, 0]), v('r', 'Otávio', 'comum', [1, 0]), v('b', 'Davi', 'comum', [2, 0], { interesse: {} }), v('f', 'Celina', 'comum', [3, 0]),
+      v('z', 'Neide', 'fofoqueira', [0, 1]), v('l', 'Bia', 'comum', [1, 1]), v('e', 'Beto', 'exagerado', [2, 1]), v('s', 'Ivo', 'comum', [3, 1]),
+      v('a', 'Seu Zé', 'assunto', [0, 2]), v('d', 'Lúcia', 'exagerado', [1, 2]), v('c', 'Solange', 'comum', [2, 2]), v('i', 'Cida', 'comum', [3, 2], escandalo),
     ],
-    // ⚠️ o Ivo tinha zero portas (achado do auditor, 2026-11-17); a porta pra Ana (colada no Zé) não muda a solução.
-    amizades: [['r', 'c'], ['r', 'f'], ['e', 'l'], ['e', 'c'], ['s', 'f'], ['z', 'a'], ['z', 'g'], ['a', 'd'], ['b', 'g']],
-    murosFinos: [['l', 's']],
-    solucao: { r: 'c', c: 'e', e: 'l', l: 'e' },
-    armadilha: { r: 'f', f: 's' }, // a porta da Solange entrega um cochicho, não o escândalo que a Cida quer
+    amizades: [['r', 'b'], ['f', 's'], ['s', 'i'], ['r', 'l'], ['e', 'c'], ['a', 'd'], ['d', 'c'], ['l', 'd'], ['b', 'f'], ['e', 's'], ['g', 'z'], ['z', 'a'], ['g', 'r'], ['z', 'l']],
+    murosFinos: [['b', 'e']],
+    solucao: { g: 'r', r: 'l', l: 'd', d: 'c', c: 'e', e: 's', s: 'i' },
+    armadilha: { g: 'z', l: 'd', d: 'c', c: 'e', e: 's', s: 'i' },
   },
   {
-    // Dois muros: o do Rui (colado no Zé) entrega a vítima, o do Caio (colado na Cida) leva o escândalo até ela. A Neide espalha o
-    // boato pro prédio todo sem custar seta. O tentador é o Beto contar pro Rui, que mora na porta da Cida: o escândalo vaza pro Zé.
-    // O Caio, que não toca no Zé, é quem conta o escândalo pro Beto de volta, e a Cida ouve pela parede dele.
+    // REFEITA em 2026-11-17 (mesmo vício da antiga). As DUAS paredes no caminho natural: a Cida (quer escândalo) tem porta pro Rui,
+    // mas o Rui divide parede com o Seu Zé — contar pela porta vaza pro Zé (a armadilha). O certo é levar o escândalo até a Neide, que
+    // divide a outra parede com a Cida: a Neide espalha sozinha e a Cida ouve pela parede. Ninguém conta pra quem já sabe. 9 setas pra 8
+    // (a folga deixa a armadilha caber na mão; continua 1 solução só). Desenho (* origem; muros Zé|Rui e Cida|Neide):
+    // Ana           Lúcia+1       Rita*         —
+    // Seu Zé(!)     Edu           Beto+1        Marlene
+    // Rui           Jandira       Otávio        Caio
+    // Cida★3        Neide(fof)    —             Solange
     titulo: 'Duas paredes',
     boato: 'O Seu Zé aluga a vaga da garagem em dobro',
-    // ⚠️ tinha a Lu de segunda Fofoqueira (achado do auditor, 2026-11-17): com ela comum a solução é a mesma e única, e o muro
-    // continua decidindo. Uma regra a menos pra ler. (No esfria as duas ficam: lá o par é o que faz o prazo pesar.)
-    giros: 0, setas: 4, origens: ['r'],
+    giros: 0, setas: 9, origens: ['m'],
     vizinhos: [
-      v('b', 'Otávio', 'comum', [0, 0]), v('f', 'Ana', 'comum', [1, 0]), v('m', 'Jandira', 'comum', [2, 0]),
-      ze([0, 1]), v('r', 'Rita', 'comum', [1, 1]), v('n', 'Neide', 'fofoqueira', [2, 1]), v('d', 'Marlene', 'comum', [3, 1]),
-      v('g', 'Rui', 'comum', [0, 2]), v('e', 'Beto', 'exagerado', [1, 2]), v('l', 'Lúcia', 'exagerado', [2, 2]), v('h', 'Solange', 'comum', [3, 2]),
-      v('s', 'Cida', 'comum', [0, 3], escandalo), v('c', 'Caio', 'comum', [1, 3]), v('a', 'Edu', 'comum', [3, 3]),
+      v('b', 'Ana', 'comum', [0, 0]), v('f', 'Lúcia', 'exagerado', [1, 0]), v('m', 'Rita', 'comum', [2, 0]),
+      v('z', 'Seu Zé', 'assunto', [0, 1]), v('r', 'Edu', 'comum', [1, 1]), v('n', 'Beto', 'exagerado', [2, 1]), v('d', 'Marlene', 'comum', [3, 1]),
+      v('g', 'Rui', 'comum', [0, 2]), v('e', 'Jandira', 'comum', [1, 2]), v('l', 'Otávio', 'comum', [2, 2]), v('h', 'Caio', 'comum', [3, 2]),
+      v('s', 'Cida', 'comum', [0, 3], escandalo), v('c', 'Neide', 'fofoqueira', [1, 3]), v('a', 'Solange', 'comum', [3, 3]),
     ],
-    // ⚠️ o Edu tinha zero portas (achado do auditor, 2026-11-17); a porta pra Solange não muda a solução.
-    amizades: [['r', 'e'], ['r', 'n'], ['r', 'f'], ['e', 'l'], ['e', 'c'], ['e', 'g'], ['l', 'n'], ['l', 'h'], ['s', 'g'], ['z', 'b'], ['n', 'm'], ['n', 'd'], ['m', 'f'], ['a', 'h']],
+    amizades: [['r', 'n'], ['r', 'f'], ['e', 'l'], ['e', 'c'], ['e', 'g'], ['s', 'g'], ['n', 'd'], ['m', 'f'], ['a', 'h'], ['d', 'h'], ['l', 'h'], ['m', 'n'], ['b', 'f']],
     murosFinos: [['z', 'g'], ['s', 'c']],
-    solucao: { r: 'n', l: 'e', e: 'c', c: 'e' },
-    armadilha: { r: 'n', l: 'e', e: 'g', g: 's' }, // o Rui conta escândalo pra Cida e o Zé, colado nele, ouve junto
+    solucao: { m: 'f', f: 'r', r: 'n', n: 'd', d: 'h', h: 'l', l: 'e', e: 'c' },
+    armadilha: { m: 'f', f: 'r', r: 'n', n: 'd', d: 'h', h: 'l', l: 'e', e: 'g', g: 's' },
   },
 ];
