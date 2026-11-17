@@ -125,7 +125,10 @@ export interface Resultado {
 export const portaDe = (fase: Fase, id: string): string[] =>
   fase.amizades.flatMap(([a, b]) => (a === id ? [b] : b === id ? [a] : []));
 
-// Vizinhos pra todos os efeitos: porta/escada + interfone (quem já é vizinho de porta não repete).
+// Vizinhos pra CONTAR: porta/escada + interfone (quem já é vizinho de porta não repete). Vale pra seta e Fofoqueira.
+// ⚠️ O fio só TRANSMITE (2026-11-17, Consulta 10 com o Sol, aprovado pelo dono): os efeitos de quem mora colado — Arnaldo
+// abafar, Dona Norma calar, Vera escutar, Nando passar reto — usam `portaDe`. Antes valiam pelo fio também, e "o Arnaldo
+// abafa alguém do outro lado do prédio" não se lê no desenho.
 export const amigosDe = (fase: Fase, id: string): string[] => {
   const porta = portaDe(fase, id);
   if (!fase.interfones) return porta;
@@ -140,7 +143,7 @@ export const porInterfone = (fase: Fase, a: string, b: string) =>
 
 // Quem está colado em alguém que abafa (Arnaldo): conta um tamanho menor.
 export const abafados = (fase: Fase): Set<string> =>
-  new Set(fase.vizinhos.filter((w) => w.abafa).flatMap((w) => amigosDe(fase, w.id)));
+  new Set(fase.vizinhos.filter((w) => w.abafa).flatMap((w) => portaDe(fase, w.id)));
 
 // Já tinha saído (padaria ao contrário) na batida `batida`? `sai: N` vale da batida N em diante; com `chega` é ignorado.
 export const saiu = (v: Vizinho, batida: number) => v.sai !== undefined && v.chega === undefined && batida >= v.sai;
@@ -244,14 +247,14 @@ export function espalhar(fase: Fase, jogada: Jogada): Resultado {
     }
     // Dona Norma: passou da hora, quem mora colado nela não conta mais nada
     for (const w of normas) if (batida > w.recolhe!) {
-      const mudos = amigosDe(fase, w.id);
+      const mudos = portaDe(fase, w.id);
       for (const m of saindo) if (mudos.includes(m.de) && !calados.some((c) => c.id === m.de)) calados.push({ id: m.de, batida, norma: w.id });
       saindo = saindo.filter((m) => !mudos.includes(m.de));
     }
     // Vera: escuta o primeiro vizinho que contar algo pra outra pessoa
     for (const w of vigias) {
       if (ouviu[w.id]) continue;
-      const perto = amigosDe(fase, w.id);
+      const perto = portaDe(fase, w.id);
       const m = saindo.find((x) => perto.includes(x.de) && x.para !== w.id);
       if (m) saindo.push({ ...m, para: w.id, escuta: true });
     }

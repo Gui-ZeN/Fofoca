@@ -4,6 +4,7 @@ import { Cartao } from './Icones';
 import { Personagem, type Expressao } from './Personagem';
 import type { Tipo, Vizinho } from './motor';
 import { capituloDe, estrelas, type Capitulo } from './capitulos';
+import { estadoDoAndar, proximoAndar } from './campanha';
 import { ARTE } from './arte';
 import { aplicarMovimento, armazemDoNavegador, gravarAjustes, lerAjustes, type Ajustes as ValoresAjustes } from './ajustes';
 
@@ -90,19 +91,21 @@ export function Corredor({ n, abrindo }: { n: number; abrindo: boolean }) {
 // vem logo embaixo, ao lado de "Ver andares" (onde está o prédio inteiro, por capítulo).
 // Sem `vidas` (pesquisa com pessoas), nada de advertência no menu.
 // `pesquisa`: pro observador do teste, o código do participante e o botão de baixar o registro das jogadas.
-export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar, capitulos, primeira, rotulos, dia }: {
-  titulos: string[]; liberada: number; vidas?: Vidas; aoJogar: (andar: number) => void; aoApagar?: () => void;
+export function Menu({ titulos, vencidos, vidas, aoJogar, pesquisa, aoApagar, capitulos, primeira, rotulos, dia }: {
+  titulos: string[]; vencidos: ReadonlySet<string>; vidas?: Vidas; aoJogar: (andar: number) => void; aoApagar?: () => void;
   capitulos: Capitulo[]; primeira: Set<string>; rotulos: string[];
   dia?: { feita: number; estrela: boolean; aoJogar: () => void }; // Fofoca do dia (feita = em quantas tentativas; 0 = ainda não; estrela = ganhou a ★)
   pesquisa?: { participante: string; aoExportar: () => void };
 }) {
-  const zerou = liberada >= titulos.length;
-  const atual = zerou ? 0 : liberada;
+  // o andar da vez = o primeiro do prédio ainda não vencido (não um índice guardado): ver campanha.ts, proximoAndar
+  const proximo = proximoAndar(rotulos, vencidos);
+  const zerou = proximo >= titulos.length;
+  const atual = zerou ? 0 : proximo;
   const [sel, setSel] = useState(atual);
   const [indice, setIndice] = useState(false);
   const [ajustes, setAjustes] = useState(false);
   const suspenso = !!vidas && vidas.restam <= 0;
-  const [aviso, resposta] = avisoDo(liberada, vidas);
+  const [aviso, resposta] = avisoDo(proximo, vidas);
   const [abrindo, setAbrindo] = useState(false);
   // a porta abre e aí o andar começa; sem animação (ajuste ou sistema), começa na hora
   const jogar = () => {
@@ -175,7 +178,7 @@ export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar, ca
 
       {ajustes && <Ajustes aoFechar={() => setAjustes(false)} aoApagar={aoApagar} />}
       {indice && (
-        <Indice total={titulos.length} liberada={liberada} sel={sel} capitulos={capitulos} primeira={primeira} rotulos={rotulos}
+        <Indice total={titulos.length} vencidos={vencidos} proximo={proximo} sel={sel} capitulos={capitulos} primeira={primeira} rotulos={rotulos}
           aoIr={(i) => { setSel(i); setIndice(false); }} aoFechar={() => setIndice(false)} />
       )}
     </main>
@@ -183,15 +186,17 @@ export function Menu({ titulos, liberada, vidas, aoJogar, pesquisa, aoApagar, ca
 }
 
 // "Ver andares": os capítulos numa faixa, os andares do capítulo (★ = vencido de primeira) e o botão de ir
-function Indice({ total, liberada, sel, aoIr, aoFechar, capitulos, primeira, rotulos }: {
-  total: number; liberada: number; sel: number; aoIr: (i: number) => void; aoFechar: () => void;
+export function Indice({ total, vencidos, proximo, sel, aoIr, aoFechar, capitulos, primeira, rotulos }: {
+  total: number; vencidos: ReadonlySet<string>; proximo: number; sel: number; aoIr: (i: number) => void; aoFechar: () => void;
   capitulos: Capitulo[]; primeira: Set<string>; rotulos: string[];
 }) {
   const atual = capituloDe(capitulos, sel) ?? capitulos[0];
   const [numero, setNumero] = useState(atual.numero);
   const [marcado, setMarcado] = useState(sel);
   // a faixa mostra os capítulos até o da vez e o próximo (trancado), como o prédio que "cresce"
-  const ultimo = Math.min((capituloDe(capitulos, Math.min(liberada, total - 1))?.numero ?? 1) + 1, capitulos.length);
+  // (andar vencido depois de um buraco continua aberto: o topo é o maior entre o próximo e o último vencido)
+  const topo = rotulos.reduce((m, r, i) => (i > m && vencidos.has(r) ? i : m), proximo);
+  const ultimo = Math.min((capituloDe(capitulos, Math.min(topo, total - 1))?.numero ?? 1) + 1, capitulos.length);
   const cap = capitulos[numero - 1];
   const faixa = useRef<HTMLDivElement>(null);
   // ⚠️ com chaves: no Chromium novo scrollIntoView devolve uma Promise, e o React a tomava por limpeza
@@ -205,8 +210,8 @@ function Indice({ total, liberada, sel, aoIr, aoFechar, capitulos, primeira, rot
         </div>
         <div className="dezenas" ref={faixa}>
           {capitulos.slice(0, ultimo).map((c) => (
-            <button key={c.numero} className={c.numero === numero ? 'atual' : undefined} disabled={c.inicio > liberada} onClick={() => setNumero(c.numero)}>
-              Cap. {c.numero}{c.fim <= liberada && <span aria-label=", concluído"> ✓</span>}
+            <button key={c.numero} className={c.numero === numero ? 'atual' : undefined} disabled={c.inicio > topo} onClick={() => setNumero(c.numero)}>
+              Cap. {c.numero}{rotulos.slice(c.inicio, c.fim).every((r) => vencidos.has(r)) && <span aria-label=", concluído"> ✓</span>}
             </button>
           ))}
         </div>
@@ -214,14 +219,15 @@ function Indice({ total, liberada, sel, aoIr, aoFechar, capitulos, primeira, rot
         <div className="andares-grade">
           {Array.from({ length: cap.fim - cap.inicio }, (_, k) => {
             const i = cap.inicio + k;
-            const cls = i === marcado ? 'marcado' : i < liberada ? 'feito' : i === liberada ? 'proximo' : 'trancado';
+            const estado = estadoDoAndar(vencidos, rotulos[i], i, proximo);
+            const cls = i === marcado ? 'marcado' : estado;
             const estrela = primeira.has(rotulos[i]);
             return (
-              <button key={i} className={cls} disabled={i > liberada} onClick={() => setMarcado(i)}
-                aria-label={`${i + 1}º andar${estrela ? ', de primeira' : i < liberada ? ', feito' : i > liberada ? ', trancado' : ''}`}>
+              <button key={i} className={cls} disabled={estado === 'trancado'} onClick={() => setMarcado(i)}
+                aria-label={`${i + 1}º andar${estrela ? ', de primeira' : estado === 'feito' ? ', feito' : estado === 'trancado' ? ', trancado' : ''}`}>
                 <b>{i + 1}</b>
                 <span className="portinha" aria-hidden="true" />
-                {i < liberada && <span className={estrela ? 'visto estrela' : 'visto'} aria-hidden="true">{estrela ? '★' : '✓'}</span>}
+                {estado === 'feito' && <span className={estrela ? 'visto estrela' : 'visto'} aria-hidden="true">{estrela ? '★' : '✓'}</span>}
               </button>
             );
           })}

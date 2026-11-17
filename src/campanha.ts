@@ -16,6 +16,8 @@ import { fasesRaquel } from './raquel';
 import { fasesDuplas } from './duplas';
 import { fasesSaida } from './saida';
 import { fasesArnaldo } from './arnaldo';
+import { fasesInterfone } from './interfone';
+import interfoneGerado from './andaresInterfone.json';
 
 export interface Andar { rotulo: string; fase: FaseTrilho }
 
@@ -56,7 +58,28 @@ export const FEITOS_A_MAO = CAMPANHA.length;
 // ⚠️ A Fofoca do dia só aparece depois dos 31 feitos à mão (dono, 2026-11-17): ela não tem cena de chegada, e todo andar
 // candidato usa alguma regra ensinada entre o 8 e o 31 (exagerado, padaria, Vera, ordem). Antes ela abria no 1º dia, e um
 // jogador novo pegava essas regras sem apresentação (auditor, 2026-11-17). `liberada` = o próximo andar a jogar (0 = o 1º).
-export const diaLiberado = (liberada: number) => liberada >= FEITOS_A_MAO;
+// Agora olha os 31 andares VENCIDOS (não mais um índice): inserir andares no meio do prédio não muda isto.
+export const diaLiberado = (vencidos: ReadonlySet<string>) => CAMPANHA.every((a) => vencidos.has(a.rotulo));
+
+// ---------- Progresso: andares vencidos (2026-11-17, Consulta 10) ----------
+// ⚠️ Antes o aparelho guardava UM índice (`liberada`): o menu dava como feito tudo abaixo dele, e vencer gravava idx + 1. Inserir
+// o capítulo do Interfone no meio marcaria os andares novos como feitos pra quem já passou dali. Agora guarda-se o CONJUNTO de rótulos
+// vencidos (únicos por ocorrência: E7, E7.2…). O "próximo" é o primeiro andar do prédio ainda não vencido; vencido fica aberto
+// mesmo depois de um buraco; trancado = depois do próximo e não vencido.
+export type EstadoDoAndar = 'feito' | 'proximo' | 'trancado';
+export const proximoAndar = (rotulos: readonly string[], vencidos: ReadonlySet<string>): number => {
+  const i = rotulos.findIndex((r) => !vencidos.has(r));
+  return i < 0 ? rotulos.length : i;
+};
+export const estadoDoAndar = (vencidos: ReadonlySet<string>, rotulo: string, i: number, proximo: number): EstadoDoAndar =>
+  vencidos.has(rotulo) ? 'feito' : i === proximo ? 'proximo' : 'trancado';
+// Vencer o andar `idx`: marca o rótulo e devolve pra onde o jogo avança — o primeiro NÃO vencido do prédio, não idx + 1.
+// Sem nenhum pendente (zerou tudo), cai no idx + 1.
+export function aposVencer(rotulos: readonly string[], vencidos: ReadonlySet<string>, idx: number): { vencidos: Set<string>; proximo: number } {
+  const novos = new Set(vencidos).add(rotulos[idx]);
+  const p = proximoAndar(rotulos, novos);
+  return { vencidos: novos, proximo: p >= rotulos.length ? idx + 1 : p };
+}
 
 // Os personagens que só existiam em blocos de teste estreiam aqui, UM POR VEZ, cada estreia seguida de um bloco
 // gerado (2026-11-13, "ir misturando os blocos soltos na campanha"). ⚠️ Contrato com a fábrica (scripts/gerarAndares.ts):
@@ -66,6 +89,7 @@ export const diaLiberado = (liberada: number) => liberada >= FEITOS_A_MAO;
 // Raquel e Duplas vêm juntas porque as duplas misturam Nando, Raquel e Vera, e só então fazem sentido.
 interface Estreia { id: string; letra: string; fases: FaseTrilho[] }
 export const ESTREIAS: Estreia[] = [
+  { id: 'interfone', letra: 'I', fases: fasesInterfone },
   { id: 'nando', letra: 'P', fases: fasesApressado },
   { id: 'raquel', letra: 'R', fases: fasesRaquel },
   { id: 'duplas', letra: 'U', fases: fasesDuplas },
@@ -74,7 +98,10 @@ export const ESTREIAS: Estreia[] = [
   { id: 'norma', letra: 'M', fases: fasesNorma },
 ];
 // quais estreias vêm logo DEPOIS do bloco k do estoque (e antes do k+1), só na 1ª volta
-const DEPOIS_DO_BLOCO: string[][] = [['nando'], ['raquel', 'duplas'], ['saida'], ['arnaldo'], ['norma']];
+// O Interfone (2026-11-17) vem logo depois do bloco 0: I1–I3 e o capítulo gerado (IF1…, src/andaresInterfone.json), uma vez só (volta 0),
+// ANTES do Nando. Json vazio: só I1–I3 entram.
+export const INTERFONE_GERADO = (interfoneGerado as unknown as { pos: number; fase: FaseTrilho }[]).map((a) => a.fase);
+const DEPOIS_DO_BLOCO: string[][] = [['interfone', 'nando'], ['raquel', 'duplas'], ['saida'], ['arnaldo'], ['norma']];
 
 // Um pedaço contíguo do prédio: o que vem pronto da mão, uma estreia ou um bloco gerado. `inicio`/`fim` são índices
 // em PREDIO (fim exclusivo). Os capítulos (capitulos.ts) seguem estes segmentos.
@@ -99,6 +126,7 @@ const montar = (): { predio: Andar[]; segmentos: Segmento[] } => {
         for (const id of DEPOIS_DO_BLOCO[k] ?? []) {
           const e = ESTREIAS.find((x) => x.id === id)!;
           poe('estreia', id, e.fases.map((fase, j) => ({ rotulo: `${e.letra}${j + 1}`, fase })));
+          if (id === 'interfone' && INTERFONE_GERADO.length) poe('bloco', 'blocoInterfone', INTERFONE_GERADO.map((fase, j) => ({ rotulo: `IF${j + 1}`, fase })));
         }
       }
     }

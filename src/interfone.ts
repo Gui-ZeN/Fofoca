@@ -1,5 +1,6 @@
 // Bloco Interfone (protótipo, 2026-11-13): `interfones: [a, b][]` na fase liga dois apartamentos distantes.
-// Os dois viram vizinhos pra todos os efeitos (seta, Fofoqueira, Arnaldo, Vera, Norma), MENOS o Nando, que só passa reto por porta/escada.
+// Os dois viram vizinhos pra CONTAR (seta e Fofoqueira). ⚠️ Desde 2026-11-17 (Consulta 10) o fio só transmite: Vera, Arnaldo,
+// Dona Norma e Nando valem só pra quem mora colado de verdade (motor.ts, portaDe). Antes o fio levava esses efeitos também.
 // Sem batida extra: contar pelo fio chega na mesma batida que contar pelo corredor. `porInterfone(fase, a, b)` diz se o laço é fio.
 // Três fases, achadas com um buscador sobre o motor (_busca/interfone, fora do git); prédios largos, porque o fio só faz sentido com distância:
 //   1. o fio ECONOMIZA: sem ele o caminho a pé custa uma seta a mais do que o jogador tem;

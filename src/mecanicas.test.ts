@@ -388,7 +388,7 @@ describe('regressão: as fases que já existem não mudaram', () => {
     n: r.batidas.reduce((s, x) => s + x.length, 0),
     o: Object.entries(r.ouviu).sort(([a], [b]) => a.localeCompare(b)).map(([id, o]) => [id, o.batida, o.tamanho, o.versao, o.de]),
   });
-  const fases = PREDIO.slice(0, 199);
+  const fases = PREDIO.filter((a) => !/^IF?\d+$/.test(a.rotulo)).slice(0, 199); // as 199 de antes: o capítulo do Interfone (I*, IF*) é de 2026-11-17
 
   it('o snapshot gravado antes de mexer no motor cobre as 199 fases', () => {
     expect(snapshot).toHaveLength(199);

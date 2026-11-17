@@ -22,9 +22,11 @@ import { fasesMuro } from './muro';
 import { fasesEsfria } from './esfria';
 import { fasesAlto } from './alto';
 import largo from './largo.json';
+import pesadelo from './pesadelo.json';
+import { FASES_DESENHADAS } from './desenhados';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
-import { CANDIDATOS_DIA, diaLiberado, ESTOQUE, PREDIO, SEGMENTOS, TUTORIAL } from './campanha';
+import { aposVencer, CANDIDATOS_DIA, diaLiberado, estadoDoAndar, ESTOQUE, PREDIO, proximoAndar, SEGMENTOS, TUTORIAL } from './campanha';
 import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, ganhaEstrela, textoDoDia, type Capitulo } from './capitulos';
 import { AberturaCapitulo } from './Capitulo';
 import { MAX, atualizar, cheias, falta, gastar, relogio, type Advertencias } from './advertencias';
@@ -51,6 +53,11 @@ const ler = <T,>(chave: string, padrao: T): T => {
 };
 const gravar = (chave: string, valor: unknown) => {
   try { localStorage.setItem(chave, JSON.stringify(valor)); } catch { /* sem armazenamento */ }
+};
+// Os andares vencidos (rótulos) desta campanha; lixo no armazém vira "nenhum". Ver campanha.ts, proximoAndar.
+const lerVencidos = (chave: string): Set<string> => {
+  const v = ler<unknown>(`${chave}.vencidos`, []);
+  return new Set(Array.isArray(v) ? v.filter((r): r is string => typeof r === 'string') : []);
 };
 
 type Item = { modo: 'trilho'; fase: FaseTrilho; rotulo: string } | { modo: 'giros'; fase: FaseGiros; rotulo: string };
@@ -81,9 +88,13 @@ const BLOCOS = {
   alto: { nome: 'Prédio alto', letra: 'P', fases: fasesAlto }, // 5 e 6 andares: a rolagem vertical
   // experimento de 2026-11-12 ("expandir o prédio pros lados?"): 4 colunas, gerados pela fábrica com `colunas: 4`
   largo: { nome: 'Prédio largo', letra: 'W', fases: largo as unknown as FaseTrilho[] },
+  // um andar difícil de verdade (2026-11-17, o dono: "que a pessoa sofra pra resolver"): 5×6, padaria + ordem + Vera + 2 Fofoqueiras, 10 setas
+  pesadelo: { nome: 'O pesadelo', letra: 'X', fases: pesadelo as unknown as FaseTrilho[] },
+  // os andares desenhados pelos 5 designers (2026-11-17), num mix de fácil/médio/difícil (src/desenhados/index.ts)
+  desenhados: { nome: 'Andares desenhados', letra: 'Q', fases: FASES_DESENHADAS },
 };
 type NomeBloco = keyof typeof BLOCOS;
-const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|duplas|saida|ronda|soneca|interfone|muro|esfria|alto|largo/i)?.[0] ?? '').toLowerCase();
+const pedido = (new URLSearchParams(location.search).get('bloco') ?? location.hash.match(/hora|ordem|dificil|arnaldo|nonato|raquel|apressado|vera|norma|alvaro|duplas|saida|ronda|soneca|interfone|muro|esfria|alto|largo|pesadelo|desenhados/i)?.[0] ?? '').toLowerCase();
 const BLOCO = pedido in BLOCOS ? BLOCOS[pedido as NomeBloco] : undefined;
 const TESTE = !!GRUPO || !!BLOCO;
 // Pesquisa com pessoas (?pesquisa): a campanha de verdade — menu, cenas de chegada, mesma sequência —, mas
@@ -160,20 +171,21 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
     document.addEventListener('visibilitychange', mudou);
     return () => document.removeEventListener('visibilitychange', mudou);
   }, []);
-  useEffect(() => { if (andar === undefined) registro.registrar('view_change', { vista: 'menu', liberada: ler(`${chave}.liberada`, 0) }); }, [andar]);
+  useEffect(() => { if (andar === undefined) registro.registrar('view_change', { vista: 'menu', liberada: proximoAndar(ROTULOS, lerVencidos(chave)) }); }, [andar]); // `liberada` do registro = o andar da vez (derivado)
   if (noDia) {
     // Fofoca do dia: um andar leve/médio do estoque, o mesmo pra todo mundo hoje (elenco fixo pela data), sem advertência
     const item: Item = { modo: 'trilho', fase: ESTOQUE[andarDoDia(new Date(), CANDIDATOS_DIA)], rotulo: `F${hoje}` };
     return <Jogo key={hoje} sequencia={[item]} chave="fofoca.dia" nome="Fofoca do dia" fixo dia={hoje} aoVoltar={() => setNoDia(false)} />;
   }
   if (andar === undefined) {
+    const vencidos = lerVencidos(chave);
     return (
       // na pesquisa não tem "apagar progresso": entre participantes, quem zera é o observador (&zerar)
-      <Menu key={apagou} titulos={ANDARES.map((a) => a.fase.titulo)} liberada={ler(`${chave}.liberada`, 0)} vidas={vidas} aoJogar={setAndar}
+      <Menu key={apagou} titulos={ANDARES.map((a) => a.fase.titulo)} vencidos={vencidos} vidas={vidas} aoJogar={setAndar}
         aoApagar={pesquisa ? undefined : () => { apagarProgresso(armazemDoNavegador, chave); marcarVersao(armazemDoNavegador); setApagou(apagou + 1); }}
         capitulos={CAPITULOS} primeira={new Set(ler<string[]>(`${chave}.primeira`, []))} rotulos={ROTULOS}
         // na pesquisa, nada de Fofoca do dia: o teste mede a campanha. E só depois dos 31 feitos à mão (diaLiberado)
-        dia={pesquisa || !diaLiberado(ler(`${chave}.liberada`, 0)) ? undefined : { feita: ler(`fofoca.dia.feita.${hoje}`, 0), estrela: ler(`fofoca.dia.estrela.${hoje}`, false), aoJogar: () => setNoDia(true) }}
+        dia={pesquisa || !diaLiberado(vencidos) ? undefined : { feita: ler(`fofoca.dia.feita.${hoje}`, 0), estrela: ler(`fofoca.dia.estrela.${hoje}`, false), aoJogar: () => setNoDia(true) }}
         pesquisa={pesquisa ? { participante: registro.participante(), aoExportar: baixarRegistro } : undefined} />
     );
   }
@@ -189,8 +201,10 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   capitulos?: Capitulo[]; dia?: string;
 }) {
   const total = SEQUENCIA.length;
-  const [liberada, setLiberada] = useState(() => Math.min(ler(`${CHAVE}.liberada`, 0), total - 1));
-  const [idx, setIdx] = useState(inicio ?? liberada);
+  const rotulos = useMemo(() => SEQUENCIA.map((it) => it.rotulo), [SEQUENCIA]);
+  const [vencidos, setVencidos] = useState(() => lerVencidos(CHAVE));
+  const proximo = proximoAndar(rotulos, vencidos); // o andar da vez: o primeiro ainda não vencido
+  const [idx, setIdx] = useState(inicio ?? Math.min(proximo, total - 1));
   const [tentativas, setTentativas] = useState<Record<string, number>>(() => ler(`${CHAVE}.tentativas`, {}));
   const [espelho, setEspelho] = useState(() => Math.random() < 0.5);
   const novoElenco = () => Math.floor(Math.random() * 2 ** 32);
@@ -261,9 +275,8 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
     if (!terminou || !resultado?.vitoria) return;
     if (dePrimeira && !primeira.includes(item.rotulo)) { const p = [...primeira, item.rotulo]; setPrimeira(p); gravar(`${CHAVE}.primeira`, p); }
     if (dia && !ler(`fofoca.dia.feita.${dia}`, 0)) { gravar(`fofoca.dia.feita.${dia}`, tentativas[item.rotulo]); gravar(`fofoca.dia.estrela.${dia}`, dePrimeira); }
-    // guarda até `total` (o menu mostra a última como feita); o estado daqui não passa da última fase
-    if (idx + 1 > ler(`${CHAVE}.liberada`, 0)) gravar(`${CHAVE}.liberada`, idx + 1);
-    if (idx + 1 > liberada && idx + 1 < total) setLiberada(idx + 1);
+    // vencer marca o RÓTULO (não grava idx + 1): o avanço vai pro primeiro andar não vencido (aposVencer)
+    if (!vencidos.has(item.rotulo)) { const novos = aposVencer(rotulos, vencidos, idx).vencidos; setVencidos(novos); gravar(`${CHAVE}.vencidos`, [...novos]); }
   }, [terminou]); // só reage ao fim da animação
 
   // Cena de chegada: na campanha, na 1ª vez que algo novo estreia (uma vez só por aparelho).
@@ -287,7 +300,6 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
   const cap = CAPS ? capituloDe(CAPS, idx) : undefined;
   const [vendoCapitulo, setVendoCapitulo] = useState(false);
   useEffect(() => { setVendoCapitulo(!!cap && idx === cap.inicio && !ler(`${CHAVE}.visto.cap${cap.numero}`, false)); }, [idx]);
-  const rotulos = SEQUENCIA.map((it) => it.rotulo);
   // fechamento: venceu o último andar do capítulo (a ★ deste andar já conta)
   const fechou = cap && idx === cap.fim - 1 && resultado?.vitoria
     ? { numero: cap.numero, titulo: cap.titulo, total: cap.fim - cap.inicio,
@@ -490,7 +502,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
             <h1>{fase.titulo}</h1>
           </div>
         )}
-        <button className="nav" disabled={idx >= liberada} onClick={() => setIdx(idx + 1)} aria-label="Próxima fase"><Seta lado="dir" /></button>
+        <button className="nav" disabled={idx + 1 >= total || estadoDoAndar(vencidos, rotulos[idx + 1], idx + 1, proximo) === 'trancado'} onClick={() => setIdx(idx + 1)} aria-label="Próxima fase"><Seta lado="dir" /></button>
       </header>
 
       <section className="palco">
@@ -569,7 +581,7 @@ function Jogo({ sequencia: SEQUENCIA, chave: CHAVE, nome: GRUPO, inicio, aoVolta
             {/* ⚠️ rótulo curto: "Passo a passo" quebrava os botões em duas linhas */}
             <button onClick={() => setRevendo(1)} aria-label="Rever passo a passo">Rever</button>
             {resultado!.vitoria && dia && <button className="principal" onClick={compartilhar}>{copiado ? 'Copiado!' : 'Compartilhar'}</button>}
-            {resultado!.vitoria && !dia && idx < total - 1 && <button className="principal" onClick={() => setIdx(idx + 1)}>{fechou ? 'Próximo capítulo' : 'Próxima fase'}</button>}
+            {resultado!.vitoria && !dia && idx < total - 1 && <button className="principal" onClick={() => setIdx(Math.min(aposVencer(rotulos, vencidos, idx).proximo, total - 1))}>{fechou ? 'Próximo capítulo' : 'Próxima fase'}</button>}
           </div>
           </>
         ) : (

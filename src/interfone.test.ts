@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alvosDe, amigosDe, portaDe, porInterfone, type Fase } from './motor';
+import { abafados, alvosDe, amigosDe, portaDe, porInterfone, type Fase } from './motor';
 import { fasesInterfone } from './interfone';
 import { custo, jogar, resolverTrilho, type FaseTrilho, type Plano } from './trilho';
 
@@ -152,5 +152,30 @@ describe('bloco Interfone', () => {
     expect(resolverTrilho(semFio(f))).toEqual([]); // sem fio nenhum, não há como
     expect(mesma(resolverTrilho(semFio(f, [usado])), f.solucao)).toBe(false);
     expect(f.vizinhos.some((x) => x.tipo === 'fofoqueira')).toBe(true);
+  });
+});
+
+describe('o fio só transmite (2026-11-17, Consulta 10, aprovado pelo dono)', () => {
+  // Vera, Arnaldo e Dona Norma valem só pra quem mora colado de verdade (porta/escada); o fio não leva esses efeitos.
+  type V = Fase['vizinhos'][number];
+  const v = (id: string, nome: string, tipo: V['tipo'], pos: [number, number], extra: Partial<V> = {}): V => ({ id, nome, tipo, pos, ...extra });
+  const predio = (vitima: Partial<V>): Fase & { origens: string[] } => ({
+    titulo: 't', boato: 'b', giros: 0, origens: ['o'],
+    vizinhos: [v('z', 'Vítima', 'assunto', [0, 0], vitima), v('o', 'Rita', 'comum', [2, 0]), v('a', 'Ana', 'comum', [3, 0]), v('b', 'Bia', 'comum', [3, 1], { interesse: {} })],
+    amizades: [['o', 'a'], ['a', 'b']], interfones: [['z', 'a']], // a Ana tem fio com a vítima, sem porta
+  });
+  it('a Vera não escuta quem fala do outro lado do fio dela', () => {
+    expect(jogar(predio({ vigia: true }), { o: 'a', a: 'b' }).vitoria).toBe(true);
+  });
+  it('o Arnaldo não abafa quem só tem fio com ele', () => {
+    expect([...abafados(predio({ abafa: true }))]).toEqual([]);
+  });
+  it('a Dona Norma não cala quem só tem fio com ela', () => {
+    const r = jogar(predio({ recolhe: 1 }), { o: 'a', a: 'b' });
+    expect(r.calados ?? []).toEqual([]);
+    expect(r.vitoria).toBe(true);
+  });
+  it('mas o fio continua levando o boato (seta e Fofoqueira)', () => {
+    expect(amigosDe(predio({}), 'a')).toContain('z');
   });
 });

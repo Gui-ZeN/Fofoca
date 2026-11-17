@@ -5,7 +5,7 @@
 //   fofoqueira: atalho (alguma ouve na solução), armadilha (existe e ninguém dela ouve) ou "-" (não há);
 //   forma: corrente (só a fila de setas) ou galho (alguém espalhou sozinho além das setas).
 
-import type { Fase, Vizinho } from './motor';
+import { portaDe, type Fase, type Vizinho } from './motor';
 import { custo, jogar, resolverTrilho, type FaseTrilho } from './trilho';
 
 const mesma = (s: Record<string, string>[], p: Record<string, string>) =>
@@ -32,6 +32,26 @@ const REGRAS: [string, (v: Vizinho) => boolean, (v: Vizinho) => Vizinho][] = [
 // tarde) ou alguém no meio do caminho (atrasar o recado). Sem isso a régua confundia a H3 com a H4 nova.
 const quemNaPadaria = (f: Fase, campo: 'chega' | 'sai' = 'chega') => [...new Set(f.vizinhos.filter((v) => !!v[campo]).map((v) => (v.tipo === 'assunto' ? 'zé' : v.interesse ? 'estrela' : 'meio')))].sort().join(',');
 
+// O fio do interfone (Consulta 10, 2026-11-17): como a SOLUÇÃO o trata. Sem isso, 25 andares de fio pareciam o mesmo raciocínio
+// ou, pior, a régua não separava "o fio é o caminho" de "o fio é a armadilha".
+//   evita = a solução não manda nada pelo fio; seta = o jogador manda a seta pelo fio; fofoqueira = só a Fofoqueira espalha por ele;
+//   +preciso = sem esse fio não há vitória com as setas do jogador; ·neide = uma ponta é Fofoqueira; ·neide-zé = e ela mora colada no Zé.
+function doFio(f: FaseTrilho): string {
+  if (!f.interfones?.length) return '';
+  const msgs = jogar(f, f.solucao).batidas.flat().filter((m) => !m.escuta && !m.vazou);
+  const fofs = new Set(f.vizinhos.filter((v) => v.tipo === 'fofoqueira').map((v) => v.id));
+  const partes = f.interfones.map(([a, b]) => {
+    const via = msgs.filter((m) => (m.de === a && m.para === b) || (m.de === b && m.para === a));
+    const resta = f.interfones!.filter(([x, y]) => !(x === a && y === b));
+    const preciso = via.length > 0 && !resolverTrilho({ ...f, interfones: resta.length ? resta : undefined } as Fase & { setas: number }, f.setas).length;
+    const uso = !via.length ? 'evita' : via.some((m) => !fofs.has(m.de)) ? 'seta' : 'fofoqueira';
+    const ponta = [a, b].filter((x) => fofs.has(x));
+    const neide = !ponta.length ? '' : ponta.some((x) => portaDe(f, x).includes('z')) ? '·neide-zé' : '·neide';
+    return `${uso}${preciso ? '+preciso' : ''}${neide}`;
+  });
+  return ` | fio ${partes.sort().join(',')}`;
+}
+
 export function assinatura(f: FaseTrilho): string {
   const regras = REGRAS.filter(([, tem]) => f.vizinhos.some(tem))
     .filter(([, , tira]) => !mesma(resolverTrilho({ ...f, vizinhos: f.vizinhos.map(tira) } as Fase & { setas: number }, f.setas), f.solucao))
@@ -40,7 +60,7 @@ export function assinatura(f: FaseTrilho): string {
   const fofs = f.vizinhos.filter((v) => v.tipo === 'fofoqueira');
   const papel = !fofs.length ? '-' : fofs.some((v) => r.ouviu[v.id]) ? 'atalho' : 'armadilha';
   const forma = Object.keys(r.ouviu).length > custo(f.solucao) + 1 ? 'galho' : 'corrente';
-  return `${regras.join('+') || 'caminho'} | fofoqueira ${papel} | ${forma}`;
+  return `${regras.join('+') || 'caminho'} | fofoqueira ${papel} | ${forma}${doFio(f)}`;
 }
 
 // Andares que repetem o raciocínio de um dos `janela` anteriores (índices na lista).

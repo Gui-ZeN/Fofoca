@@ -185,3 +185,14 @@ describe('boato que esfria', () => {
     expect(renderToStaticMarkup(createElement(FichaValidade, { validade: 5, batida: 6, montando: false }))).toContain('validade fria');
   });
 });
+
+describe('ronda com resultado de outra fase', () => {
+  // ⚠️ achado jogando os andares desenhados (2026-11-17): de uma fase com ronda pra outra, o prédio novo desenhava uma vez com o
+  // resultado da fase anterior, e a ronda apontava pra um apartamento que não existe aqui → "O elevador travou".
+  it('não quebra: a vítima fica em casa se o lugar da ronda não é deste prédio', () => {
+    const f = base({ origens: ['a'] }, [v('z', 'Seu Zé', 'assunto', [0, 0], { ronda: ['z', 'b', 'z', 'b'] }), v('a', 'Rita', 'comum', [1, 0]), v('b', 'Davi', 'comum', [0, 1]),
+      v('c', 'Cida', 'comum', [1, 1], { interesse: {} })], [['z', 'b'], ['a', 'c'], ['b', 'c']]);
+    const deOutraFase = { batidas: [[]], ouviu: {}, vitoria: false, rondas: [{ batida: 1, onde: 'Q' }] } as unknown as Parameters<typeof espalhar>[0] extends never ? never : ReturnType<typeof espalhar>;
+    expect(() => desenhar(props(f, { resultado: deOutraFase, batida: 1, montando: false }))).not.toThrow();
+  });
+});

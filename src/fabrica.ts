@@ -17,9 +17,10 @@
 //    vira padrão: 1 andar em 3 (`fofArmadilha`) ela é armadilha — ninguém dela ouve na solução;
 //  - Zé no canto com uma porta só (43%): bastava não ir pra lá. Agora ele nunca fica no canto e tem 2+ portas.
 
-import { alvosDe, amigosDe, controlavel, type Fase, type Tamanho, type Vizinho } from './motor';
-import { jogar, resolverTrilho, type FaseTrilho, type Plano } from './trilho';
+import { alvosDe, amigosDe, controlavel, portaDe, type Fase, type Tamanho, type Vizinho } from './motor';
+import { custo, jogar, resolverTrilho, type FaseTrilho, type Plano } from './trilho';
 import { celulas, FORMATOS, type Formato } from './planta';
+import { planos } from './quase';
 
 // setas além do mínimo (K): o contador deixa de entregar o tamanho do caminho
 export const FOLGA = 1;
@@ -62,7 +63,15 @@ export interface Molde {
   // quanto do sorteio de planta vai pros VAZIOS ESPALHADOS (planta.ts): 0 = nunca, 1 = sempre. Padrão: ESPALHADO.
   espalhado?: number;
   formato?: Formato; // a planta do prédio (planta.ts); sem isso, sorteia uma que caiba na lotação do molde
+  // INTERFONE (Consulta 10, 2026-11-17): quantos fios o prédio tem. Cada fio liga dois apartamentos NÃO colados (nunca o Zé), e o
+  // certificado exige um papel pra cada um (`papeisDosFios`). Sem o campo, o sorteio é idêntico ao de antes.
+  fios?: number;
+  // o papel principal que a vaga pede (`principal`): 'util' = algum fio útil; 'impede' = nenhum útil e algum impede;
+  // 'armadilha' = todos armadilha pura. Sem ele, qualquer andar em que todo fio tenha papel serve.
+  papelFio?: PapelFio;
 }
+
+export type PapelFio = 'util' | 'impede' | 'armadilha';
 
 export function moldeDe(peso: Peso, tema: Tema, largo = false): Molde {
   const base: Record<Peso, Omit<Molde, 'tema'>> = {
@@ -89,16 +98,28 @@ export function moldeDe(peso: Peso, tema: Tema, largo = false): Molde {
   return m;
 }
 
+// O molde do capítulo do Interfone (2026-11-17): prédio largo (4 ou 5 colunas), porque o fio só faz sentido com distância.
+// `colunas`×`andares` por peso: leve 4×3; média 4×4 ou 5×3; pesada 4×4 ou 5×4; chefão 5×4 ou 5×5.
+const LOTACAO_INTERFONE: Record<string, [number, number]> = { '4x3': [9, 10], '4x4': [11, 13], '5x3': [11, 13], '5x4': [13, 15], '5x5': [17, 19] };
+export function moldeInterfone(peso: Peso, tema: Tema, colunas: number, andares: number, fios: number, papelFio: PapelFio, vera = false): Molde {
+  const b = moldeDe(peso, tema);
+  const n = LOTACAO_INTERFONE[`${colunas}x${andares}`];
+  if (!n) throw new Error(`prédio ${colunas}×${andares} fora do capítulo do Interfone`);
+  return { ...b, colunas, andares, n, fios, papelFio, ...(vera ? { vera: true } : {}) };
+}
+
 // Teto de leitura (Consulta 7, teto.test.ts): a Fofoqueira + no máximo 2 regras especiais por andar. Contam 1 cada:
 // padaria, ordem, tamanho, Vera, Arnaldo, Dona Norma, Nando, Raquel e saída (o tema padaria+ordem conta 2).
 export const REGRAS_DO_TEMA: Record<Tema, number> = { cadeia: 0, padaria: 1, ordem: 1, tamanho: 1, 'padaria+ordem': 2 };
 export const TETO_DE_REGRAS = 2;
 export const regrasDoMolde = (m: Molde) =>
-  REGRAS_DO_TEMA[m.tema] + [m.vera, m.arnaldo, m.norma, m.nando, m.raquel, m.saida].filter(Boolean).length;
+  REGRAS_DO_TEMA[m.tema] + [m.vera, m.arnaldo, m.norma, m.nando, m.raquel, m.saida].filter(Boolean).length + (m.fios ? 1 : 0); // o interfone conta 1
+// ⚠️ Com fio o teto sobe: prédio de 4 colunas lê 3 regras, o de 5 lê 4 (briefing do Chefe, 2026-11-17: prédio maior = mais espaço pra ler).
+export const tetoDoMolde = (m: Molde) => TETO_DE_REGRAS + (m.fios ? ((m.colunas ?? 3) >= 5 ? 2 : 1) : 0);
 // ⚠️ o Arnaldo só muda a jogada quando o tamanho importa (tema `tamanho`); nos outros temas ele seria enfeite e o certificado
 // recusaria tudo até o prazo. E só uma vítima por andar.
 export const moldeValido = (m: Molde) =>
-  regrasDoMolde(m) <= TETO_DE_REGRAS && [m.vera, m.arnaldo, m.norma].filter(Boolean).length <= 1 && (!m.arnaldo || m.tema === 'tamanho');
+  regrasDoMolde(m) <= tetoDoMolde(m) && [m.vera, m.arnaldo, m.norma].filter(Boolean).length <= 1 && (!m.arnaldo || m.tema === 'tamanho');
 
 const pick = <T,>(xs: T[], sorte: () => number) => xs[Math.floor(sorte() * xs.length)];
 const embaralha = <T,>(xs: T[], sorte: () => number) => {
@@ -181,6 +202,25 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
   const exag = temTamanho ? embaralha(livres.filter((x) => !fofs.includes(x)), sorte).slice(0, 2) : [];
   // cada morador comum precisa de um nome com desenho próprio (COMUNS): mais que isso repetiria rosto
   if (n - 1 - fofs.length - exag.length > COMUNS.length) return null;
+  // Os fios: dois apartamentos a ≥ 2 cômodos de distância (nunca colados, então nunca com porta), nunca o Zé, cada morador numa
+  // ponta só. O 1º fio nasce numa Fofoqueira em metade das vezes: é por ela que o fio vira armadilha ou impedimento.
+  const interfones: [string, string][] = [];
+  if (m.fios) {
+    const posDe = new Map(ids.map((id, i) => [id, usados[i]] as const));
+    const longeDe = (a: string, b: string) => { const [p, q] = [posDe.get(a)!, posDe.get(b)!]; return Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) >= 2; };
+    const sem = ids.filter((x) => x !== 'z');
+    for (let k = 0; k < m.fios; k++) {
+      const livresFio = sem.filter((x) => !interfones.some((p) => p.includes(x)));
+      let par: [string, string] | undefined;
+      for (let t = 0; t < 30 && !par; t++) {
+        const a = k === 0 && sorte() < 0.5 ? pick(fofs, sorte) : pick(livresFio, sorte);
+        const b = pick(livresFio, sorte);
+        if (a !== b && livresFio.includes(a) && longeDe(a, b)) par = [a, b];
+      }
+      if (!par) return null;
+      interfones.push(par);
+    }
+  }
   const ordem = m.tema === 'ordem' || m.tema === 'padaria+ordem';
   const padaria = m.tema === 'padaria' || m.tema === 'padaria+ordem';
   // padaria: às vezes no Zé, às vezes na 1ª estrela, às vezes nos dois
@@ -217,7 +257,7 @@ export function montar(m: Molde, sorte: () => number): Fase | null {
     ...(id === sai?.id ? { sai: sai.batida } : {}),
     ...(id === est[0] && quem.includes('e') ? { chega: 3 + Math.floor(sorte() * 3) } : {}),
   }));
-  return { titulo: '', boato: '', giros: 0, vizinhos, amizades: am, origens: [origem] };
+  return { titulo: '', boato: '', giros: 0, vizinhos, amizades: am, origens: [origem], ...(interfones.length ? { interfones } : {}) };
 }
 
 // Planos em que só quem ouve tem seta (a mesma busca do resolvedor, sem filtrar vitória).
@@ -255,7 +295,91 @@ function obvios(f: Fase, K: number, evita: string[]): Plano[] {
   return ok.filter((x) => nota(x) === mn).map((x) => x.p);
 }
 
-export interface Certificado { K: number; solucao: Plano; armadilha: Plano }
+export interface Certificado { K: number; solucao: Plano; armadilha: Plano; papeis?: Record<string, PapelFio> }
+
+// ---- Os fios do interfone (Consulta 10, 2026-11-17): três papéis, certificados POR FIO ----
+//  - 'util': a solução manda o boato pelo fio E, sem ESTE fio, não há vitória com as setas que o jogador recebe (K + FOLGA —
+//    a folga conta: em I1 o caminho a pé custa K + 1 e vence com a seta de sobra, então lá o fio não é "necessário");
+//  - 'impede': existe uma jogada LEGAL (sem usar o fio) que vence sem ele e PERDE com ele, porque uma Fofoqueira espalha o
+//    boato pelo fio. Definição estreita: atalho que perde por outro motivo é armadilha, não impedimento;
+//  - 'armadilha': uma jogada tentadora que passa pelo fio perde — gasta no máximo K setas, faz todas as estrelas ouvirem, e o
+//    fio é a CAUSA (sem ele a seta nem existe, ou o mesmo plano deixa de perder pelo mesmo motivo). A solução NÃO passa por ele:
+//    um fio que a solução usa sem precisar dele não é armadilha a evitar — fica sem papel e o andar é recusado.
+// Um fio com mais de um papel fica com o primeiro desta ordem: util, impede, armadilha. Nenhum papel = enfeite.
+// ⚠️ "tirar o fio e jogar a mesma seta" não é contrafactual válido: a seta só é legal se o par for vizinho (alvosDe) — por isso
+// as jogadas do 'impede' vêm do resolvedor SEM o fio, e a causa do 'armadilha' confere `ilegal` antes de comparar resultados.
+const mesmoFio = (x: [string, string], y: [string, string]) => (x[0] === y[0] && x[1] === y[1]) || (x[0] === y[1] && x[1] === y[0]);
+export const chaveFio = ([a, b]: [string, string]) => `${a}-${b}`;
+const semOFio = <F extends Fase>(f: F, fio: [string, string]): F => {
+  const resta = (f.interfones ?? []).filter((x) => !mesmoFio(x, fio));
+  return { ...f, interfones: resta.length ? resta : undefined };
+};
+const passaPeloFio = (f: Fase, p: Plano, fio: [string, string]) =>
+  jogar(f, p).batidas.flat().some((x) => !x.escuta && !x.vazou && ((x.de === fio[0] && x.para === fio[1]) || (x.de === fio[1] && x.para === fio[0])));
+const jogadaIlegal = (f: Fase, p: Plano) => Object.entries(p).some(([a, b]) => !alvosDe(f, f.vizinhos.find((x) => x.id === a)!).includes(b));
+
+export function papeisDosFios(f: Fase, solucao: Plano, K: number): Record<string, PapelFio | undefined> {
+  const S = K + FOLGA;
+  const estrelas = f.vizinhos.filter((v) => v.interesse).map((v) => v.id);
+  let tentadoras: Plano[] | undefined; // só calcula se algum fio chegar ao 'armadilha'
+  const out: Record<string, PapelFio | undefined> = {};
+  for (const fio of f.interfones ?? []) {
+    const sem = semOFio(f, fio);
+    const semFio = resolverTrilho(sem, S);
+    if (semFio.length === 0 && passaPeloFio(f, solucao, fio)) { out[chaveFio(fio)] = 'util'; continue; }
+    if (semFio.some((p) => !jogar(f, p).vitoria && passaPeloFio(f, p, fio))) { out[chaveFio(fio)] = 'impede'; continue; }
+    if (passaPeloFio(f, solucao, fio)) { out[chaveFio(fio)] = undefined; continue; } // a solução usa o fio sem precisar dele: não é armadilha a evitar
+    tentadoras ??= planos(f, K);
+    out[chaveFio(fio)] = tentadoras.some((p) => {
+      if (Object.values(p).includes('z') || !passaPeloFio(f, p, fio)) return false;
+      const r = jogar(f, p);
+      if (r.vitoria || !estrelas.every((s) => r.ouviu[s])) return false;
+      if (jogadaIlegal(sem, p)) return true;
+      const q = jogar(sem, p);
+      return q.vitoria || q.motivo !== r.motivo;
+    }) ? 'armadilha' : undefined;
+  }
+  return out;
+}
+
+// O papel principal do andar: 'util' se algum fio é útil; senão 'impede' se algum impede; senão todos são armadilha pura.
+export const principal = (papeis: Record<string, PapelFio>): PapelFio => {
+  const v = Object.values(papeis);
+  return v.includes('util') ? 'util' : v.includes('impede') ? 'impede' : 'armadilha';
+};
+const todosComPapel = (p: Record<string, PapelFio | undefined>): p is Record<string, PapelFio> => Object.keys(p).length > 0 && Object.values(p).every(Boolean);
+
+// A fase JÁ batizada (ids finais) ainda passa em tudo? Devolve os problemas (vazio = confere). Rodada depois do `batizar`, antes de
+// gravar, e pelos testes do capítulo: o certificado vale pro prédio com os ids provisórios, e `batizar` é quem remapeia tudo.
+export function revalidar(f: FaseTrilho): string[] {
+  const erros: string[] = [];
+  const K = custo(f.solucao);
+  if (Object.entries(f.solucao).some(([a, b]) => { const v = f.vizinhos.find((x) => x.id === a); return !v || !alvosDe(f, v).includes(b); })) erros.push('a solução tem seta ilegal');
+  if (!jogar(f, f.solucao).vitoria) erros.push('a solução não vence');
+  if (f.setas !== K + FOLGA) erros.push(`setas ${f.setas} ≠ K + folga (${K + FOLGA})`);
+  const sols = resolverTrilho(f, K);
+  if (sols.length !== 1 || !mesma(sols, f.solucao)) erros.push(`no mínimo (K=${K}) há ${sols.length} soluções, ou não é a gravada`);
+  if (resolverTrilho(f, K - 1).length) erros.push('há solução com uma seta a menos');
+  if (resolverTrilho(f).length > 2) erros.push('com a folga há mais de 2 soluções');
+  if (!f.armadilha || jogar(f, f.armadilha).vitoria) erros.push('a armadilha vence (ou não existe)');
+  if (!papelDoZe(f, K, f.solucao)) erros.push('o Zé é enfeite');
+  const ids = new Set(f.vizinhos.map((v) => v.id));
+  if (ids.size !== f.vizinhos.length) erros.push('ids repetidos');
+  if (new Set(f.vizinhos.map((v) => v.nome)).size !== f.vizinhos.length) erros.push('nomes repetidos');
+  const pontas = (f.interfones ?? []).flat();
+  if (new Set(pontas).size !== pontas.length) erros.push('um morador com dois fios');
+  for (const [a, b] of f.interfones ?? []) {
+    const [p, q] = [a, b].map((id) => f.vizinhos.find((x) => x.id === id)?.pos);
+    if (!p || !q) erros.push(`fio ${a}-${b} aponta pra id que não existe`);
+    else if (Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) < 2 || portaDe(f, a).includes(b)) erros.push(`fio ${a}-${b} liga apartamentos colados`);
+    if (a === 'z' || b === 'z') erros.push(`fio ${a}-${b} é da vítima`);
+  }
+  if (f.interfones?.length && !erros.length) {
+    const pa = papeisDosFios(f, f.solucao, K);
+    if (!todosComPapel(pa)) erros.push(`fio sem papel: ${JSON.stringify(pa)}`);
+  }
+  return erros;
+}
 
 // O Zé PESA na jogada? Refaz a conta com o mesmo prédio e o Zé virando um morador qualquer (pode ouvir e passar adiante):
 //  - 'desvio': sem a ameaça existe solução com menos setas — ele obriga a dar a volta;
@@ -280,6 +404,13 @@ export function certificar(f: Fase, m: Molde): Certificado | undefined {
   if (m.fofArmadilha && fofs.some((v) => jogar(f, p).ouviu[v.id])) return;
   const S = K + FOLGA; // o que o jogador recebe
   if (resolverTrilho(f, S).length > 2) return;
+  // cada fio precisa de papel, e o andar tem que ser o que a vaga pede (antes das contas caras: é aqui que a maioria cai)
+  let papeis: Record<string, PapelFio> | undefined;
+  if (f.interfones?.length) {
+    const pa = papeisDosFios(f, p, K);
+    if (!todosComPapel(pa) || (m.papelFio && principal(pa) !== m.papelFio)) return;
+    papeis = pa;
+  }
   const ingenuos = obvios(f, S, []);
   if (!ingenuos.length || ingenuos.some((q) => jogar(f, q).vitoria)) return;
   if (m.aprendeu) {
@@ -302,7 +433,7 @@ export function certificar(f: Fase, m: Molde): Certificado | undefined {
   if (f.vizinhos.some((v) => v.recolhe) && semRegra((v) => ({ ...v, recolhe: undefined }))) return;
   if (f.vizinhos.some((v) => v.sai !== undefined) && semRegra((v) => ({ ...v, sai: undefined }))) return;
   if (!m.zeLivre && !papelDoZe(f, K, p)) return; // por último: é a conta mais cara
-  return { K, solucao: p, armadilha: ingenuos[0] };
+  return { K, solucao: p, armadilha: ingenuos[0], ...(papeis ? { papeis } : {}) };
 }
 
 // Nomes de verdade (o elenco ainda troca ao abrir): origem Rita, estrelas Bia/Cida/Ana,
@@ -346,6 +477,8 @@ export function batizar(f: Fase, c: Certificado, titulo: string, boato: string):
     titulo, boato: boato.replace('O Seu Zé', vitima.boato), giros: 0, setas: c.K + FOLGA, origens: [novo(f.origens![0])],
     vizinhos: f.vizinhos.map((v) => ({ ...v, id: novo(v.id), nome: nome[v.id] })),
     amizades: f.amizades.map(([a, b]) => [novo(a), novo(b)] as [string, string]),
+    // ⚠️ o fio também usa id provisório: sem remapear, o par apontava pra ids que não existem mais (ou, pior, pra outro morador)
+    ...(f.interfones ? { interfones: f.interfones.map(([a, b]) => [novo(a), novo(b)] as [string, string]) } : {}),
     solucao: plano(c.solucao),
     armadilha: plano(c.armadilha),
   };

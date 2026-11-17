@@ -8,6 +8,7 @@ import { fasesArnaldo } from './arnaldo';
 import { fasesNonato } from './nonato';
 import { fasesAlvaro, fasesNorma } from './fiscais';
 import { fasesSaida } from './saida';
+import { fasesInterfone } from './interfone';
 
 // cada cena de chegada mostra o que de fato estreia naquele andar, e é a 1ª vez que aparece
 const usa: Record<string, (f: FaseTrilho) => boolean> = {
@@ -22,6 +23,7 @@ const usa: Record<string, (f: FaseTrilho) => boolean> = {
   S1: (f) => f.vizinhos.some((v) => v.sai !== undefined),
   A1: (f) => f.vizinhos.some((v) => !!v.abafa),
   M1: (f) => f.vizinhos.some((v) => !!v.recolhe),
+  I1: (f) => !!f.interfones?.length, // o fio: a 1ª fase com `interfones` é a estreia
 };
 
 describe('cenas de chegada', () => {
@@ -41,7 +43,7 @@ describe('cenas de chegada', () => {
   // as cenas das estreias que saíram do bloco de teste continuam sendo achadas por ele (?bloco=apressado/raquel/arnaldo/norma),
   // e as que ficaram de fora da campanha (Nonato, Dr. Álvaro) continuam em CHEGADAS_DE_TESTE
   it.each([
-    ['P1', fasesApressado], ['R1', fasesRaquel], ['A1', fasesArnaldo], ['M1', fasesNorma], ['S1', fasesSaida], ['N1', fasesNonato], ['L1', fasesAlvaro],
+    ['P1', fasesApressado], ['R1', fasesRaquel], ['A1', fasesArnaldo], ['M1', fasesNorma], ['S1', fasesSaida], ['I1', fasesInterfone], ['N1', fasesNonato], ['L1', fasesAlvaro],
   ] as [string, FaseTrilho[]][])('%s: a 1ª fase do bloco de teste tem quem a cena mostra', (rotulo, fases) => {
     const cena = APRESENTACOES[rotulo] ?? CHEGADAS_DE_TESTE[rotulo];
     expect(cena, rotulo).toBeDefined();

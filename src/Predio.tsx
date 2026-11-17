@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { abafados, espalhar, girosUsados, podeGirar, podeSerOrigem, porCelular, porInterfone, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
+import { abafados, alvosDe, espalhar, girosUsados, podeGirar, podeSerOrigem, porCelular, porInterfone, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
 import { Personagem, type Expressao } from './Personagem';
 import { Boato, Estrela, Girar, Telefone } from './Icones';
 import { Vazio } from './Vazio';
@@ -553,8 +553,13 @@ export function Predio(props: {
     if (!arrasto || !trilho) return;
     const limpar = () => { guia.current?.classList.remove('viva', 'presa'); mira.current?.classList.remove('mira'); mira.current = null; };
     // os destinos valem só quando quem está escolhido é quem começou o arrasto (o App escolhe no apertar)
-    const alvoDoArrasto = (p: { x: number; y: number }) => trilho.selecionado === arrasto.de
-      ? escolherAlvo(porId[arrasto.de], trilho.alvos.map((id) => porId[id]).filter(Boolean), p) : undefined;
+    // os destinos de QUEM COMEÇOU o arrasto, não os do escolhido. ⚠️ Antes (ed59ecc) a mira só valia se quem arrastava fosse
+    // o escolhido: depois de desenhar Rita→Bia o jogo escolhe a Bia, e arrastar de um vizinho dela não fazia nada (achado
+    // jogando os andares desenhados no painel, 2026-11-17). O App ignora seta que não pode (ligar confere alvosDe).
+    const alvoDoArrasto = (p: { x: number; y: number }) => {
+      const de = porId[arrasto.de];
+      return de ? escolherAlvo(de, alvosDe(fase, de).map((id) => porId[id]).filter(Boolean), p) : undefined;
+    };
     const mover = (e: PointerEvent) => {
       if (e.pointerId !== arrasto.dedo) return;
       const m = raiz.current?.getScreenCTM(), g = guia.current, de = porId[arrasto.de];
@@ -613,7 +618,9 @@ export function Predio(props: {
   // RONDA: onde a vítima está agora (a casa dela fica vazia enquanto ela visita). `aFora` = visitando outro apartamento.
   const rondeira = rondeiraDe(fase);
   const visitada = rondeira ? ondeDaRonda(rondeira, resultado, batida, montando) : undefined;
-  const aFora = !!rondeira && visitada !== rondeira.id;
+  // ⚠️ `porId[visitada]` também: passando de uma fase com ronda pra outra, o prédio novo desenhava uma vez com o resultado da
+  // anterior, e a ronda apontava pra um apartamento que não existe aqui → "O elevador travou" (2026-11-17). Aí ela fica em casa.
+  const aFora = !!rondeira && !!visitada && visitada !== rondeira.id && !!porId[visitada];
   const celulaDe = (v: Vizinho) => (aFora && v.id === rondeira!.id ? porId[visitada!].pos : v.pos);
   // a luz que acende e o vermelho do culpado vão pro apartamento onde ela ESTÁ (não pra casa vazia dela)
   const acendeNa = (c: number, r: number) => {
@@ -995,7 +1002,8 @@ export function Predio(props: {
         }
         // ⚠️ RONDA: a vítima estava no apartamento de quem falou (ou de quem recebeu); as ondas ficam NESSE apartamento, não na casa dela
         if (nessa.some((m) => m.ronda)) {
-          const onde = porId[resultado.rondas?.find((x) => x.batida === resultado.ouviu[resultado.culpado!].batida)?.onde ?? visitada!];
+          const onde = porId[resultado.rondas?.find((x) => x.batida === resultado.ouviu[resultado.culpado!]?.batida)?.onde ?? visitada!];
+          if (!onde) return null; // resultado de outra fase (troca de fase): não desenha onda de um apartamento que não existe aqui
           const cab = cabeca(onde);
           const [ox, oy, rumo] = de === onde.id
             ? [cab.x + 22, cab.y, 0] // quem falou é quem mora lá: as ondas abrem pro lado onde ela está

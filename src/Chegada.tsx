@@ -9,7 +9,7 @@ import { o } from './elenco';
 // pra algo novo". Uma vez só por estreia; "Bora!" pula a qualquer momento. A etiqueta NOVO continua na fase.
 // Quem aparece é o morador da própria fase (já com o nome sorteado), achado pelo papel.
 
-type Demo = 'espalha' | 'aumenta' | 'abafa' | 'inverte' | 'padaria' | 'celular' | 'fila' | 'duvida' | 'reto' | 'fiscal';
+type Demo = 'espalha' | 'aumenta' | 'abafa' | 'inverte' | 'padaria' | 'celular' | 'fila' | 'duvida' | 'reto' | 'fiscal' | 'fio';
 export interface Apresentacao {
   demo: Demo;
   titulo: string;
@@ -78,6 +78,13 @@ export const APRESENTACOES: Record<string, Apresentacao> = {
     quem: (f) => f.vizinhos.find((v) => v.recolhe),
     fala: 'Passou da hora, acabou a conversa.',
     regra: (v) => `Depois da batida ${v.recolhe}, quem mora colado na ${v.nome} não conta mais nada. E o boato é sobre ela.`,
+  },
+  I1: {
+    // 2026-11-17 (Consulta 10): o fio só passa o BOATO (seta e Fofoqueira); fiscal e apressado não passam por ele
+    demo: 'fio', titulo: 'Interfone novo',
+    quem: (f) => f.vizinhos.find((v) => v.id === f.interfones?.[0][0]),
+    fala: 'Alô? Passa o recado!',
+    regra: (v) => `${v.nome} tem um fio até um vizinho longe: o boato passa por ele. Só o boato.`,
   },
   S1: {
     // ⚠️ reaproveita o demo 'padaria' (a placa com o número da batida), sem animação nova: a regra é a mesma ideia da padaria, ao contrário
@@ -178,6 +185,16 @@ export function Chegada({ fase, apresentacao, aoFechar }: { fase: Fase; apresent
         )}
         {apresentacao.demo === 'padaria' && (
           <g className="placa-aparece"><Padaria x={302} y={150} faltam={3} batendo={false} /></g>
+        )}
+        {apresentacao.demo === 'fio' && (
+          // dois aparelhos tocando, ligados por um fio tracejado (sem classe nova no CSS: estilo.css não é deste escopo)
+          <>
+            <g className="placa-aparece">
+              <path d={`M${PARADA + 48} ${CHAO - 92} Q 200 ${CHAO - 160} 318 90`} fill="none" stroke="currentColor" strokeWidth={2.4} strokeDasharray="6 5" />
+            </g>
+            <g transform={`translate(${PARADA + 36} ${CHAO - 92})`}><g className="toca"><Telefone /></g></g>
+            <g transform="translate(330 90)"><g className="toca"><Telefone /></g></g>
+          </>
         )}
         {apresentacao.demo === 'celular' && (
           <g transform={`translate(${PARADA + 36} ${CHAO - 92})`}><g className="toca"><Telefone /></g></g>

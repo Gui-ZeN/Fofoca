@@ -29,6 +29,7 @@ const FEITOS: [string, string, number][] = [
 // Capítulos de estreia (2026-11-13): título e aviso, na voz "Conforme o regulamento". Chave = id do segmento de estreia.
 // ⚠️ A Raquel e as Duplas formam UM capítulo (duas estreias seguidas, antes do mesmo bloco): vale a 1ª, e as duplas não têm texto.
 const ESTREIAS: Record<string, [string, string]> = {
+  interfone: ['O fio da portaria', 'O INTERFONE É PARA AVISOS DA PORTARIA.'], // 2026-11-17: I1–I3 + o bloco gerado do Interfone
   nando: ['O apressado do 204', 'É PROIBIDO CORRER NOS CORREDORES.'],
   raquel: ['A desconfiada do 105', 'BOATO SEM DUAS FONTES NÃO SERÁ AFIXADO NO MURAL.'],
   saida: ['A saída das seis', 'QUEM SAIR DE CASA DEVE AVISAR A PORTARIA.'],
@@ -59,13 +60,21 @@ export function capitulos(segmentos: Segmento[]): Capitulo[] {
   }
   let tema = 0;
   let estreias: Segmento[] = [];
-  for (const seg of segmentos) {
-    if (seg.tipo === 'feitos') continue;
-    if (seg.tipo === 'estreia') { estreias.push(seg); continue; }
+  const fecha = (seg: Segmento) => {
     const [titulo, aviso] = estreias.length ? ESTREIAS[estreias[0].id] : TEMAS[tema++ % TEMAS.length];
     lista.push({ numero: lista.length + 1, titulo, aviso, inicio: (estreias[0] ?? seg).inicio, fim: seg.fim });
     estreias = [];
-  }
+  };
+  segmentos.forEach((seg, k) => {
+    if (seg.tipo === 'feitos') return;
+    if (seg.tipo === 'estreia') {
+      estreias.push(seg);
+      // Interfone sem o bloco gerado atrás (json vazio): I1–I3 fecham o capítulo sozinhos, sem engolir o Nando
+      if (seg.id === 'interfone' && segmentos[k + 1]?.id !== 'blocoInterfone') fecha(seg);
+      return;
+    }
+    fecha(seg);
+  });
   return lista;
 }
 

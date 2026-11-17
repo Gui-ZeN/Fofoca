@@ -14,6 +14,7 @@ import { fasesInterfone } from './interfone';
 import { fasesMuro } from './muro';
 import { fasesEsfria } from './esfria';
 import { assinatura, repetidos } from './assinatura';
+import andaresInterfone from './andaresInterfone.json';
 
 // Teto de leitura (Consulta 7, 17 de 20 designers): no máximo a Fofoqueira + 2 regras especiais por andar, e no máximo
 // 2 selos numa plaquinha. ⚠️ O "muita informação" que afastou o dono do Rumor Mill é o que esse teto evita.
@@ -53,6 +54,18 @@ const todas: [string, Fase][] = [
   ...ESTOQUE.map((f, i) => [`estoque ${i}`, f] as [string, Fase]),
   ...[fasesArnaldo, fasesNonato, fasesRaquel, fasesApressado, fasesVera, fasesNorma, fasesAlvaro, fasesDuplas, fasesSaida, fasesRonda, fasesSoneca, fasesInterfone, fasesMuro, fasesEsfria].flat().map((f) => [`protótipo "${f.titulo}"`, f] as [string, Fase]),
 ];
+
+// O capítulo do Interfone (2026-11-17): prédios maiores, teto maior — 3 regras em 4 colunas e 4 em 5 colunas (decisão do
+// dono: "até 4 nos prédios grandes"), contando o fio como regra.
+const capituloInterfone = (andaresInterfone as unknown as { fase: Fase }[]).map((a, i) => [`IF${i + 1}`, a.fase] as [string, Fase]);
+describe('teto de leitura no capítulo do Interfone', () => {
+  it('o capítulo existe (25 andares)', () => expect(capituloInterfone).toHaveLength(25));
+  it.each(capituloInterfone)('%s: até 3 regras em 4 colunas, até 4 em 5 colunas; até 2 selos numa plaquinha', (_n, f) => {
+    const colunas = Math.max(...f.vizinhos.map((v) => v.pos[0])) + 1;
+    expect(regras(f).length).toBeLessThanOrEqual(colunas >= 5 ? 4 : 3);
+    expect(Math.max(...selos(f))).toBeLessThanOrEqual(2);
+  });
+});
 
 describe('teto de leitura por andar', () => {
   it.each(todas)('%s: no máximo 2 regras especiais além da Fofoqueira', (_n, f) => {
