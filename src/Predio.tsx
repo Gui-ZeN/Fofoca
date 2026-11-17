@@ -846,10 +846,10 @@ export function Predio(props: {
             {selecionado && (
               // seleção = 4 cantoneiras grossas (forma, não só cor)
               <g className="cantoneiras">
-                {[[x0 + 3, y0 + 3, 1, 1], [x0 + L - 3, y0 + 3, -1, 1], [x0 + 3, y0 + A - 3, 1, -1], [x0 + L - 3, y0 + A - 3, -1, -1]].map(([x, y, sx, sy]) => (
-                  // o contorno branco é um traço por baixo, não um filtro (ver estilo.css, .cantoneiras)
-                  [<path key={`f${x},${y}`} className="fundo" d={`M${x},${y + sy * 18} V${y} H${x + sx * 18}`} />,
-                    <path key={`${x},${y}`} d={`M${x},${y + sy * 18} V${y} H${x + sx * 18}`} />]
+                {[[x0 + 6, y0 + 6, 1, 1], [x0 + L - 6, y0 + 6, -1, 1], [x0 + 6, y0 + A - 6, 1, -1], [x0 + L - 6, y0 + A - 6, -1, -1]].map(([x, y, sx, sy]) => (
+                  // o contorno de tinta é um traço por baixo, não um filtro (ver estilo.css, .cantoneiras)
+                  [<path key={`f${x},${y}`} className="fundo" d={`M${x},${y + sy * 22} V${y} H${x + sx * 22}`} />,
+                    <path key={`${x},${y}`} d={`M${x},${y + sy * 22} V${y} H${x + sx * 22}`} />]
                 ))}
               </g>
             )}

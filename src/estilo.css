@@ -91,12 +91,13 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .porta .contorno { fill: none; stroke: #5A3E2B; stroke-width: 1.2; }
 .porta .folha { fill: #C9A06C; stroke: #5A3E2B; stroke-width: 1.5; stroke-linejoin: round; transition: fill .2s; }
 .porta .macaneta { fill: #5A3E2B; }
-.porta.usada .batente { stroke: var(--seta); stroke-width: 3.5; }
+/* passagem usada por uma seta: contorno de tinta, como a fita (era azul da seta antiga, 2026-11-17) */
+.porta.usada .batente { stroke: #2B1E16; stroke-width: 3.5; }
 .porta.ativa .folha { fill: var(--botao); }
 /* ⚠️ escada de madeira, como a porta: em traço fraco ela sumia no desenho do cômodo e ninguém via a passagem (Fable) */
 .escada .lance { fill: #C9A06C; stroke: #5A3E2B; stroke-width: 1.5; stroke-linejoin: round; transition: fill .2s; }
 .escada .corrimao { fill: none; stroke: #5A3E2B; stroke-width: 1.8; stroke-linecap: round; }
-.escada.usada .lance { stroke: var(--seta); stroke-opacity: 1; stroke-width: 2; }
+.escada.usada .lance { stroke: #2B1E16; stroke-opacity: 1; stroke-width: 2.4; }
 .escada.ativa .lance { fill: var(--botao); fill-opacity: .75; }
 .telefone line { stroke: #5C6E66; stroke-width: 3; stroke-dasharray: 7 6; }
 .telefone circle { fill: var(--papel); stroke: #5C6E66; stroke-width: 2; }
@@ -124,12 +125,15 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
    azul mais vivo, traço grosso, véu claro no cômodo e um contorno branco por trás pra descolar do cenário */
 /* ⚠️ sem `filter` em nada que anima (2026-11-13): o drop-shadow obrigava o celular a refazer o filtro a cada quadro, em
    todo destino aceso, justo enquanto o dedo arrasta. O contorno branco das cantoneiras virou um traço por baixo. */
-.morador.alvo .toque { stroke: #1E86C8; stroke-width: 4; stroke-dasharray: 10 6; fill: rgba(72, 170, 235, .20); animation: corre-alvo .8s linear infinite; }
+/* ⚠️ 2026-11-17, o dono: seleção e destinos "ficaram fora do padrão" ao lado da seta em fita (azul elétrico de interface por
+   cima da ilustração). Agora falam a língua da fita: tinta e papel. Destino = linha tracejada de tinta ("recorte aqui"), véu de papel. */
+.morador.alvo .toque { stroke: #2B1E16; stroke-width: 3.2; stroke-dasharray: 10 6; fill: rgba(251, 244, 229, .30); animation: corre-alvo .8s linear infinite; }
 /* o destino debaixo do dedo, durante o arrasto (Predio.tsx, `mira`) */
-.morador.alvo.mira .toque { stroke-width: 6; stroke-dasharray: none; fill: rgba(72, 170, 235, .45); animation: none; }
-.morador.selecionado .toque { stroke: #1E86C8; stroke-width: 3; fill: rgba(72, 170, 235, .12); }
-.cantoneiras path { fill: none; stroke: #0F5E94; stroke-width: 7; stroke-linecap: square; }
-.cantoneiras path.fundo { stroke: #fff; stroke-width: 11; }
+.morador.alvo.mira .toque { stroke-width: 4.5; stroke-dasharray: none; fill: rgba(251, 244, 229, .55); animation: none; }
+.morador.selecionado .toque { stroke: none; fill: rgba(255, 246, 218, .22); }
+/* seleção = as 4 cantoneiras desenhadas como a fita: papel com contorno de tinta */
+.cantoneiras path { fill: none; stroke: #FBF4E5; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.cantoneiras path.fundo { stroke: #2B1E16; stroke-width: 11; }
 .cantoneiras { animation: pulsa-sel 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes pulsa-sel { 50% { transform: scale(1.035); } }
 .etiqueta rect { fill: var(--papel); stroke: var(--tinta); stroke-width: 1.6; }
