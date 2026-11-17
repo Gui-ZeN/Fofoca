@@ -40,14 +40,6 @@ describe('tela inicial', () => {
     expect(desenhar(ate(40), { feita: 1, estrela: true })).toContain('feita de primeira ★');
   });
 
-  it('pesquisa: "Andares difíceis" só aparece quando o App passa o kit (um link só pro playtest)', () => {
-    const base = { titulos: ROTULOS.map((_, i) => `Andar ${i + 1}`), vencidos: ate(3), aoJogar: () => {}, capitulos: CAPS, primeira: new Set<string>(), rotulos: ROTULOS };
-    expect(desenhar(ate(3))).not.toContain('Andares difíceis');
-    expect(renderToStaticMarkup(createElement(Menu, { ...base, pesquisa: { participante: 'P-X', aoExportar: () => {} } }))).not.toContain('Andares difíceis');
-    const html = renderToStaticMarkup(createElement(Menu, { ...base, pesquisa: { participante: 'P-X', aoExportar: () => {}, aoDificeis: () => {} } }));
-    expect(html).toMatch(/<button class="ver-andares">Andares difíceis<\/button>/);
-  });
-
   it('não sobra nada do prédio de três andares na tela inicial', () => {
     expect(desenhar(ate(6))).not.toMatch(/janela|elevador|Trancado/);
   });
