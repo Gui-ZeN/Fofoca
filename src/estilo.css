@@ -487,12 +487,6 @@ main.limpo { position: relative; }
 .zzz text { font-family: var(--titulo); fill: #5A3E2B; stroke: var(--papel); stroke-width: 3; paint-order: stroke; text-anchor: middle; animation: sobe 1.6s ease-in-out infinite; }
 .zzz .z1 { font-size: 10px; } .zzz .z2 { font-size: 13px; animation-delay: .25s; } .zzz .z3 { font-size: 16px; animation-delay: .5s; }
 /* ronda: a rota (madeira escura, contorno creme fino) e a visita */
-.rota-ronda { pointer-events: none; }
-.rota-ronda polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.rota-ronda polyline.fundo { stroke: var(--papel); stroke-width: 5.5; }
-.rota-ronda polyline.linha { stroke: #5A3E2B; stroke-width: 2.6; stroke-dasharray: 1 6; }
-.rota-ronda .parada circle { fill: #5A3E2B; stroke: var(--papel); stroke-width: 1.4; }
-.rota-ronda .parada text { fill: var(--papel); font-family: var(--fonte); font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
 .visita { pointer-events: none; }
 .visita.culpado { transform-box: fill-box; animation: treme .3s 3; }
 /* interfone: aparelho na parede e fio fino, discretos */
@@ -547,3 +541,15 @@ main.limpo { position: relative; }
 .seta.guia.presa .cabeca-seta { fill: #DCEEFA; }
 .apagar-seta circle { fill: #FBF4E5; stroke: #2B1E16; stroke-width: 2.2; }
 .apagar-seta path { stroke: var(--vitima); stroke-width: 2.6; stroke-linecap: round; }
+
+/* RONDA (2026-11-17, escolha do dono): fantasmas da rota com as batidas numa plaquinha; a visita entra andando com a luz da lanterna */
+.marca-ronda { pointer-events: none; }
+.placa-ronda rect { fill: #EBD3A6; stroke: #2B1E16; stroke-width: 1.6; }
+.placa-ronda text { fill: #2B1E16; font-family: var(--fonte); font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.marca-ronda .fantasma { opacity: .38; }
+/* a visita: entra andando do lado de onde veio, e a lanterna acende o cômodo */
+.visita.nova { animation: entra-ronda .5s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes entra-ronda { from { transform: translate(var(--dx), var(--dy)); opacity: .2; } to { transform: none; opacity: 1; } }
+.luz-lanterna { fill: #FFE7A0; opacity: .38; }
+.visita.nova .luz-lanterna { animation: acende .6s ease-out both; }
+@keyframes acende { from { opacity: 0; } to { opacity: .38; } }

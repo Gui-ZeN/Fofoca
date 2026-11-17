@@ -139,19 +139,45 @@ const colunasDe = (fase: Fase) => Math.max(...fase.vizinhos.map((v) => v.pos[0])
 // RONDA: a vítima que anda. Só a primeira vítima com `ronda` (o motor também só olha a primeira).
 export const rondeiraDe = (fase: Fase) => fase.vizinhos.find((w) => w.tipo === 'assunto' && !!w.ronda?.length);
 
-// A rota, antes de espalhar: uma parada por item de `ronda` (só o primeiro ciclo), com o número da batida. Cada parada fica no
-// alto-direita do apartamento (acima de onde a visita aparece depois); visita repetida ao mesmo apartamento recua um pouco pro lado.
-export function rotaDaRonda(fase: Fase): { n: number; id: string; x: number; y: number }[] {
+// A rota, antes de espalhar: os apartamentos por onde ela passa, cada um com as batidas em que ela está lá (a casa também), na
+// ordem em que aparecem na ronda. Ex.: ['z', 'i', 'j', 'i'] → z: [1], i: [2, 4], j: [3].
+export function paradasDaRonda(fase: Fase): { id: string; batidas: number[] }[] {
   const w = rondeiraDe(fase);
   if (!w) return [];
-  const vezes = new Map<string, number>();
-  return w.ronda!.flatMap((id, i) => {
-    const v = achar(fase, id);
-    if (!v) return [];
-    const k = vezes.get(id) ?? 0;
-    vezes.set(id, k + 1);
-    return [{ n: i + 1, id, x: v.pos[0] * L + L - 24 - k * 18, y: v.pos[1] * A + 38 }];
-  });
+  const m = new Map<string, number[]>();
+  w.ronda!.forEach((id, i) => { if (achar(fase, id)) m.set(id, [...(m.get(id) ?? []), i + 1]); });
+  return [...m.entries()].map(([id, batidas]) => ({ id, batidas }));
+}
+
+// RONDA, antes de espalhar (2026-11-17, o dono: "a marcação da ronda tá horrenda, a animação dela também"). Escolhida entre três
+// desenhadas no jogo (fantasmas, pegadas, lanternas): um FANTASMA dela, de lanterna e translúcido, em cada apartamento por onde
+// passa, e uma plaquinha de madeira com as batidas em que ela está ali (na casa dela também). Antes: círculos numerados ligados
+// por uma linha pontilhada, que atravessava o prédio.
+function MarcaRonda({ fase, rondeira }: { fase: Fase; rondeira: Vizinho }) {
+  const placa = (x: number, y: number, bs: number[]) => {
+    const txt = bs.join(' · '), w = 10 + txt.length * 6.2;
+    return (
+      <g className="placa-ronda" transform={`translate(${x} ${y})`}>
+        <rect x={-w / 2} y={-9} width={w} height={18} rx={4} />
+        <text>{txt}</text>
+      </g>
+    );
+  };
+  return (
+    <g className="marca-ronda" aria-label={`Rota de ${rondeira.nome}: em cada apartamento, as batidas em que ela passa`}>
+      {paradasDaRonda(fase).map(({ id, batidas }) => {
+        const v = achar(fase, id)!, c = pes(v);
+        return (
+          <g key={id}>
+            {id !== rondeira.id && (
+              <g className="fantasma"><Personagem v={rondeira} expressao="neutro" x={c.x + 32} y={c.y} olha={[-1, 0]} escala={ESCALA * 0.62} pose="ronda" /></g>
+            )}
+            {placa(v.pos[0] * L + L - 28, v.pos[1] * A + 36, batidas)}
+          </g>
+        );
+      })}
+    </g>
+  );
 }
 
 // Em que apartamento ela está agora. Montando: na parada 1. Espalhando: onde `resultado.rondas` diz; depois da última batida
@@ -816,23 +842,8 @@ export function Predio(props: {
         );
       })}
 
-      {/* ⚠️ RONDA, antes de espalhar: a rota da vítima, uma parada por item (só o primeiro ciclo), com o número da batida em que
-          ela está lá. Linha pontilhada em madeira escura com contorno creme. Some quando o boato começa a andar. */}
-      {montando && rondeira && (() => {
-        const rota = rotaDaRonda(fase);
-        const pontos = rota.map((p) => `${p.x},${p.y}`).join(' ');
-        return (
-          <g className="rota-ronda" aria-label={`Rota de ${rondeira.nome}: o número é a batida em que ela está em cada apartamento`}>
-            {rota.length > 1 && <polyline points={pontos} className="fundo" />}
-            {rota.length > 1 && <polyline points={pontos} className="linha" />}
-            {rota.map((p) => (
-              <g key={'parada' + p.n} className="parada" transform={`translate(${p.x} ${p.y})`}>
-                <circle r={8.5} /><text>{p.n}</text>
-              </g>
-            ))}
-          </g>
-        );
-      })()}
+      {/* RONDA, antes de espalhar: os fantasmas da rota (MarcaRonda). Somem quando o boato começa a andar. */}
+      {montando && rondeira && <MarcaRonda fase={fase} rondeira={rondeira} />}
 
       {/* moradores */}
       {fase.vizinhos.map((v) => {
@@ -883,9 +894,15 @@ export function Predio(props: {
       {aFora && rondeira && (() => {
         const hospede = porId[visitada!], base = pes(hospede);
         const perdeuAqui = fim && resultado.culpado === rondeira.id;
+        // ⚠️ ela entra ANDANDO do lado do apartamento de onde veio (a parada anterior da ronda), e a lanterna acende o cômodo onde
+        // está — é a luz que diz "aqui ela escuta". Antes ela só aparecia, menor, no apartamento da vez (dono: "animação horrenda").
+        const lista = rondeira.ronda!, b = Math.max(batida, 1), antes = lista[(b - 2 + lista.length) % lista.length];
+        const de = porId[antes] ?? rondeira;
+        const dx = Math.sign(de.pos[0] - hospede.pos[0]) * 44, dy = Math.sign(de.pos[1] - hospede.pos[1]) * 44;
         return (
-          <g className={perdeuAqui ? 'visita culpado' : 'visita'} aria-label={`${rondeira.nome} está no apartamento de ${hospede.nome}`}>
-            {/* andando de lanterna enquanto ronda; pego no flagra, volta a ser a cara de bravo */}
+          <g key={'visita' + batida + visitada} className={perdeuAqui ? 'visita nova culpado' : 'visita nova'} style={{ '--dx': `${dx}px`, '--dy': `${dy}px` } as CSSProperties}
+            aria-label={`${rondeira.nome} está no apartamento de ${hospede.nome}`}>
+            <ellipse cx={hospede.pos[0] * L + L / 2 + 14} cy={hospede.pos[1] * A + A / 2 + 6} rx={L * 0.46} ry={A * 0.44} className="luz-lanterna" />
             <Personagem v={rondeira} expressao={expressao(rondeira)} x={base.x + 32} y={base.y} olha={[-1, 0]} escala={ESCALA * 0.72} pose={perdeuAqui ? undefined : 'ronda'} />
           </g>
         );

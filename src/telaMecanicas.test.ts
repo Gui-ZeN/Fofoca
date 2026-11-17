@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { espalhar, type Fase, type Vizinho } from './motor';
 import { FichaValidade } from './Icones';
-import { A, Predio, geometriaFio, geometriaMuro, ondeDaRonda, rotaDaRonda, tracoDoFio } from './Predio';
+import { A, Predio, geometriaFio, geometriaMuro, ondeDaRonda, paradasDaRonda, tracoDoFio } from './Predio';
 import { fasesInterfone } from './interfone';
 
 const v = (id: string, nome: string, tipo: Vizinho['tipo'], pos: [number, number], extra: Partial<Vizinho> = {}): Vizinho => ({ id, nome, tipo, pos, ...extra });
@@ -27,22 +27,23 @@ const ronda = base({}, [
 ], [['a', 'b'], ['b', 'c'], ['b', 'z']]);
 
 describe('ronda', () => {
-  it('a rota tem uma parada por item, na ordem, com o número da batida', () => {
-    const rota = rotaDaRonda(ronda);
-    expect(rota.map((p) => p.id)).toEqual(['z', 'b', 'a']);
-    expect(rota.map((p) => p.n)).toEqual([1, 2, 3]);
-    expect(conta(desenhar(props(ronda)), /class="parada"/g)).toBe(3);
+  it('a rota: um fantasma dela em cada apartamento que visita (não na casa) e uma plaquinha com as batidas em cada parada', () => {
+    // ⚠️ desde 2026-11-17 (o dono escolheu entre três): fantasmas de lanterna, não mais círculos numerados com linha pontilhada
+    expect(paradasDaRonda(ronda)).toEqual([{ id: 'z', batidas: [1] }, { id: 'b', batidas: [2] }, { id: 'a', batidas: [3] }]);
+    const html = desenhar(props(ronda));
+    expect(conta(html, /class="fantasma"/g)).toBe(2);
+    expect(conta(html, /class="placa-ronda"/g)).toBe(3);
   });
-  it('visita repetida ao mesmo apartamento não cai em cima da anterior', () => {
-    const f = base({}, ronda.vizinhos.map((w) => (w.id === 'z' ? { ...w, ronda: ['b', 'a', 'b'] } : w)), ronda.amizades);
-    const [p1, , p3] = rotaDaRonda(f);
-    expect(p1.x).not.toBe(p3.x);
+  it('visita repetida ao mesmo apartamento vira UMA plaquinha com as duas batidas', () => {
+    const f = base({}, ronda.vizinhos.map((w) => (w.id === 'z' ? { ...w, ronda: ['z', 'b', 'a', 'b'] } : w)), ronda.amizades);
+    expect(paradasDaRonda(f)).toEqual([{ id: 'z', batidas: [1] }, { id: 'b', batidas: [2, 4] }, { id: 'a', batidas: [3] }]);
+    expect(desenhar(props(f))).toContain('>2 · 4<');
   });
   it('sem ronda, nada de rota nem pegadas (fase antiga igual)', () => {
     const f = base({}, ronda.vizinhos.map((w) => ({ ...w, ronda: undefined })), ronda.amizades);
     const html = desenhar(props(f));
-    expect(rotaDaRonda(f)).toEqual([]);
-    expect(html).not.toContain('rota-ronda');
+    expect(paradasDaRonda(f)).toEqual([]);
+    expect(html).not.toContain('marca-ronda');
     expect(html).not.toContain('pegadas');
   });
   it('o selo de pegadas existe na plaquinha dela', () => {
@@ -54,8 +55,9 @@ describe('ronda', () => {
     // batida 2: ela está em b (Davi)
     expect(ondeDaRonda(ronda.vizinhos[3], r, 2, false)).toBe('b');
     const html = desenhar(props(ronda, { resultado: r, montando: false, batida: 2 }));
-    expect(conta(html, /class="visita"/g)).toBe(1);
-    expect(html).not.toContain('rota-ronda'); // a rota some quando o boato anda
+    expect(conta(html, /class="visita nova"/g)).toBe(1);
+    expect(html).toContain('luz-lanterna'); // a lanterna acende o cômodo onde ela está
+    expect(html).not.toContain('marca-ronda'); // a rota some quando o boato anda
   });
   it('no fim, ela fica onde esteve na última batida (não na seguinte)', () => {
     const r = espalhar(ronda, { origem: 'a', setas: { a: 'b' } });
