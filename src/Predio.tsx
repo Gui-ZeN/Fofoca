@@ -76,6 +76,57 @@ function trajeto(de: Vizinho, para: Vizinho): [number, number, number, number] {
 const ponta = (x1: number, y1: number, x2: number, y2: number) =>
   `translate(${x2} ${y2}) rotate(${(Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI})`;
 
+// SETA EM FITA (2026-11-17). O dono: "as setinhas estão muito fora do padrão e tão ruins ainda". Eram linhas finas azuis com
+// ponta pequena, que pareciam fio de diagrama por cima da ilustração; ele escolheu, entre três desenhadas no jogo, a fita de
+// gibi: larga, de papel, com contorno de tinta (o mesmo marrom dos personagens), leve curva e ponta dobrada. TODA seta usa
+// a mesma fita (a que o jogador desenha, a do fio, a do celular, a prevista do Nando, a do fim, a que segue o dedo); o que
+// muda é a cor do miolo, pela classe.
+export function curvaDaSeta(x1: number, y1: number, x2: number, y2: number, k = 0.1) {
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+  let nx = -dy / len, ny = dx / len;
+  if (ny > 0 || (ny === 0 && nx > 0)) { nx = -nx; ny = -ny; } // a barriga sobe (ou, em pé, vai pra esquerda)
+  const cx = (x1 + x2) / 2 + nx * len * k, cy = (y1 + y2) / 2 + ny * len * k;
+  return { d: `M${x1},${y1} Q${cx},${cy} ${x2},${y2}`, rumo: ponta(cx, cy, x2, y2), meio: { x: (x1 + 2 * cx + x2) / 4, y: (y1 + 2 * cy + y2) / 4 } };
+}
+const CABECA_FITA = 'M4,0 L-14,-13 L-10,-4 L-14,0 L-10,4 L-14,13 Z';
+function Fita({ d, rumo, pega, apagar }: { d: string; rumo: string; pega?: boolean; apagar?: { x: number; y: number } }) {
+  return (
+    <>
+      {pega && <path d={d} className="pega" />}
+      <path d={d} className="contorno" />
+      <path d={d} className="miolo" />
+      <path d={CABECA_FITA} transform={rumo} className="cabeca-seta" />
+      {/* ⚠️ o dono achava trabalhoso apagar uma seta (2026-11-17): na seta de quem está escolhido aparece um "×" no meio,
+          e tocar em qualquer parte dela apaga (a faixa de toque é larga) */}
+      {apagar && (
+        <g className="apagar-seta" transform={`translate(${apagar.x} ${apagar.y})`} aria-label="tocar apaga esta seta">
+          <circle r={10} />
+          <path d="M-4,-4 L4,4 M4,-4 L-4,4" />
+        </g>
+      )}
+    </>
+  );
+}
+
+// MIRA DO ARRASTO (2026-11-17). O dono: "arrastar é travado". Antes a seta só valia se o dedo soltasse EXATAMENTE em cima de
+// quem ouve (elementFromPoint); um puxão curto na direção certa, ou soltar um pouco fora do cômodo, não fazia nada.
+// Agora: dentro (ou quase) do cômodo de um destino possível vale ele; senão vale o destino na DIREÇÃO do puxão, se só um
+// estiver bem alinhado. Pura e exportada pra testar sem tela.
+export function escolherAlvo(de: Vizinho, alvos: Vizinho[], p: { x: number; y: number }): string | undefined {
+  const folga = 14;
+  const dentro = alvos.find((v) => p.x >= v.pos[0] * L - folga && p.x <= v.pos[0] * L + L + folga && p.y >= v.pos[1] * A - folga && p.y <= v.pos[1] * A + A + folga);
+  if (dentro) return dentro.id;
+  const ox = de.pos[0] * L + L / 2, oy = de.pos[1] * A + A / 2, vx = p.x - ox, vy = p.y - oy, n = Math.hypot(vx, vy);
+  if (n < 30) return undefined; // puxão curto demais pra dizer o rumo
+  const nota = alvos.map((v) => {
+    const wx = v.pos[0] * L + L / 2 - ox, wy = v.pos[1] * A + A / 2 - oy;
+    return { id: v.id, cos: (vx * wx + vy * wy) / (n * (Math.hypot(wx, wy) || 1)) };
+  }).sort((a, b) => b.cos - a.cos);
+  // só quando um destino está claramente na direção (≤ ~32°) e o segundo não chega perto: na dúvida, não chuta
+  if (!nota.length || nota[0].cos < 0.85 || (nota[1] && nota[1].cos > nota[0].cos - 0.08)) return undefined;
+  return nota[0].id;
+}
+
 // ---- Cinco mecânicas novas (2026-11-13): a geometria é pura e exportada pra dar pra testar sem tela (telaMecanicas.test.ts) ----
 // ⚠️ Os campos novos são todos opcionais: sem eles, nada disto desenha nada e as fases antigas ficam idênticas.
 const achar = (fase: Fase, id: string) => fase.vizinhos.find((v) => v.id === id);
@@ -493,29 +544,37 @@ export function Predio(props: {
   // ⚠️ a linha que segue o dedo e o destino que acende debaixo dele são mexidos DIRETO no desenho, sem estado: com
   // estado, cada movimento redesenhava o prédio inteiro. Antes não havia nada disso — o dedo arrastava no vazio e a seta
   // só aparecia ao soltar, o que o dono sentiu como "meio travado" no celular (2026-11-13).
-  const raiz = useRef<SVGGElement>(null), guia = useRef<SVGLineElement>(null), mira = useRef<Element | null>(null);
+  const raiz = useRef<SVGGElement>(null), guia = useRef<SVGGElement>(null), mira = useRef<Element | null>(null);
   useEffect(() => {
     if (!arrasto || !trilho) return;
-    const limpar = () => { guia.current?.classList.remove('viva'); mira.current?.classList.remove('mira'); mira.current = null; };
+    const limpar = () => { guia.current?.classList.remove('viva', 'presa'); mira.current?.classList.remove('mira'); mira.current = null; };
+    // os destinos valem só quando quem está escolhido é quem começou o arrasto (o App escolhe no apertar)
+    const alvoDoArrasto = (p: { x: number; y: number }) => trilho.selecionado === arrasto.de
+      ? escolherAlvo(porId[arrasto.de], trilho.alvos.map((id) => porId[id]).filter(Boolean), p) : undefined;
     const mover = (e: PointerEvent) => {
       if (e.pointerId !== arrasto.dedo) return;
       const m = raiz.current?.getScreenCTM(), g = guia.current, de = porId[arrasto.de];
       if (!m || !g || !de || Math.hypot(e.clientX - arrasto.x, e.clientY - arrasto.y) <= 14) return;
       const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
-      g.setAttribute('x1', String(de.pos[0] * L + L / 2)); g.setAttribute('y1', String(de.pos[1] * A + A / 2));
-      g.setAttribute('x2', String(p.x)); g.setAttribute('y2', String(p.y));
+      const id = alvoDoArrasto(p);
+      // com destino na mira, a fita já é a seta que vai ficar; sem destino, ela vai do meio do cômodo até o dedo
+      const [x1, y1, x2, y2] = id ? trajeto(de, porId[id]) : [de.pos[0] * L + L / 2, de.pos[1] * A + A / 2, p.x, p.y];
+      const c = curvaDaSeta(x1, y1, x2, y2);
+      g.querySelectorAll('.contorno, .miolo').forEach((el) => el.setAttribute('d', c.d));
+      g.querySelector('.cabeca-seta')?.setAttribute('transform', c.rumo);
       g.classList.add('viva');
-      const sob = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-morador]') ?? null;
-      const novo = sob?.classList.contains('alvo') ? sob : null;
+      g.classList.toggle('presa', !!id);
+      const novo = id ? document.querySelector(`[data-morador="${id}"]`) : null;
       if (novo !== mira.current) { mira.current?.classList.remove('mira'); novo?.classList.add('mira'); mira.current = novo; }
     };
     const soltar = (e: PointerEvent) => {
       if (e.pointerId !== arrasto.dedo) return;
       limpar();
-      const alvo = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-morador]')?.getAttribute('data-morador');
+      const m = raiz.current?.getScreenCTM();
       const andou = Math.hypot(e.clientX - arrasto.x, e.clientY - arrasto.y) > 14;
-      if (alvo && alvo !== arrasto.de && andou) trilho.aoSoltar(arrasto.de, alvo);
-      else if (!andou || alvo === arrasto.de) trilho.aoTocar(porId[arrasto.de]);
+      const alvo = andou && m ? alvoDoArrasto(new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse())) : undefined;
+      if (alvo) trilho.aoSoltar(arrasto.de, alvo);
+      else if (!andou) trilho.aoTocar(porId[arrasto.de]);
       setArrasto(undefined);
     };
     // se o navegador tomar o gesto (pointercancel), o arrasto morre; senão o próximo toque desenhava uma seta fantasma
@@ -832,8 +891,7 @@ export function Predio(props: {
         const [x1, y1, x2, y2] = trajeto(p, porId[para]);
         return (
           <g key={'prevista' + p.id} className="seta prevista" aria-label={`${p.nome} vai passar pra ${porId[para].nome}`}>
-            <line x1={x1} y1={y1} x2={x2} y2={y2} />
-            <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(x1, y1, x2, y2)} />
+            {(() => { const c = curvaDaSeta(x1, y1, x2, y2); return <Fita d={c.d} rumo={c.rumo} />; })()}
           </g>
         );
       })}
@@ -850,10 +908,8 @@ export function Predio(props: {
           return (
             <g key={'s' + v.id} className={['seta fio', setas[v.id] && 'girada', ligando && 'ativa'].filter(Boolean).join(' ') + fraca(v.id)}
               onPointerDown={apagavel ? (e) => { e.stopPropagation(); trilho.aoApagar(v.id); } : undefined}>
-              {apagavel && <path d={t.d} className="pega" />}
-              <path d={t.d} className="fundo" />
-              <path d={t.d} />
-              <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(t.ax, t.ay, t.x2, t.y2)} />
+              <Fita d={t.d} rumo={ponta(t.ax, t.ay, t.x2, t.y2)} pega={!!apagavel}
+                apagar={apagavel && trilho.selecionado === v.id ? { x: t.xm, y: t.ym } : undefined} />
             </g>
           );
         }
@@ -865,22 +921,19 @@ export function Predio(props: {
           const [fx, fy] = [q.x - ux * 30, q.y - uy * 30];
           return (
             <g key={'s' + v.id} className={(ligando ? 'seta ligacao ativa' : 'seta ligacao') + fraca(v.id)}>
-              <line x1={p.x + ux * 48} y1={p.y + uy * 48} x2={fx} y2={fy} />
-              <path d="M-4,-6 L3,0 L-4,6" transform={ponta(p.x, p.y, fx, fy)} />
+              {(() => { const c = curvaDaSeta(p.x + ux * 48, p.y + uy * 48, fx, fy); return <Fita d={c.d} rumo={c.rumo} />; })()}
               <g transform={`translate(${p.x + ux * 37} ${p.y + uy * 37}) scale(0.7)`}><Telefone /></g>
             </g>
           );
         }
         const [x1, y1, x2, y2] = trajeto(v, porId[alvo]);
         const apagavel = trilho && montando && setas[v.id];
+        const c = curvaDaSeta(x1, y1, x2, y2);
+        const ligando = falando.some((m) => m.de === v.id && m.para === alvo);
         return (
-          <g key={'s' + v.id} className={(setas[v.id] ? 'seta girada' : 'seta') + fraca(v.id)}
+          <g key={'s' + v.id} className={['seta', setas[v.id] && 'girada', ligando && 'ativa'].filter(Boolean).join(' ') + fraca(v.id)}
             onPointerDown={apagavel ? (e) => { e.stopPropagation(); trilho.aoApagar(v.id); } : undefined}>
-            {/* faixa larga e invisível: a seta tem 4,5 de traço, fina demais pro dedo */}
-            {apagavel && <line x1={x1} y1={y1} x2={x2} y2={y2} className="pega" />}
-            <line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" />
-            <line x1={x1} y1={y1} x2={x2} y2={y2} />
-            <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(x1, y1, x2, y2)} />
+            <Fita d={c.d} rumo={c.rumo} pega={!!apagavel} apagar={apagavel && trilho.selecionado === v.id ? c.meio : undefined} />
           </g>
         );
       })}
@@ -951,10 +1004,8 @@ export function Predio(props: {
           return <Ondas key={'fatal' + de} x={x1} y={y1} rumo={Math.atan2(y2 - y1, x2 - x1)} rotulo={`${porId[resultado.culpado!].nome} escutou ${porId[de].nome} contando`} />;
         }
         return (
-          <g key={'fatal' + de} className="elo-fatal" aria-hidden="true">
-            <line x1={x1} y1={y1} x2={x2} y2={y2} className="fundo" />
-            <line x1={x1} y1={y1} x2={x2} y2={y2} />
-            <polygon points="0,0 -11,-8 -8,0 -11,8" transform={ponta(x1, y1, x2, y2)} />
+          <g key={'fatal' + de} className="seta elo-fatal" aria-hidden="true">
+            {(() => { const c = curvaDaSeta(x1, y1, x2, y2); return <Fita d={c.d} rumo={c.rumo} />; })()}
           </g>
         );
       })}
@@ -1009,7 +1060,7 @@ export function Predio(props: {
         }
         return null;
       })}
-      <line ref={guia} className="guia" />
+      <g ref={guia} className="seta guia" aria-hidden="true"><Fita d="M0,0" rumo="" /></g>
     </g>
   );
 }

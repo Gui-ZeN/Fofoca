@@ -103,17 +103,8 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .telefone.ativa line { stroke: var(--botao); stroke-width: 5; animation: corre .6s linear infinite; }
 .telefone.ativa circle { fill: var(--botao); }
 /* pra quem cada um conta: seta grossa com contorno de papel (lê em cima de qualquer cômodo) */
-.seta > line { stroke: var(--seta); stroke-width: 4.5; stroke-linecap: round; }
-.seta > line.pega { stroke: transparent; stroke-width: 26; cursor: pointer; }
-.seta > line.fundo, .elo-fatal > line.fundo { stroke: var(--papel); stroke-width: 10; }
-.seta > polygon { fill: var(--seta); stroke: var(--papel); stroke-width: 1.5; stroke-linejoin: round; }
 /* ⚠️ :not(.pega): sem isso a faixa invisível de 26 (o lugar do dedo) ficava pintada e a seta virava um tubo */
-.seta.girada > line:not(.fundo):not(.pega) { stroke: #173E52; }
-.seta.girada > polygon { fill: #173E52; }
 /* ⚠️ só os filhos diretos: sem o ">", isto pintava por dentro o ícone de telefone da ligação de celular */
-.seta.ligacao > line { stroke: var(--seta); stroke-width: 3; stroke-dasharray: 2 7; }
-.seta.ligacao > path { fill: none; stroke: var(--seta); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
-.seta.ligacao.ativa > line { stroke: var(--botao); stroke-width: 5; animation: corre .6s linear infinite; }
 .padaria .placa { fill: #EBD3A6; stroke: #5A3E2B; stroke-width: 2; }
 .padaria text { text-anchor: middle; dominant-baseline: middle; }
 .padaria .faltam { font-family: var(--titulo); font-size: 24px; fill: var(--vitima); }
@@ -136,8 +127,6 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .morador.alvo .toque { stroke: #1E86C8; stroke-width: 4; stroke-dasharray: 10 6; fill: rgba(72, 170, 235, .20); animation: corre-alvo .8s linear infinite; }
 /* o destino debaixo do dedo, durante o arrasto (Predio.tsx, `mira`) */
 .morador.alvo.mira .toque { stroke-width: 6; stroke-dasharray: none; fill: rgba(72, 170, 235, .45); animation: none; }
-.guia { stroke: #1E86C8; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 1 12; pointer-events: none; opacity: 0; }
-.guia.viva { opacity: .9; }
 .morador.selecionado .toque { stroke: #1E86C8; stroke-width: 3; fill: rgba(72, 170, 235, .12); }
 .cantoneiras path { fill: none; stroke: #0F5E94; stroke-width: 7; stroke-linecap: square; }
 .cantoneiras path.fundo { stroke: #fff; stroke-width: 11; }
@@ -168,8 +157,6 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .etiqueta .passa path { fill: var(--papel); stroke: none; }
 /* pra onde o Nando vai passar (só montando): tracejada, na cor do selo dele */
 .seta.prevista { pointer-events: none; }
-.seta.prevista > line { stroke: #2F6E5A; stroke-width: 3.5; stroke-dasharray: 7 6; }
-.seta.prevista > polygon { fill: #2F6E5A; }
 /* desconfiada em dúvida: o balão da 1ª fonte apagado, com um "?" */
 .em-duvida .balao { opacity: .5; }
 .em-duvida .interroga { font-family: var(--titulo); font-size: 22px; fill: #6B4E8E; stroke: var(--papel); stroke-width: 4; paint-order: stroke; }
@@ -203,9 +190,6 @@ h1 { font-family: var(--titulo); font-size: 24px; font-weight: 400; margin: 0; l
 .girar.esgotado { opacity: .35; }
 
 /* derrota pela vítima: o elo que entregou o boato a ela */
-.elo-fatal > line:not(.fundo) { stroke: var(--vitima); stroke-width: 5; stroke-linecap: round; }
-.elo-fatal > line.fundo { stroke-linecap: round; }
-.elo-fatal > polygon { fill: var(--vitima); stroke: var(--papel); stroke-width: 1.5; stroke-linejoin: round; }
 .elo-fatal { animation: chega .4s both; }
 /* ⚠️ a escuta da Vera: 3 arcos de som (sem seta, ninguém contou pra ela). Aparecem um depois do outro; o estado base já é
    visível, então sem animação (.reduzir) ficam todos parados no lugar */
@@ -517,11 +501,6 @@ main.limpo { position: relative; }
 .aparelho .grade-traco { stroke: #EBD3A6; stroke-width: 1; fill: none; }
 .aparelho .botao { fill: #A53D3D; stroke: none; }
 /* a seta que segue o fio (mesmo estilo da seta e da ligação de celular) */
-.seta.fio > path { fill: none; stroke: var(--seta); stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
-.seta.fio > path.fundo { stroke: var(--papel); stroke-width: 10; }
-.seta.fio > path.pega { stroke: transparent; stroke-width: 26; cursor: pointer; }
-.seta.fio.girada > path:not(.fundo):not(.pega) { stroke: #173E52; }
-.seta.fio.ativa > path:not(.fundo):not(.pega) { stroke: var(--botao); stroke-width: 5; stroke-dasharray: 2 7; animation: corre .6s linear infinite; }
 /* fofoca solta pelo fio */
 .fofoca-solta > path { fill: none; stroke: var(--botao); stroke-width: 5; stroke-dasharray: 9 7; stroke-linecap: round; }
 .fofoca-solta > path.fundo { stroke: var(--tinta); stroke-width: 8; }
@@ -534,3 +513,32 @@ main.limpo { position: relative; }
 /* boato que esfria: a ficha do topo, azul-gelo; passou do prazo, vermelha */
 .ficha.validade { background: #245A73; }
 .ficha.validade.fria { background: var(--vitima); }
+
+/* SETA EM FITA (2026-11-17, escolha do dono): fita larga de papel com contorno de tinta e ponta de gibi. Todas as setas usam o
+   mesmo desenho; o miolo muda de cor pelo papel da seta. */
+.seta .pega { fill: none; stroke: transparent; stroke-width: 34; cursor: pointer; }
+.seta .contorno { fill: none; stroke: #2B1E16; stroke-width: 13; stroke-linejoin: round; }
+.seta .miolo { fill: none; stroke: #FBF4E5; stroke-width: 8.5; stroke-linejoin: round; }
+.seta .cabeca-seta { fill: #FBF4E5; stroke: #2B1E16; stroke-width: 2.4; stroke-linejoin: round; }
+/* seta pronta da fase (não foi o jogador que desenhou): papel azulado */
+.seta:not(.girada):not(.prevista):not(.elo-fatal):not(.guia) .miolo { stroke: #CFE1EA; }
+.seta:not(.girada):not(.prevista):not(.elo-fatal):not(.guia) .cabeca-seta { fill: #CFE1EA; }
+/* falando agora: miolo amarelo */
+.seta.ativa .miolo { stroke: var(--botao); }
+.seta.ativa .cabeca-seta { fill: var(--botao); }
+/* celular: miolo tracejado, a ligação é "no ar" */
+.seta.ligacao .miolo { stroke-dasharray: 9 6; }
+/* o Nando vai passar: verde, tracejado */
+.seta.prevista .miolo { stroke: #CFE8D9; stroke-dasharray: 9 6; }
+.seta.prevista .cabeca-seta { fill: #CFE8D9; }
+/* o elo que perdeu: vermelho */
+.seta.elo-fatal .miolo { stroke: #E7A3A3; }
+.seta.elo-fatal .cabeca-seta { fill: #E7A3A3; }
+/* a que segue o dedo: meio apagada até ter destino na mira; com destino, cheia */
+.seta.guia { pointer-events: none; opacity: 0; }
+.seta.guia.viva { opacity: .55; }
+.seta.guia.viva.presa { opacity: 1; }
+.seta.guia.presa .miolo { stroke: #DCEEFA; }
+.seta.guia.presa .cabeca-seta { fill: #DCEEFA; }
+.apagar-seta circle { fill: #FBF4E5; stroke: #2B1E16; stroke-width: 2.2; }
+.apagar-seta path { stroke: var(--vitima); stroke-width: 2.6; stroke-linecap: round; }
