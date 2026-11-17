@@ -44,7 +44,9 @@ export const fasesInterfone: FaseTrilho[] = [
       v('i', 'Lia', 'comum', [0, 1]), v('s', 'Cida', 'comum', [1, 1], { interesse: {} }), v('n', 'Neide', 'fofoqueira', [2, 1]), v('b', 'Bia', 'comum', [3, 1]),
       v('r', 'Rita', 'comum', [0, 2]), ze([2, 2]), v('a', 'Ana', 'comum', [3, 2]),
     ],
-    amizades: [['r', 'i'], ['i', 'd'], ['d', 'u'], ['u', 's'], ['n', 's'], ['n', 'z'], ['z', 'a']],
+    // ⚠️ a Bia tinha zero portas (achado do auditor, 2026-11-17): morador solto parece enfeite. A porta pra Ana, que mora colada
+    // no Zé, é só mais um beco; a solução e a armadilha não mudam (conferido: solução única, nenhuma com uma seta a menos).
+    amizades: [['r', 'i'], ['i', 'd'], ['d', 'u'], ['u', 's'], ['n', 's'], ['n', 'z'], ['z', 'a'], ['b', 'a']],
     interfones: [['n', 'd']],
     solucao: { r: 'i', i: 'd', d: 'u', u: 's' },
     armadilha: { r: 'i', i: 'd', d: 'n' }, // o fio leva o boato à Neide, que conta pra Cida e pro Zé

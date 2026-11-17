@@ -46,7 +46,8 @@ export const fasesMuro: FaseTrilho[] = [
       ze([0, 1]), v('c', 'Bia', 'comum', [2, 1]), v('s', 'Cida', 'comum', [3, 1], escandalo),
       v('a', 'Otávio', 'comum', [0, 2]), v('d', 'Celina', 'comum', [1, 2]), v('e', 'Beto', 'exagerado', [2, 2]), v('l', 'Lúcia', 'exagerado', [3, 2]),
     ],
-    amizades: [['r', 'c'], ['r', 'f'], ['e', 'l'], ['e', 'c'], ['s', 'f'], ['z', 'a'], ['z', 'g'], ['a', 'd']],
+    // ⚠️ o Ivo tinha zero portas (achado do auditor, 2026-11-17); a porta pra Ana (colada no Zé) não muda a solução.
+    amizades: [['r', 'c'], ['r', 'f'], ['e', 'l'], ['e', 'c'], ['s', 'f'], ['z', 'a'], ['z', 'g'], ['a', 'd'], ['b', 'g']],
     murosFinos: [['l', 's']],
     solucao: { r: 'c', c: 'e', e: 'l', l: 'e' },
     armadilha: { r: 'f', f: 's' }, // a porta da Solange entrega um cochicho, não o escândalo que a Cida quer
@@ -57,14 +58,17 @@ export const fasesMuro: FaseTrilho[] = [
     // O Caio, que não toca no Zé, é quem conta o escândalo pro Beto de volta, e a Cida ouve pela parede dele.
     titulo: 'Duas paredes',
     boato: 'O Seu Zé aluga a vaga da garagem em dobro',
+    // ⚠️ tinha a Lu de segunda Fofoqueira (achado do auditor, 2026-11-17): com ela comum a solução é a mesma e única, e o muro
+    // continua decidindo. Uma regra a menos pra ler. (No esfria as duas ficam: lá o par é o que faz o prazo pesar.)
     giros: 0, setas: 4, origens: ['r'],
     vizinhos: [
-      v('b', 'Otávio', 'comum', [0, 0]), v('f', 'Ana', 'comum', [1, 0]), v('m', 'Lu', 'fofoqueira', [2, 0]),
+      v('b', 'Otávio', 'comum', [0, 0]), v('f', 'Ana', 'comum', [1, 0]), v('m', 'Jandira', 'comum', [2, 0]),
       ze([0, 1]), v('r', 'Rita', 'comum', [1, 1]), v('n', 'Neide', 'fofoqueira', [2, 1]), v('d', 'Marlene', 'comum', [3, 1]),
       v('g', 'Rui', 'comum', [0, 2]), v('e', 'Beto', 'exagerado', [1, 2]), v('l', 'Lúcia', 'exagerado', [2, 2]), v('h', 'Solange', 'comum', [3, 2]),
       v('s', 'Cida', 'comum', [0, 3], escandalo), v('c', 'Caio', 'comum', [1, 3]), v('a', 'Edu', 'comum', [3, 3]),
     ],
-    amizades: [['r', 'e'], ['r', 'n'], ['r', 'f'], ['e', 'l'], ['e', 'c'], ['e', 'g'], ['l', 'n'], ['l', 'h'], ['s', 'g'], ['z', 'b'], ['n', 'm'], ['n', 'd'], ['m', 'f']],
+    // ⚠️ o Edu tinha zero portas (achado do auditor, 2026-11-17); a porta pra Solange não muda a solução.
+    amizades: [['r', 'e'], ['r', 'n'], ['r', 'f'], ['e', 'l'], ['e', 'c'], ['e', 'g'], ['l', 'n'], ['l', 'h'], ['s', 'g'], ['z', 'b'], ['n', 'm'], ['n', 'd'], ['m', 'f'], ['a', 'h']],
     murosFinos: [['z', 'g'], ['s', 'c']],
     solucao: { r: 'n', l: 'e', e: 'c', c: 'e' },
     armadilha: { r: 'n', l: 'e', e: 'g', g: 's' }, // o Rui conta escândalo pra Cida e o Zé, colado nele, ouve junto

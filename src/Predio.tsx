@@ -109,37 +109,50 @@ export function ondeDaRonda(w: Vizinho, r: Resultado | undefined, batida: number
   return (r.rondas.find((x) => x.batida === b) ?? ultima).onde;
 }
 
-// INTERFONE: o aparelho fica na parede de CADA ponta, do lado do prédio por onde o fio sai; o fio faz uma curva por FORA do prédio.
-// Mesma linha (sem como dar a volta por fora): os aparelhos ficam de frente um pro outro e o fio pende por dentro.
+// INTERFONE: o aparelho fica na parede de CADA ponta, do lado do prédio por onde o fio sai. O fio sobe do aparelho até RENTE AO
+// TETO, corre pelo teto até a parede de fora, desce ou sobe por FORA do prédio e volta pelo teto do outro andar.
+// ⚠️ Era uma curva na altura do aparelho (a meia altura do cômodo): atravessava o corpo de quem mora entre a ponta e a parede de
+// fora, e na mesma linha pendia por dentro passando por cima das cabeças (o dono, 2026-11-17). Rente ao teto não cruza ninguém.
+export const TETO_FIO = 5; // altura do fio abaixo da laje
+export const APARELHO = { w: 22, h: 36 }; // o aparelho desenhado (era 16×26, pequeno perto das cabeças)
+type Ponto = { x: number; y: number };
 export function geometriaFio(fase: Fase, par: [string, string], k = 0) {
   const va = achar(fase, par[0])!, vb = achar(fase, par[1])!;
-  const y = (v: Vizinho) => v.pos[1] * A + 58;
-  let dirA: number, dirB: number, c1: { x: number; y: number }, c2: { x: number; y: number };
-  const aparelho = (v: Vizinho, dir: number) => ({ x: v.pos[0] * L + (dir < 0 ? 13 : L - 13), y: y(v) });
+  const teto = (v: Vizinho) => v.pos[1] * A + TETO_FIO + 3 * k; // um fio por par, sem um correr em cima do outro
+  let dirA: number, dirB: number;
+  const aparelho = (v: Vizinho, dir: number) => ({ x: v.pos[0] * L + (dir < 0 ? 15 : L - 15), y: v.pos[1] * A + 58 });
   if (va.pos[1] === vb.pos[1]) {
     dirA = vb.pos[0] > va.pos[0] ? 1 : -1; dirB = -dirA;
   } else {
     dirA = dirB = (va.pos[0] + vb.pos[0]) / 2 <= (colunasDe(fase) - 1) / 2 ? -1 : 1;
   }
   const a = aparelho(va, dirA), b = aparelho(vb, dirB);
-  const p0 = { x: a.x + dirA * 9, y: a.y }, p3 = { x: b.x + dirB * 9, y: b.y };
-  if (dirA === dirB) {
-    const fora = dirA < 0 ? -22 - 8 * k : colunasDe(fase) * L + 22 + 8 * k; // o fio passa fora da parede do prédio
-    c1 = { x: fora, y: p0.y }; c2 = { x: fora, y: p3.y };
-  } else {
-    c1 = { x: p0.x + (p3.x - p0.x) / 3, y: p0.y + 24 }; c2 = { x: p0.x + ((p3.x - p0.x) * 2) / 3, y: p3.y + 24 };
+  const p0 = { x: a.x, y: a.y - APARELHO.h / 2 }, p3 = { x: b.x, y: b.y - APARELHO.h / 2 }; // o fio sai do alto do aparelho
+  const fora = dirA < 0 ? -14 - 8 * k : colunasDe(fase) * L + 14 + 8 * k; // a descida por fora da parede do prédio
+  const pontos: Ponto[] = va.pos[1] === vb.pos[1]
+    ? [p0, { x: p0.x, y: teto(va) }, { x: p3.x, y: teto(vb) }, p3]
+    : [p0, { x: p0.x, y: teto(va) }, { x: fora, y: teto(va) }, { x: fora, y: teto(vb) }, { x: p3.x, y: teto(vb) }, p3];
+  return { a, b, p0, p3, pontos, fora, meio: meioDe(pontos), d: caminho(pontos) };
+}
+const caminho = (ps: Ponto[]) => 'M' + ps.map((p) => `${p.x},${p.y}`).join(' L');
+// o ponto na metade do comprimento (o balão passa por ele)
+function meioDe(ps: Ponto[]): Ponto {
+  const seg = ps.slice(1).map((p, i) => Math.hypot(p.x - ps[i].x, p.y - ps[i].y));
+  let resta = seg.reduce((s, x) => s + x, 0) / 2;
+  for (let i = 0; i < seg.length; i++) {
+    if (resta <= seg[i]) { const t = seg[i] ? resta / seg[i] : 0; return { x: ps[i].x + (ps[i + 1].x - ps[i].x) * t, y: ps[i].y + (ps[i + 1].y - ps[i].y) * t }; }
+    resta -= seg[i];
   }
-  const meio = { x: (p0.x + 3 * c1.x + 3 * c2.x + p3.x) / 8, y: (p0.y + 3 * c1.y + 3 * c2.y + p3.y) / 8 };
-  return { a, b, p0, c1, c2, p3, meio, d: `M${p0.x},${p0.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${p3.x},${p3.y}` };
+  return ps[ps.length - 1];
 }
 
 // O fio de `de` até `para`, no sentido da seta: de onde sai, onde chega e o ponto de antes da ponta (pra dar o rumo da cabeça).
 export function tracoDoFio(fase: Fase, de: string, para: string) {
   const k = fase.interfones!.findIndex(([x, y]) => (x === de && y === para) || (x === para && y === de));
   const g = geometriaFio(fase, fase.interfones![k], k);
-  const volta = fase.interfones![k][0] !== de;
-  const [p0, c1, c2, p3] = volta ? [g.p3, g.c2, g.c1, g.p0] : [g.p0, g.c1, g.c2, g.p3];
-  return { d: `M${p0.x},${p0.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${p3.x},${p3.y}`, x1: p0.x, y1: p0.y, x2: p3.x, y2: p3.y, xm: g.meio.x, ym: g.meio.y, ax: c2.x, ay: c2.y };
+  const ps = fase.interfones![k][0] !== de ? [...g.pontos].reverse() : g.pontos;
+  const [p0, p3, antes] = [ps[0], ps[ps.length - 1], ps[ps.length - 2]];
+  return { d: caminho(ps), x1: p0.x, y1: p0.y, x2: p3.x, y2: p3.y, xm: g.meio.x, ym: g.meio.y, ax: antes.x, ay: antes.y };
 }
 
 // MURO FINO: a faixa entre os dois cômodos (a parede, ou a laje se um mora em cima do outro). Não colados: sem faixa (null).
@@ -250,9 +263,9 @@ function Ondas({ x, y, rumo, ouro, rotulo }: { x: number; y: number; rumo: numbe
 // Aparelho de interfone na parede (caixinha de madeira com a grade do alto-falante e um botão).
 const Aparelho = ({ x, y }: { x: number; y: number }) => ARTE ? (
   // o interfone desenhado pelo dono (2026-11-13); o de traço abaixo fica pro modo ?vetor
-  <image className="aparelho-arte" href={urlArte('interfone.webp')} x={x - 8} y={y - 13} width={16} height={26} />
+  <image className="aparelho-arte" href={urlArte('interfone.webp')} x={x - APARELHO.w / 2} y={y - APARELHO.h / 2} width={APARELHO.w} height={APARELHO.h} />
 ) : (
-  <g className="aparelho" transform={`translate(${x} ${y})`}>
+  <g className="aparelho" transform={`translate(${x} ${y}) scale(${APARELHO.h / 22})`}>
     <rect x={-6.5} y={-9} width={13} height={18} rx={2.5} />
     <circle cx={0} cy={-3.2} r={3} className="grade" />
     <path d="M-2,-3.2 h4 M0,-5.2 v4" className="grade-traco" />

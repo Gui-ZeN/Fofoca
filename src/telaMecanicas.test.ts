@@ -5,7 +5,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { espalhar, type Fase, type Vizinho } from './motor';
 import { FichaValidade } from './Icones';
-import { Predio, geometriaFio, geometriaMuro, ondeDaRonda, rotaDaRonda, tracoDoFio } from './Predio';
+import { A, Predio, geometriaFio, geometriaMuro, ondeDaRonda, rotaDaRonda, tracoDoFio } from './Predio';
+import { fasesInterfone } from './interfone';
 
 const v = (id: string, nome: string, tipo: Vizinho['tipo'], pos: [number, number], extra: Partial<Vizinho> = {}): Vizinho => ({ id, nome, tipo, pos, ...extra });
 const base = (extra: Partial<Fase>, vizinhos: Vizinho[], amizades: [string, string][]): Fase => ({ titulo: 't', boato: 'b', giros: 0, vizinhos, amizades, ...extra });
@@ -91,8 +92,24 @@ describe('interfone', () => {
   });
   it('o fio sai pelo lado do prédio, fora das paredes', () => {
     const g = geometriaFio(f, ['a', 'c']);
-    expect(g.c1.x).toBeLessThan(0);
-    expect(g.c2.x).toBeLessThan(0);
+    expect(g.fora).toBeLessThan(0);
+    expect(g.pontos.filter((p) => p.x === g.fora)).toHaveLength(2);
+  });
+  it.each(fasesInterfone.map((x, i) => [`I${i + 1}`, x] as const))('%s: o fio não cruza o corpo de ninguém (corre rente ao teto ou por fora)', (_n, fase) => {
+    // ⚠️ o dono (2026-11-17): o fio passava na altura do aparelho, por cima de quem mora no caminho. Dentro do prédio, um trecho
+    // deitado tem que estar rente ao teto, e um trecho em pé só existe na própria ponta (do aparelho até o teto).
+    const largura = Math.max(...fase.vizinhos.map((v) => v.pos[0])) * 120 + 120;
+    for (const [k, par] of fase.interfones!.entries()) {
+      const g = geometriaFio(fase, par, k);
+      g.pontos.slice(1).forEach((q, i) => {
+        const p = g.pontos[i];
+        // deitado: conta se qualquer pedaço passa dentro do prédio; em pé: se a linha está entre as paredes de fora
+        const dentro = p.y === q.y ? Math.min(p.x, q.x) < largura && Math.max(p.x, q.x) > 0 : p.x > 0 && p.x < largura;
+        if (!dentro) return;
+        if (p.y === q.y) expect(((p.y % A) + A) % A, `${par} trecho deitado em y=${p.y}`).toBeLessThan(16); // a plaquinha do nome começa em ~11 e a cabeça bem abaixo
+        else expect([g.a.x, g.b.x], `${par} trecho em pé em x=${p.x}`).toContain(p.x);
+      });
+    }
   });
   it('a seta desenhada por esse laço segue o fio, nos dois sentidos', () => {
     const ida = tracoDoFio(f, 'a', 'c'), volta = tracoDoFio(f, 'c', 'a');

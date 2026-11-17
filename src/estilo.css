@@ -502,7 +502,7 @@ main.limpo { position: relative; }
 .visita.culpado { transform-box: fill-box; animation: treme .3s 3; }
 /* interfone: aparelho na parede e fio fino, discretos */
 .fio-interfone { pointer-events: none; }
-.fio-interfone path { fill: none; stroke-linecap: round; }
+.fio-interfone path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .fio-interfone path.fundo { stroke: var(--papel); stroke-width: 5; }
 .fio-interfone path:not(.fundo) { stroke: #5A3E2B; stroke-width: 2.4; }
 .aparelho rect { fill: #EBD3A6; stroke: #5A3E2B; stroke-width: 1.5; }
@@ -510,7 +510,7 @@ main.limpo { position: relative; }
 .aparelho .grade-traco { stroke: #EBD3A6; stroke-width: 1; fill: none; }
 .aparelho .botao { fill: #A53D3D; stroke: none; }
 /* a seta que segue o fio (mesmo estilo da seta e da ligação de celular) */
-.seta.fio > path { fill: none; stroke: var(--seta); stroke-width: 4.5; stroke-linecap: round; }
+.seta.fio > path { fill: none; stroke: var(--seta); stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
 .seta.fio > path.fundo { stroke: var(--papel); stroke-width: 10; }
 .seta.fio > path.pega { stroke: transparent; stroke-width: 26; cursor: pointer; }
 .seta.fio.girada > path:not(.fundo):not(.pega) { stroke: #173E52; }
