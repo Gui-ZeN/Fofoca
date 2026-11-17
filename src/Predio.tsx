@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { abafados, amigosDe, espalhar, girosUsados, podeGirar, podeSerOrigem, porCelular, porInterfone, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
+import { abafados, espalhar, girosUsados, podeGirar, podeSerOrigem, porCelular, porInterfone, quemContou, type Fase, type Resultado, type Tamanho, type Vizinho } from './motor';
 import { Personagem, type Expressao } from './Personagem';
 import { Boato, Estrela, Girar, Telefone } from './Icones';
 import { Vazio } from './Vazio';
@@ -128,7 +128,9 @@ export function geometriaFio(fase: Fase, par: [string, string], k = 0) {
   }
   const a = aparelho(va, dirA), b = aparelho(vb, dirB);
   const p0 = { x: a.x, y: a.y - APARELHO.h / 2 }, p3 = { x: b.x, y: b.y - APARELHO.h / 2 }; // o fio sai do alto do aparelho
-  const fora = dirA < 0 ? -14 - 8 * k : colunasDe(fase) * L + 14 + 8 * k; // a descida por fora da parede do prédio
+  // a descida por fora da parede do prédio. ⚠️ A margem do desenho é 18 (Cena.tsx): com 8 por fio, o 2º fio caía em 22 e sumia
+  // na borda (auditor, 2026-11-17); com 4, cabem 3 fios antes da margem.
+  const fora = dirA < 0 ? -10 - 4 * k : colunasDe(fase) * L + 10 + 4 * k;
   const pontos: Ponto[] = va.pos[1] === vb.pos[1]
     ? [p0, { x: p0.x, y: teto(va) }, { x: p3.x, y: teto(vb) }, p3]
     : [p0, { x: p0.x, y: teto(va) }, { x: fora, y: teto(va) }, { x: fora, y: teto(vb) }, { x: p3.x, y: teto(vb) }, p3];
@@ -273,7 +275,7 @@ const Aparelho = ({ x, y }: { x: number; y: number }) => ARTE ? (
   </g>
 );
 
-function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizinho; x0: number; y0: number; contou?: boolean; menos?: boolean; perto?: string; comNome?: boolean }) {
+function Etiqueta({ v, x0, y0, contou, menos, comNome = true }: { v: Vizinho; x0: number; y0: number; contou?: boolean; menos?: boolean; comNome?: boolean }) {
   const exato = v.interesse?.tamanho;
   const versao = v.interesse?.versao; // quer a versão certa ou a ao contrário: o balão mostra qual
   const req = exato ?? v.interesse?.minTamanho ?? (versao ? 1 : undefined);
@@ -299,10 +301,9 @@ function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizi
   // ⚠️ o selo do fiscal fica numa etiqueta própria, EMBAIXO do nome: do lado, "Dona Norma" + "até 3" passava do cômodo
   // e a plaquinha inteira encolhia até não dar pra ler — justo onde está a regra do vilão (achado jogando, 2026-11-12)
   const fim = fimNome + (duas ? 26 : 0) + (passa ? 26 : 0);
-  const xPerto = fim + (mais ? 26 : 0) + (menos ? 26 : 0);
   // "−1": mora colado no Arnaldo e fala um tamanho menor (o efeito no tabuleiro, não só no personagem)
   const xMenos = fim + (mais ? 26 : 0);
-  const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (perto ? 34 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 27 : 0);
+  const w = fim - (x0 + 8) + (mais ? 26 : 0) + (menos ? 26 : 0) + (contra ? 22 : 0) + (exato ? 11 : 0) + (req ? 27 : 0);
   // mecânicas novas: o selo vai na linha de baixo, depois do que já estiver lá (fiscal, saída)
   const soneca = !!v.soneca, ronda = vitima && !!v.ronda?.length;
   const xSelo = x0 + 8 + (fiscal ? (v.vigia ? 24 : 46) + 4 : 0) + (sai !== undefined ? 52 : 0);
@@ -354,13 +355,6 @@ function Etiqueta({ v, x0, y0, contou, menos, perto, comNome = true }: { v: Vizi
           <rect x={xSelo + (soneca ? 34 : 0)} y={y0 + 31} width={30} height={16} rx={3} />
           <Pegada x={xSelo + (soneca ? 34 : 0) + 11} y={y0 + 41} giro={-12} />
           <Pegada x={xSelo + (soneca ? 34 : 0) + 20} y={y0 + 38} giro={12} />
-        </g>
-      )}
-      {perto && (
-        // mora colado (por porta ou escada) na Dona Norma: "até N"
-        <g className="perto" aria-label={`mora colado na Dona Norma: só conta ${perto}`}>
-          <rect x={xPerto} y={y0 + 11} width={30} height={16} rx={3} />
-          <text x={xPerto + 15} y={y0 + 23}>{perto}</text>
         </g>
       )}
       {passa && (
@@ -534,7 +528,6 @@ export function Predio(props: {
   const porId = Object.fromEntries(fase.vizinhos.map((v) => [v.id, v]));
   const baixo = abafados(fase);
   // vizinhos de passagem da Vera e da Dona Norma: marcados na plaquinha, como o −1 do Arnaldo
-  const daNorma = new Map(fase.vizinhos.filter((w) => w.recolhe).flatMap((w) => amigosDe(fase, w.id).map((id) => [id, `até ${w.recolhe}`] as [string, string])));
   const colunas = Math.max(...fase.vizinhos.map((v) => v.pos[0])) + 1;
   const andares = Math.max(...fase.vizinhos.map((v) => v.pos[1])) + 1;
   const largura = colunas * L, altura = andares * A;
@@ -807,10 +800,9 @@ export function Predio(props: {
             {/* ⚠️ a plaquinha sobe 11 e fica meio em cima da laje: no lugar de antes (y0+8…30) ela tapava a testa
                 e às vezes o olho — a cabeça do desenho começa em ~y0+9. Assim ela encosta só no alto do cabelo. */}
             <Etiqueta v={v} x0={x0} y0={y0 - 11} contou={!!fase.origens && origem === v.id} menos={baixo.has(v.id) && v.tipo !== 'assunto'}
-              // ⚠️ os vizinhos da Vera NÃO ganham mais selo (era "psiu", depois uma orelha): marcava de antemão quem não
-              // podia falar, e o dono quer que isso se descubra jogando (2026-11-13: "as pessoas têm que entender o jogo
-              // jogando"). A regra está no selo DELA e na cena de chegada. A Dona Norma ainda marca os vizinhos ("até N").
-              perto={v.tipo === 'assunto' ? undefined : daNorma.get(v.id)}
+              // ⚠️ os vizinhos da Vera e da Dona Norma NÃO ganham selo (Vera: "psiu", depois uma orelha; Norma: "até N", tirado em
+              // 2026-11-17): marcava de antemão quem não podia falar, e o dono quer que isso se descubra jogando ("as pessoas
+              // têm que entender o jogo jogando"). A regra está no selo DELAS e na cena de chegada.
               comNome={!SEM_NOMES || selecionado || fim} />
             {v.celular && <g transform={`translate(${x0 + 22} ${y0 + A - 28}) scale(0.9)`} className="tem-celular"><Telefone /></g>}
           </g>

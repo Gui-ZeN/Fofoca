@@ -106,7 +106,7 @@ describe('interfone', () => {
         // deitado: conta se qualquer pedaço passa dentro do prédio; em pé: se a linha está entre as paredes de fora
         const dentro = p.y === q.y ? Math.min(p.x, q.x) < largura && Math.max(p.x, q.x) > 0 : p.x > 0 && p.x < largura;
         if (!dentro) return;
-        if (p.y === q.y) expect(((p.y % A) + A) % A, `${par} trecho deitado em y=${p.y}`).toBeLessThan(16); // a plaquinha do nome começa em ~11 e a cabeça bem abaixo
+        if (p.y === q.y) expect(((p.y % A) + A) % A, `${par} trecho deitado em y=${p.y}`).toBeLessThan(16); // rente à laje: o fio passa por trás da plaquinha do nome (desenhado antes dos moradores), acima da cabeça
         else expect([g.a.x, g.b.x], `${par} trecho em pé em x=${p.x}`).toContain(p.x);
       });
     }
@@ -118,9 +118,35 @@ describe('interfone', () => {
     const html = desenhar(props(f, { setas: { a: 'c' } }));
     expect(html).toContain('class="seta fio girada"');
   });
+  it.each(fasesInterfone.map((x, i) => [`I${i + 1}`, x] as const))('%s: aparelho na lateral do cômodo, fio dentro do desenho, ponta e balão sobre o fio', (_n, fase) => {
+    // ⚠️ lacunas que o auditor provou por mutação (2026-11-17): aparelho no meio do cômodo, ponta da seta torta e balão fora do fio passavam
+    const largura = Math.max(...fase.vizinhos.map((v) => v.pos[0])) * 120 + 120;
+    for (const [k, par] of fase.interfones!.entries()) {
+      const g = geometriaFio(fase, par, k);
+      for (const ap of [g.a, g.b]) expect(Math.min(ap.x % 120, 120 - (ap.x % 120)), `${par} aparelho em x=${ap.x}`).toBeLessThanOrEqual(20);
+      expect(g.fora > -18 && g.fora < largura + 18, `${par} fora=${g.fora} além da margem do desenho`).toBe(true);
+      for (const [de, para] of [par, [par[1], par[0]]]) {
+        const t = tracoDoFio(fase, de, para);
+        expect([t.x2 - t.ax, Math.sign(t.y2 - t.ay)], `${de}>${para} ponta`).toEqual([0, 1]); // desce em pé até o aparelho
+      }
+      const no = g.pontos.slice(1).some((q, i) => {
+        const p = g.pontos[i];
+        return Math.min(p.x, q.x) <= g.meio.x && g.meio.x <= Math.max(p.x, q.x) && Math.min(p.y, q.y) <= g.meio.y && g.meio.y <= Math.max(p.y, q.y) && (p.x === q.x || p.y === q.y);
+      });
+      expect(no, `${par} meio fora do fio`).toBe(true);
+    }
+  });
   it('par que já tem porta não ganha fio', () => {
     const g = base({ interfones: [['a', 'b']] }, f.vizinhos, [['a', 'b']]);
     expect(desenhar(props(g))).not.toContain('fio-interfone');
+  });
+});
+
+describe('Dona Norma', () => {
+  it('só ela mostra "até N": os vizinhos não ganham selo (o dono: entender jogando)', () => {
+    const f = base({ origens: ['a'] }, [v('z', 'Dona Norma', 'assunto', [0, 0], { recolhe: 3 }), v('a', 'Rita', 'comum', [1, 0]),
+      v('b', 'Davi', 'comum', [0, 1]), v('c', 'Cida', 'comum', [1, 1], { interesse: {} })], [['z', 'a'], ['z', 'b'], ['a', 'c']]);
+    expect(conta(desenhar(props(f)), />até 3</g)).toBe(1);
   });
 });
 

@@ -53,6 +53,10 @@ export const CANDIDATOS_DIA = ESTOQUE_PESOS.flatMap((p, i) => ((p === 'leve' || 
 export const VOLTAS = 20;
 export const POR_BLOCO = 25; // o estoque gerado: escada leve/média/pesada e um chefão no 25º
 export const FEITOS_A_MAO = CAMPANHA.length;
+// ⚠️ A Fofoca do dia só aparece depois dos 31 feitos à mão (dono, 2026-11-17): ela não tem cena de chegada, e todo andar
+// candidato usa alguma regra ensinada entre o 8 e o 31 (exagerado, padaria, Vera, ordem). Antes ela abria no 1º dia, e um
+// jogador novo pegava essas regras sem apresentação (auditor, 2026-11-17). `liberada` = o próximo andar a jogar (0 = o 1º).
+export const diaLiberado = (liberada: number) => liberada >= FEITOS_A_MAO;
 
 // Os personagens que só existiam em blocos de teste estreiam aqui, UM POR VEZ, cada estreia seguida de um bloco
 // gerado (2026-11-13, "ir misturando os blocos soltos na campanha"). ⚠️ Contrato com a fábrica (scripts/gerarAndares.ts):

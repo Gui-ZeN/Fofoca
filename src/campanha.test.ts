@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FaseTrilho } from './trilho';
-import { BLOCOS_DO_ESTOQUE, CAMPANHA, CANDIDATOS_DIA, ESTOQUE_PESOS, ESTOQUE, ESTREIAS, ORDEM_CAMPANHA, POR_BLOCO, PREDIO, SEGMENTOS, TUTORIAL, VOLTAS } from './campanha';
+import { BLOCOS_DO_ESTOQUE, CAMPANHA, CANDIDATOS_DIA, diaLiberado, FEITOS_A_MAO, ESTOQUE_PESOS, ESTOQUE, ESTREIAS, ORDEM_CAMPANHA, POR_BLOCO, PREDIO, SEGMENTOS, TUTORIAL, VOLTAS } from './campanha';
 import { jogar } from './trilho';
 
 // o que cada regra precisa ter sido apresentada antes de aparecer
@@ -12,6 +12,13 @@ const usa: Record<string, (f: FaseTrilho) => boolean> = {
 };
 
 describe('Fofoca do dia', () => {
+  it('só abre depois dos 31 feitos à mão (ela não tem cena de chegada)', () => {
+    expect(diaLiberado(0)).toBe(false);
+    expect(diaLiberado(FEITOS_A_MAO - 1)).toBe(false); // ainda falta o 31º
+    expect(diaLiberado(FEITOS_A_MAO)).toBe(true); // venceu o 31º
+    expect(FEITOS_A_MAO).toBe(31);
+  });
+
   it('só sorteia andar sem regra de estreia (Nando, Raquel, saída, Arnaldo, Norma): o dia não tem cena de chegada', () => {
     // ⚠️ achado do auditor (2026-11-17): antes eram 36 dos 114 candidatos leves/médios com uma dessas regras
     const regra = (i: number) => ESTOQUE[i].vizinhos.some((v) => v.tipo === 'apressado' || v.desconfia || v.abafa || v.recolhe || v.sai !== undefined);

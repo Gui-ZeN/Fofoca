@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { Fase } from './motor';
 import { explicar } from './explicar';
 import { fasesMuro } from './muro';
+import { fasesInterfone } from './interfone';
+import { fasesEsfria } from './esfria';
 import { jogar, resolverTrilho } from './trilho';
 
 describe('bloco Muro fino', () => {
@@ -124,5 +126,16 @@ describe('bloco Muro fino', () => {
   it('a primeira fase traz a novidade, e só ela', () => {
     expect(fasesMuro[0].novidade).toBe('Muro fino: escândalo contado ali vaza pro vizinho do outro lado');
     expect(fasesMuro.slice(1).every((f) => !f.novidade)).toBe(true);
+  });
+});
+
+describe('ninguém solto nas fases das mecânicas de prédio grande', () => {
+  // ⚠️ Bia (I2), Ivo (M2) e Edu (M3) estavam sem porta nenhuma, corrigido em 2026-11-17; a Lu da M3 virou comum (auditor pediu a guarda)
+  it.each([...fasesInterfone, ...fasesMuro, ...fasesEsfria].map((f) => [f.titulo, f] as const))('%s: todo morador tem porta, fio ou muro', (_t, f) => {
+    const ligados = new Set([...(f.amizades ?? []), ...(f.interfones ?? []), ...(f.murosFinos ?? [])].flat());
+    expect(f.vizinhos.filter((v) => !ligados.has(v.id)).map((v) => v.nome)).toEqual([]);
+  });
+  it('a M3 tem uma Fofoqueira só (a Neide)', () => {
+    expect(fasesMuro[2].vizinhos.filter((v) => v.tipo === 'fofoqueira').map((v) => v.nome)).toEqual(['Neide']);
   });
 });

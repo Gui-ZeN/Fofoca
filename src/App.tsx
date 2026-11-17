@@ -24,7 +24,7 @@ import { fasesAlto } from './alto';
 import largo from './largo.json';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
-import { CANDIDATOS_DIA, ESTOQUE, PREDIO, SEGMENTOS, TUTORIAL } from './campanha';
+import { CANDIDATOS_DIA, diaLiberado, ESTOQUE, PREDIO, SEGMENTOS, TUTORIAL } from './campanha';
 import { andarDoDia, capituloDe, capitulos, dataLocal, estrelas, ganhaEstrela, textoDoDia, type Capitulo } from './capitulos';
 import { AberturaCapitulo } from './Capitulo';
 import { MAX, atualizar, cheias, falta, gastar, relogio, type Advertencias } from './advertencias';
@@ -172,8 +172,8 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
       <Menu key={apagou} titulos={ANDARES.map((a) => a.fase.titulo)} liberada={ler(`${chave}.liberada`, 0)} vidas={vidas} aoJogar={setAndar}
         aoApagar={pesquisa ? undefined : () => { apagarProgresso(armazemDoNavegador, chave); marcarVersao(armazemDoNavegador); setApagou(apagou + 1); }}
         capitulos={CAPITULOS} primeira={new Set(ler<string[]>(`${chave}.primeira`, []))} rotulos={ROTULOS}
-        // na pesquisa, nada de Fofoca do dia: o teste mede a campanha
-        dia={pesquisa ? undefined : { feita: ler(`fofoca.dia.feita.${hoje}`, 0), estrela: ler(`fofoca.dia.estrela.${hoje}`, false), aoJogar: () => setNoDia(true) }}
+        // na pesquisa, nada de Fofoca do dia: o teste mede a campanha. E só depois dos 31 feitos à mão (diaLiberado)
+        dia={pesquisa || !diaLiberado(ler(`${chave}.liberada`, 0)) ? undefined : { feita: ler(`fofoca.dia.feita.${hoje}`, 0), estrela: ler(`fofoca.dia.estrela.${hoje}`, false), aoJogar: () => setNoDia(true) }}
         pesquisa={pesquisa ? { participante: registro.participante(), aoExportar: baixarRegistro } : undefined} />
     );
   }

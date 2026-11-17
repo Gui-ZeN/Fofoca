@@ -97,8 +97,10 @@ export const Seta = ({ lado }: { lado: 'esq' | 'dir' }) => (
 // Advertência do síndico: papel de aviso preenchido (recebida) ou só o contorno tracejado (ainda não).
 export const Cartao = ({ recebido }: { recebido: boolean }) => (
   <Mini tamanho={18} caixa={24}>
-    <rect x={-6.5} y={-9} width={13} height={17} rx={1.5} fill={recebido ? '#A53D3D' : PAPEL} {...C} strokeWidth={1.6} strokeDasharray={recebido ? undefined : '3 2.5'} />
-    {recebido && <path d="M-3,-4 h6 M-3,0 h6 M-3,4 h4" stroke={PAPEL} strokeWidth={1.3} strokeLinecap="round" />}
+    {/* ⚠️ o não recebido era tracejado e, pequeno, parecia caractere quebrado (dono, 2026-11-17): agora é o papel inteiro, apagado */}
+    <rect x={-6.5} y={-9} width={13} height={17} rx={1.5} fill={recebido ? '#A53D3D' : PAPEL} {...C} strokeWidth={1.6} opacity={recebido ? 1 : 0.45} />
+    {/* as linhas do papel nos dois: sem elas o não recebido, pequeno, ainda lia como um quadradinho vazio */}
+    <path d="M-3,-4 h6 M-3,0 h6 M-3,4 h4" stroke={recebido ? PAPEL : 'currentColor'} strokeWidth={1.3} strokeLinecap="round" opacity={recebido ? 1 : 0.45} />
   </Mini>
 );
 // Voltar pro prédio (menu).
