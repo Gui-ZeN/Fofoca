@@ -104,11 +104,11 @@ O motor é determinístico (`src/motor.ts`, função `espalhar`): a mesma jogada
 | **Celular** | uma pessoa pode ligar pra alguém longe, sem passagem (linha pontilhada com telefone) | 13 (só ali) |
 | **Ordem** | ⭐1 tem que saber antes da ⭐2; junto não vale | 15 |
 | **Vera, a vigia** | a vítima é ela, e ela **escuta quando um vizinho dela conta algo** pra outra pessoa (os vizinhos ganham o selo "psiu"). Ouvir e guardar do lado dela pode; contar, não | 29 |
-| **Nando, o apressado** | não aceita seta: passa o recado sozinho pro lado oposto de quem contou pra ele | 57 |
-| **Raquel, a desconfiada** | só acredita ouvindo de duas pessoas diferentes | 85 (e as duplas, 88–90) |
-| **Sai pra padaria** | selo de pão, seta e número: em casa até a batida anterior; dali em diante não ouve nem conta | 116 |
-| **Arnaldo** | a vítima é ele; quem mora colado nele conta um tamanho menor | 144 |
-| **Dona Norma** | a vítima é ela; depois da batida marcada, quem mora colado nela não conta mais nada | 172 |
+| **Nando, o apressado** | não aceita seta: passa o recado sozinho pro lado oposto de quem contou pra ele | 85 |
+| **Raquel, a desconfiada** | só acredita ouvindo de duas pessoas diferentes | 113 (e as duplas, 116–118) |
+| **Sai pra padaria** | selo de pão, seta e número: em casa até a batida anterior; dali em diante não ouve nem conta | 144 |
+| **Arnaldo** | a vítima é ele; quem mora colado nele conta um tamanho menor | 172 |
+| **Dona Norma** | a vítima é ela; depois da batida marcada, quem mora colado nela não conta mais nada | 200 |
 
 **Passagens:** **porta** (vizinhos lado a lado: a parede some, batente e folha aberta) e **escada** (um em cima do outro: um lance do chão de baixo até o buraco na laje). Só existe passagem onde está desenhada.
 
@@ -419,14 +419,12 @@ Direção **"Conforme o regulamento"** (Consulta 5), com a arte **ilustrada** co
 | Link | O que abre |
 |---|---|
 | https://gui-zen.github.io/Fofoca/ | a campanha |
-| `?pesquisa` / `?pesquisa&zerar` | **teste com pessoas**: campanha igual pra todos, sem advertências, com registro exportável; `&zerar` = participante novo |
+| `?pesquisa` / `?pesquisa&zerar` | **teste com pessoas**: sequência própria de 28 andares com todas as mecânicas (estreia fácil, depois misturadas em 6 difíceis, sem aviso; `src/pesquisa.ts`), igual pra todos, sem advertências, com registro exportável; `&zerar` = participante novo; roteiro no README |
 | `?bloco=arnaldo` / `?bloco=nonato` / `?bloco=raquel` / `?bloco=apressado` | os protótipos de mecânica (com cena de chegada) |
 | `?bloco=alto` | dois prédios de 5 e 6 andares feitos pela fábrica, pra ver a rolagem |
 | `?bloco=largo` | oito prédios largos: **4 colunas** (4×3, 4×4, 4×4 com a Vera — o experimento que virou formato do estoque) e **5 colunas** (5×3, 5×4, 5×4 com a Vera, 5×5, 5×6 — aprovado pelo dono no celular em 2026-11-13, ainda fora da campanha) |
 | `?bloco=ronda` / `soneca` / `interfone` / `muro` / `esfria` | as cinco mecânicas de prédio grande (3 fases cada) |
-| `?bloco=desenhados` | os 30 andares desenhados à mão, na ordem do mix (7.6) |
-| `?pesquisa` (andares 6–10) | só na pesquisa: 5 desenhados logo depois do tutorial, sem aviso (D1–D5 no registro, `src/amostra.ts`); roteiro no README |
-| `?bloco=pesadelo` | os "pesadelos" rejeitados pelo dono, só registro |
+| `?bloco=desenhados` | os 30 andares desenhados à mão, na ordem do mix (7.6) || `?bloco=pesadelo` | os "pesadelos" rejeitados pelo dono, só registro |
 | `?bloco=hora` / `ordem` / `dificil` | blocos de 6 fases (diagnóstico) |
 | `?grupo=A` / `?grupo=B` | o antigo teste trilho × giros (diagnóstico) |
 | `?vetor` | o jogo com o desenho antigo em SVG |

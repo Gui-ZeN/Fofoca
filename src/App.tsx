@@ -24,7 +24,7 @@ import { fasesAlto } from './alto';
 import largo from './largo.json';
 import pesadelo from './pesadelo.json';
 import { FASES_DESENHADAS } from './desenhados';
-import { comAmostra, fasesAmostra } from './amostra';
+import { CAPITULOS_PESQUISA, SEQUENCIA_PESQUISA } from './pesquisa';
 import { dele, ele, o, pro, vestir } from './elenco';
 import { aleatorio } from './variar';
 import { aposVencer, CANDIDATOS_DIA, diaLiberado, estadoDoAndar, ESTOQUE, PREDIO, proximoAndar, SEGMENTOS, TUTORIAL } from './campanha';
@@ -114,10 +114,6 @@ if (PESQUISA && busca.has('zerar')) {
   history.replaceState(null, '', `${location.pathname}?${busca}${location.hash}`);
   registro.novoParticipante(); // o registro das jogadas NÃO é apagado: só passa a contar outra pessoa
 }
-// Kit do playtest dos andares desenhados (src/amostra.ts): na pesquisa, os 5 entram LOGO DEPOIS DO TUTORIAL, sem aviso de que são
-// difíceis (o dono, 2026-11-17: "juntar tudo, sem falar que é difícil, e no relatório ver o que fizeram"). Rótulos D1–D5 no registro.
-// ⚠️ Antes foi um link à parte (`?pesquisa=dificeis`) e depois um botão "Andares difíceis" no menu: os dois avisavam a pessoa.
-const SEQ_DIFICEIS: Item[] = fasesAmostra.map((fase, i) => ({ modo: 'trilho', fase, rotulo: `D${i + 1}` }));
 const sementeDe = (rotulo: string) => [...rotulo].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const TRILHO: Item[] = fasesTrilho.map((fase, i) => ({ modo: 'trilho', fase, rotulo: `T${i + 1}` }));
 const GIROS: Item[] = fasesGiros.map((fase, i) => ({ modo: 'giros', fase, rotulo: `G${i}` }));
@@ -126,7 +122,8 @@ const SEQ_TESTE: Item[] = BLOCO ? DO_BLOCO : GRUPO === 'A' ? [...TRILHO, ...GIRO
 const ANDARES: Item[] = PREDIO.map(({ rotulo, fase }) => ({ modo: 'trilho', fase, rotulo }));
 const ROTULOS = ANDARES.map((a) => a.rotulo);
 const CAPITULOS = capitulos(SEGMENTOS);
-const { andares: ANDARES_PESQUISA, capitulos: CAPITULOS_PESQUISA } = comAmostra(ANDARES, CAPITULOS, SEQ_DIFICEIS, TUTORIAL);
+// A pesquisa tem sequência PRÓPRIA (src/pesquisa.ts): todas as mecânicas em 28 andares, com difíceis no meio, sem aviso.
+const ANDARES_PESQUISA: Item[] = SEQUENCIA_PESQUISA.map(({ rotulo, fase }) => ({ modo: 'trilho', fase, rotulo }));
 const ROTULOS_PESQUISA = ANDARES_PESQUISA.map((a) => a.rotulo);
 
 export function App() {
@@ -181,7 +178,7 @@ function Campanha({ pesquisa }: { pesquisa: boolean }) {
   const [noDia, setNoDia] = useState(false); // jogando a Fofoca do dia
   const hoje = dataLocal(new Date());
   const andares = pesquisa ? ANDARES_PESQUISA : ANDARES, rotulos = pesquisa ? ROTULOS_PESQUISA : ROTULOS, caps = pesquisa ? CAPITULOS_PESQUISA : CAPITULOS;
-  useRegistroPesquisa(pesquisa ? { modo: 'pesquisa', campanha: `${andares.length} andares`, desenhados: SEQ_DIFICEIS.map((i, k) => `${TUTORIAL + k + 1}º ${i.rotulo} ${i.fase.titulo}`), passo_ms: PASSO_MS, chegadas: true, advertencias: false, fixo: true } : undefined);
+  useRegistroPesquisa(pesquisa ? { modo: 'pesquisa', campanha: `${andares.length} andares`, sequencia: SEQUENCIA_PESQUISA.map((a, k) => `${k + 1}º ${a.rotulo}${a.dificil ? ' (difícil)' : ''} ${a.fase.titulo}`), passo_ms: PASSO_MS, chegadas: true, advertencias: false, fixo: true } : undefined);
   useEffect(() => { if (andar === undefined) registro.registrar('view_change', { vista: 'menu', liberada: proximoAndar(rotulos, lerVencidos(chave)) }); }, [andar]); // `liberada` do registro = o andar da vez (derivado)
   if (noDia) {
     // Fofoca do dia: um andar leve/médio do estoque, o mesmo pra todo mundo hoje (elenco fixo pela data), sem advertência

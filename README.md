@@ -46,10 +46,10 @@ A fábrica (`src/fabrica.ts`) só aceita um prédio com uma solução única no 
 
 **Advertências do síndico** (`src/advertencias.ts`, vidas clássicas): o Seu Zé é o síndico e odeia fofoca. Depois do tutorial, cada vez que a vítima descobre, ele dá uma advertência (cartão amarelo); na terceira você fica **suspenso** — monta o trilho mas não espalha — até ele tirar uma (uma a cada 15 min). Errar tamanho, ordem ou esquecer uma estrela não custa nada. Anúncio/compra pra recuperar: quando houver loja. Os links de teste (`?grupo`, `?bloco`) não têm advertência.
 
-## Teste com 5 pessoas (pesquisa na campanha)
+## Teste com 5 pessoas (a pesquisa)
 Roteiro fechado na Consulta 4 (Sol + Astra, vault). A pergunta da rodada: **prever, espalhar e corrigir sustenta uma sessão voluntária?** Não é votação nem medida de retenção: são 5 pessoas.
 
-**Link:** `?pesquisa` — a campanha de verdade (menu, cenas de chegada, mesma sequência), **igual pra todo participante** e **sem advertências** (decisão do Guilherme, 11/11/2026: o teste mede o ciclo de jogo; **não** aprova as vidas). Progresso próprio, separado da campanha normal. Pra cada participante novo, abra **`?pesquisa&zerar`** (apaga só os dados da pesquisa).
+**Link:** `?pesquisa` — o jogo de verdade (menu, cenas de chegada, capítulos), mas com **sequência própria de 28 andares** (abaixo), **igual pra todo participante** e **sem advertências** (decisão do Guilherme, 11/11/2026: o teste mede o ciclo de jogo; **não** aprova as vidas). Progresso próprio, separado da campanha normal. Pra cada participante novo, abra **`?pesquisa&zerar`** (apaga só os dados da pesquisa).
 
 **Quem:** pessoas do público (adultos casuais) que não conheçam o projeto, com variação de familiaridade com puzzle e celular. **2 pessoas → corrigir o que travou → 3 pessoas**, numa versão estável; relate cada versão separado.
 
@@ -66,24 +66,30 @@ Roteiro fechado na Consulta 4 (Sol + Astra, vault). A pergunta da rodada: **prev
 
 **Como ler:** não entenderam → corrigir ensino ou leitura; entenderam mas corrigem por adivinhação → olhar o retorno da derrota e as fases; entenderam, corrigiram com intenção e quiseram continuar → próxima rodada; entenderam e não quiseram continuar → investigar o interesse antes de criar qualquer conteúdo.
 
-### Os 5 desenhados, no meio da campanha (sem aviso)
-A segunda pergunta da rodada (2026-11-17): **os andares desenhados são difíceis *e* bons?** Decisão do dono: **juntar tudo, sem dizer que é difícil**, e olhar no registro o que a pessoa fez.
+### A sequência: todas as mecânicas em 28 andares (`src/pesquisa.ts`)
+A segunda pergunta da rodada (2026-11-17): **as mecânicas se entendem jogando, e os difíceis são difíceis *e* bons?** Decisões do dono: **todas** as mecânicas, até as que ele achou fracas (ronda, Dr. Álvaro) — "o teste é pra saber o que gente de fora acha"; **uns 25 andares**, pra caber numa sessão; cada regra **estreia fácil e depois volta misturada**; e **sem avisar** que um andar é difícil (no registro dá pra ver o que a pessoa fez).
 
-**Onde:** na própria sequência do `?pesquisa`, **logo depois do tutorial**: andares 1–5 do tutorial, **6–10 = os 5 desenhados** (D1–D5 no registro), e do 11 em diante a campanha segue do 6º andar de sempre. Eles ficam dentro do capítulo 2 (nenhuma abertura nova). Só na pesquisa; a campanha normal não muda. Trilha em que cada um estreia só o que os anteriores não mostraram (linha NOVO), e o último junta tudo:
+| Andar | Capítulo | O que é |
+|---|---|---|
+| 1–5 | Primeiros boatos | o tutorial de sempre (seta, guardar, passar adiante, Fofoqueira) |
+| 6–9 | Vizinhos novos | estreias: Exagerado e tamanho, padaria, celular, ordem (com cena) |
+| **10** | | **difícil**: Reunião de condomínio (Fofoqueira + Exagerado + padaria + ordem) |
+| 11–13 | Os fiscais do prédio | estreias: Vera, Nonato (Do Contra), Arnaldo (com cena) |
+| **14** | | **difícil**: Dois exagerados, uma fresta (Exagerado + Do Contra + Arnaldo) |
+| 15–17 | O toque de recolher | estreias: Dona Norma (cena), Soneca (linha NOVO), interfone (cena) |
+| **18** | | **difícil**: O telefone do 402 (ordem + fio + Norma) |
+| 19–21 | A desconfiada do 105 | estreias: Nando, Raquel (com cena), ronda (linha NOVO) |
+| **22–23** | | **dois difíceis seguidos**: Dois fiscais, uma Raquel · A volta da Neide |
+| 24–27 | A saída das seis | estreias: sai de casa, Dr. Álvaro (com cena), muro fino, boato que esfria (linha NOVO) |
+| **28** | | **difícil**: Ponto de ronda (padaria + sai + Soneca + ronda), o fechamento |
 
-| Andar | | Nome | Dificuldade | Estreia |
-|---|---|---|---|---|
-| 6º | D1 | Quem fala, ela ouve | fácil | Vera |
-| 7º | D2 | Depois das dez | fácil | Soneca, Dona Norma |
-| 8º | D3 | A Bia volta às cinco | médio | padaria, ordem |
-| 9º | D4 | O telefone do 402 | difícil | interfone |
-| 10º | D5 | A volta da Neide | difícil | nada (junta tudo) |
+Cada estreia é a 1ª fase do bloco da mecânica, com uma regra nova só; um difícil só usa o que já estreou (`src/pesquisa.test.ts` confere). Muro fino, esfria e Dr. Álvaro não voltam num difícil: não há andar desenhado com eles. Como na campanha, o próximo andar só abre vencendo; vale a regra de travar do roteiro acima (2 min sem hipótese nova → "ajuda ou encerrar?"). **Não** diga que algum andar é difícil.
 
-Como na campanha, o próximo andar só abre vencendo. Vale a regra de travar do roteiro acima (2 min sem hipótese nova → "ajuda ou encerrar?"). **Não** diga que esses andares são diferentes. Depois da sessão, na entrevista, sobre o 9º e o 10º (vencendo ou não): "Por que não dava pelo caminho mais curto?" — se a pessoa explica o motivo (ordem, recolher, fio), o andar é difícil **e** legível; se diz "tentei até dar", é adivinhação. E: "Algum andar foi injusto? Qual foi o mais gostoso de resolver?"
+Na entrevista, sobre os difíceis que a pessoa jogou (vencendo ou não): "Por que não dava pelo caminho mais curto?" — se explica o motivo (ordem, recolher, fio…), o andar é difícil **e** legível; se diz "tentei até dar", é adivinhação. E: "Alguma regra você não entendeu? Algum andar foi injusto? Qual foi o mais gostoso de resolver?"
 
 **Resumo do registro:** `npx vite-node scripts/resumoRegistro.ts fofoca-registro-*.json` imprime uma linha por pessoa e andar: tentativas, desfecho (**venceu** · **pulou** = saiu sem vencer · **parou** = a sessão acabou ali), tempo, maior pausa sem tentar, "travou?" (pausa ≥ 2 min — **indício**, o registro não vê toque; vale a folha) e por que perdeu.
 
-**Como ler:** venceu com várias tentativas e explicou o porquê → difícil e bom; venceu e não sabe explicar → adivinhação (o andar não comunica a regra); travou no andar que estreia regra → ensino, não dificuldade; largou num desenhado (parou ali) → olhar a folha: dificuldade ou interesse. 3 de 5 explicando o 9º/10º (D4/D5) é o sinal pra pôr os desenhados na campanha.
+**Como ler:** venceu com várias tentativas e explicou o porquê → difícil e bom; venceu e não sabe explicar → adivinhação (o andar não comunica a regra); travou no andar que estreia regra → ensino, não dificuldade; largou num desenhado (parou ali) → olhar a folha: dificuldade ou interesse. 3 de 5 explicando os difíceis (14º, 18º, 22º, 23º, 28º) é o sinal pra pôr os desenhados na campanha; uma regra que 3 de 5 não entendem na estreia (resumo: muitas tentativas ou "travou" no andar dela) pede ensino novo antes de entrar.
 
 ### Links antigos (diagnóstico, não o teste principal)
 - `?grupo=A` / `?grupo=B`: as 10 fases do trilho × 4 de giros (setas prontas, só gira; `src/comparacao.ts`). Útil se alguém entende a regra mas sofre pra montar o trilho.

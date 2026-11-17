@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { resumir, TRAVOU_MS } from './resumo';
-import { comAmostra, fasesAmostra } from './amostra';
-import { capitulos } from './capitulos';
-import { PREDIO, SEGMENTOS, TUTORIAL } from './campanha';
-import type { FaseTrilho } from './trilho';
 import type { Arquivo, Evento } from './registro';
 
 const sessao = (eventos: { t_ms: number; type: string; [dado: string]: unknown }[], modo = 'pesquisa-dificeis'): Arquivo => ({
@@ -56,44 +52,5 @@ describe('resumo do registro da pesquisa', () => {
     ]))[0]);
     expect(a).toMatchObject({ desfecho: 'venceu', tentativas: 1, ms: s(9) });
     expect(b).toMatchObject({ desfecho: 'pulou', tentativas: 0 });
-  });
-});
-
-describe('kit do playtest dos difíceis (amostra)', () => {
-  // as regras que cada andar usa, e a palavra que a linha NOVO tem que trazer na 1ª vez
-  const regras = (f: FaseTrilho): string[] => [
-    f.vizinhos.some((v) => v.vigia) && 'Vera', f.vizinhos.some((v) => v.soneca) && 'Soneca', f.vizinhos.some((v) => v.recolhe !== undefined) && 'Norma',
-    f.vizinhos.some((v) => v.chega || v.sai !== undefined) && 'Padaria', f.vizinhos.some((v) => v.interesse?.ordem) && 'Ordem', !!f.interfones?.length && 'Interfone',
-  ].filter((x): x is string => !!x);
-
-  it('na pesquisa entram logo depois do tutorial, dentro do capítulo 2, sem capítulo novo; o resto anda 5 andares', () => {
-    const caps = capitulos(SEGMENTOS);
-    const amostra = fasesAmostra.map((_, i) => ({ rotulo: `D${i + 1}` }));
-    const { andares, capitulos: c } = comAmostra(PREDIO.map((a) => ({ rotulo: a.rotulo })), caps, amostra, TUTORIAL);
-    expect(andares.slice(0, 11).map((a) => a.rotulo)).toEqual(['T1', 'T2', 'T3', 'T4', 'T5', 'D1', 'D2', 'D3', 'D4', 'D5', PREDIO[5].rotulo]);
-    expect(andares).toHaveLength(PREDIO.length + 5);
-    expect(c).toHaveLength(caps.length); // nenhum capítulo a mais (nenhum título que avise)
-    expect(c[0]).toMatchObject({ numero: 1, inicio: 0, fim: 5 }); // o tutorial não muda
-    expect(c[1]).toMatchObject({ numero: 2, titulo: caps[1].titulo, inicio: 5, fim: caps[1].fim + 5 }); // os 5 abrem o capítulo 2
-    // cada capítulo seguinte cobre os MESMOS andares de antes, 5 adiante
-    for (let k = 2; k < 12; k++) {
-      expect(c[k].inicio, caps[k].titulo).toBe(caps[k].inicio + 5);
-      expect(andares[c[k].inicio].rotulo).toBe(PREDIO[caps[k].inicio].rotulo);
-    }
-  });
-
-  it('5 andares: fácil, fácil, médio, difícil, difícil (a trilha)', () => {
-    expect(fasesAmostra.map((f) => f.titulo)).toEqual(['Quem fala, ela ouve', 'Depois das dez', 'A Bia volta às cinco', 'O telefone do 402', 'A volta da Neide']);
-  });
-
-  it('cada regra estreia com a linha NOVO; o último andar não estreia nada', () => {
-    const vistas = new Set<string>();
-    fasesAmostra.forEach((f, i) => {
-      const novas = regras(f).filter((r) => !vistas.has(r));
-      for (const r of novas) expect(f.novidade ?? '', `${f.titulo}: ${r}`).toContain(r);
-      if (!novas.length) expect(f.novidade, f.titulo).toBeUndefined();
-      if (i === fasesAmostra.length - 1) expect(novas).toEqual([]);
-      novas.forEach((r) => vistas.add(r));
-    });
   });
 });
